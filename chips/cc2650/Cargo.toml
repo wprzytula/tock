@@ -1,0 +1,18 @@
+[package]
+name = "cc2650"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+
+# [features]
+# driverlib = []
+
+[dependencies]
+cortexm3 = { path = "../../arch/cortex-m3" }
+kernel = { path = "../../kernel" }
+enum_primitive = { path = "../../libraries/enum_primitive" }
+cty = "0.2.2"
+
+[build-dependencies]
+bindgen = { version = "0.69.4", features = ["experimental"] }
+cc = "1.0.90"

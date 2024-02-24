@@ -62,6 +62,7 @@ members = [
     "capsules/system",
     "chips/apollo3",
     "chips/arty_e21_chip",
+    "chips/cc2650/",
     "chips/e310_g002",
     "chips/e310_g003",
     "chips/e310x",
