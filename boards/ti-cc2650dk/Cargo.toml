@@ -1,0 +1,26 @@
+[package]
+name = "ti-cc2650dk"
+version.workspace = true
+authors.workspace = true
+build = "build.rs"
+edition.workspace = true
+
+[[bin]]
+name = "ti-cc2650dk"
+path = "src/main.rs"
+
+[[bin]]
+name = "ti-cc2650dk-ccfg"
+path = "src/ccfg.rs"
+
+[dependencies]
+components = { path = "../components" }
+cortexm3 = { path = "../../arch/cortex-m3" }
+kernel = { path = "../../kernel" }
+cc26x0 = { path = "../../chips/cc26x0" }
+enum_primitive = { path = "../../libraries/enum_primitive" }
+
+capsules-core = { path = "../../capsules/core" }
+capsules-extra = { path = "../../capsules/extra" }
+
+
