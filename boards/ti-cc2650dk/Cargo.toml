@@ -2,7 +2,6 @@
 name = "ti-cc2650dk"
 version.workspace = true
 authors.workspace = true
-build = "../build.rs"
 edition.workspace = true
 
 # [[bin]]
