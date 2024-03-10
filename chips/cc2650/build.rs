@@ -15,7 +15,6 @@ const LIB_NOROM_ORIGINAL: &str = "libNOROM_driverlib.a";
 const LIB_NOROM_NOPREFIX: &str = "libdriverlib.a";
 
 fn main() {
-    return;
     let out = PathBuf::from(env::var_os("OUT_DIR").unwrap());
     driverlib_config(&out);
 }
@@ -39,6 +38,24 @@ fn driverlib_config(out: &PathBuf) {
     // if ROM version is not available.
     transform_norom_symbols(out, &cc26x0_crate_driverlib);
     link_norom_driverlib(out, &cc26x0_crate_root);
+
+    // Copy the libraries to a directory that is shared with the end board crate.
+    expose_libs(out);
+}
+
+fn expose_libs(out: &PathBuf) {
+    let shared_dir = out.join("../../../").canonicalize().unwrap();
+    for file in [LIB_ROM_FILTERED, LIB_NOROM_NOPREFIX, "libextern.a"] {
+        let status = std::process::Command::new("ln")
+            .arg("-f")
+            .arg(out.join(file))
+            .arg(shared_dir.join(file))
+            .spawn()
+            .unwrap()
+            .wait()
+            .unwrap();
+        assert!(status.success(), "ln failed: {}", status)
+    }
 }
 
 fn generate_bindings(out: &PathBuf, driverlib_path: &str) {
@@ -100,6 +117,7 @@ fn compile_static_inline_extern_fns(_out: &PathBuf, extern_c_path: &PathBuf) {
         .define("DOXYGEN", None)
         .include("/usr/arm-none-eabi/include")
         .flag("-flto=thin")
+        .cargo_metadata(false) // We do not link to the chip crate lib, yet to the end board crate binary.
         .compile("extern");
 
     // let status = Command::new("ar")

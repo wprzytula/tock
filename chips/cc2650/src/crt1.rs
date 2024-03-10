@@ -87,7 +87,7 @@ pub static IRQS: [unsafe extern "C" fn(); 34] = [
 
 #[no_mangle]
 pub unsafe extern "C" fn init() {
-    // driverlib::SetupTrimDevice();
+    driverlib::SetupTrimDevice();
 
     nvic::enable_all();
 }
