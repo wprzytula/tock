@@ -10,7 +10,6 @@ edition.workspace = true
 [dependencies]
 cortexm3 = { path = "../../arch/cortex-m3" }
 kernel = { path = "../../kernel" }
-enum_primitive = { path = "../../libraries/enum_primitive" }
 cty = "0.2.2"
 
 [build-dependencies]
