@@ -11,6 +11,7 @@ edition.workspace = true
 cortexm3 = { path = "../../arch/cortex-m3" }
 kernel = { path = "../../kernel" }
 cty = "0.2.2"
+cc2650 = "0.1.1"
 
 [build-dependencies]
 bindgen = { version = "0.69.4", features = ["experimental"] }
