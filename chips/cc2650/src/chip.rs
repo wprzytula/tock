@@ -2,9 +2,12 @@ use core::fmt::Write;
 
 use cortexm3::{nvic, CortexM3, CortexMVariant as _};
 
+use crate::peripheral_interrupts as irq;
+
 pub struct Cc2650 {
     userspace_kernel_boundary: cortexm3::syscall::SysCall,
 }
+const MASK_AON_PROG: (u128, u128) = cortexm3::interrupt_mask!(irq::AON_PROG);
 
 impl Cc2650 {
     pub unsafe fn new() -> Cc2650 {
@@ -29,7 +32,7 @@ impl kernel::platform::chip::Chip for Cc2650 {
 
     fn service_pending_interrupts(&self) {
         unsafe {
-            while let Some(interrupt) = nvic::next_pending() {
+            while let Some(interrupt) = nvic::next_pending_with_mask(MASK_AON_PROG) {
                 // let irq = NvicIrq::from_u32(interrupt)
                 //     .expect("Pending IRQ flag not enumerated in NviqIrq");
                 // match irq {
@@ -50,7 +53,7 @@ impl kernel::platform::chip::Chip for Cc2650 {
     }
 
     fn has_pending_interrupts(&self) -> bool {
-        unsafe { nvic::has_pending() }
+        unsafe { nvic::has_pending_with_mask(MASK_AON_PROG) }
     }
 
     fn sleep(&self) {
