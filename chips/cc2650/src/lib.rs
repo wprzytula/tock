@@ -6,5 +6,6 @@ pub mod chip;
 mod crt1;
 mod driverlib;
 mod peripheral_interrupts;
+pub mod prcm;
 
 pub use crate::crt1::init;

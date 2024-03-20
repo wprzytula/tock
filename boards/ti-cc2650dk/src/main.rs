@@ -2,6 +2,8 @@
 #![cfg_attr(not(doc), no_main)]
 
 use cc2650_chip::chip::Cc2650;
+use cc2650_chip::prcm;
+
 use kernel::{
     capabilities,
     component::Component as _,
@@ -91,6 +93,15 @@ unsafe fn start() -> (&'static kernel::Kernel, Platform, &'static Cc2650) {
         create_capability!(capabilities::ProcessManagementCapability);
     // let memory_allocation_capability = create_capability!(capabilities::MemoryAllocationCapability);
 
+    // Power on peripherals (eg. GPIO)
+    // prcm::Power::enable_domain(prcm::PowerDomain::Peripherals);
+
+    // Power on Serial domain
+    // prcm::Power::enable_domain(prcm::PowerDomain::Serial);
+
+    // TODO: remove (for debug only)
+    prcm::Power::power_on_domains();
+
     let board_kernel = static_init!(kernel::Kernel, kernel::Kernel::new(&PROCESSES));
 
     // let dynamic_deferred_call_clients =
@@ -100,6 +111,9 @@ unsafe fn start() -> (&'static kernel::Kernel, Platform, &'static Cc2650) {
     //     DynamicDeferredCall::new(dynamic_deferred_call_clients)
     // );
     // DynamicDeferredCall::set_global_instance(dynamic_deferred_caller);
+
+    // Enable the GPIO clocks
+    prcm::Clock::enable_gpio();
 
     let chip = static_init!(Cc2650, Cc2650::new());
     CHIP = Some(chip);
