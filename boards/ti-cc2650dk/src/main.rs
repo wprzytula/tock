@@ -35,6 +35,11 @@ static mut CHIP: Option<&'static Cc2650> = None;
 struct Platform {
     scheduler: &'static RoundRobinSched<'static>,
     systick: cortexm3::systick::SysTick,
+    led: &'static capsules_core::led::LedDriver<
+        'static,
+        kernel::hil::led::LedHigh<'static, cc2650_chip::gpio::GPIOPin>,
+        1,
+    >,
 }
 
 impl SyscallDriverLookup for Platform {
@@ -43,6 +48,7 @@ impl SyscallDriverLookup for Platform {
         F: FnOnce(Option<&dyn kernel::syscall::SyscallDriver>) -> R,
     {
         match driver_num {
+            capsules_core::led::DRIVER_NUM => f(Some(self.led)),
             _ => f(None),
         }
     }
@@ -118,11 +124,19 @@ unsafe fn start() -> (&'static kernel::Kernel, Platform, &'static Cc2650) {
     let chip = static_init!(Cc2650, Cc2650::new());
     CHIP = Some(chip);
 
+    // Capsules go here!
+    // LEDs
+    let led = components::led::LedsComponent::new().finalize(components::led_component_static!(
+        kernel::hil::led::LedHigh<'static, cc2650_chip::gpio::GPIOPin>,
+        kernel::hil::led::LedHigh::new(&cc2650_chip::gpio::PORT[25]),
+    ));
+
     let scheduler = components::sched::round_robin::RoundRobinComponent::new(&PROCESSES)
         .finalize(components::round_robin_component_static!(NUM_PROCS));
     let smartrf = Platform {
         scheduler,
         systick: cortexm3::systick::SysTick::new_with_calibration(HFREQ),
+        led,
     };
 
     // These symbols are defined in the linker script.
