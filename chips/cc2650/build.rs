@@ -129,55 +129,42 @@ fn compile_static_inline_extern_fns(out: &PathBuf, extern_c_path: &PathBuf) -> P
 }
 
 fn merge_lib(out: &PathBuf, extern_o_path: &PathBuf) {
-    let libdriverlib_o_full_path = out.join(LIB_FULL_O);
-
-    const DRIVERLIB_O_PATH: &str = "driverlib";
-
-    let driverlib_os_path = out.join(DRIVERLIB_O_PATH);
-
-    // mkdir -p ${out}/driverlib
-    fs::create_dir_all(&driverlib_os_path).unwrap();
-
-    // ar x libdriverlib.a --output ${out}/driverlib
     let status = Command::new("ar")
         .arg("x")
         .arg(out.join(LIB_NOROM_NOPREFIX))
+        .arg("setup.o")
         .arg("--output")
-        .arg(&driverlib_os_path)
+        .arg(out)
         .status()
         .unwrap();
-    assert!(status.success(), "ar extracting driverlib failed");
+    assert!(status.success(), "ar extract setup.o failed");
 
-    let mut driverlib_os = fs::read_dir(driverlib_os_path).unwrap();
-    let driverlib_os = std::iter::from_fn(|| {
-        driverlib_os
-            .next()
-            .transpose()
-            .unwrap()
-            .map(|entry| entry.path())
-    });
+    let setup_o_path = out.join("setup.o");
+    let setup2_o_path = out.join("setup2.o");
+    fs::rename(&setup_o_path, &setup2_o_path).unwrap();
 
-    // arm-none-eabi-ld --relocatable --just-symbols libROM_driverlib_filtered.elf -zmuldefs extern.o libdriverlib.a -o libdriverlib_full.o
+    // arm-none-eabi-ld --relocatable --just-symbols libROM_driverlib_filtered.elf setup.o setup2.o
     let status = Command::new("arm-none-eabi-ld")
         .arg("--relocatable")
         .arg("-zmuldefs")
         .arg("--just-symbols")
         .arg(out.join(LIB_ROM_FILTERED))
-        .arg(&extern_o_path)
-        .args(driverlib_os)
+        .arg(&setup2_o_path)
         .arg("-o")
-        .arg(&libdriverlib_o_full_path)
+        .arg(&setup_o_path)
         .status()
         .unwrap();
-    assert!(status.success(), "ld merging lib failed");
+    assert!(status.success(), "ld adding symbols to setup.o failed");
 
     let status = Command::new("ar")
-        .arg("crus")
-        .arg(out.join(LIB_FULL))
-        .arg(&libdriverlib_o_full_path)
+        .arg("rb")
+        .arg("adi.o")
+        .arg(out.join(LIB_NOROM_NOPREFIX))
+        .arg(&setup_o_path)
+        .arg(extern_o_path)
         .status()
         .unwrap();
-    assert!(status.success(), "libdriverlib_full.o ar failed");
+    assert!(status.success(), "merge driverlib ar failed");
 }
 
 // Strips those functions from ROM symbols ELF, which are disabled in rom.h.
@@ -297,7 +284,7 @@ fn transform_norom_symbols(out: &PathBuf, driverlib_artifacts_path: &PathBuf) {
 fn link_driverlib(out: &PathBuf, _root: &PathBuf) {
     let current_dir = std::env::current_dir().unwrap();
     println!("cargo:rustc-link-search={}", current_dir.to_str().unwrap());
-    println!("cargo:rustc-link-lib=static=driverlib_full");
+    println!("cargo:rustc-link-lib=static=driverlib");
     println!("cargo:rustc-link-search=native={}", out.to_str().unwrap());
     println!("cargo:rustc-link-arg=-zmuldefs");
 }

@@ -3,7 +3,7 @@ name = "cc2650"
 version.workspace = true
 authors.workspace = true
 edition.workspace = true
-links = "driverlib_full"
+links = "driverlib"
 
 # [features]
 # driverlib = []
