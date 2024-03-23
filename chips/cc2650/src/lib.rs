@@ -8,5 +8,6 @@ mod driverlib;
 pub mod gpio;
 mod peripheral_interrupts;
 pub mod prcm;
+pub mod uart;
 
 pub use crate::crt1::init;

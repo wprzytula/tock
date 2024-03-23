@@ -1,8 +1,8 @@
 #![no_std]
 #![cfg_attr(not(doc), no_main)]
 
-use cc2650_chip::chip::Cc2650;
 use cc2650_chip::prcm;
+use cc2650_chip::{chip::Cc2650, uart};
 
 use kernel::{
     capabilities,
@@ -121,6 +121,11 @@ unsafe fn start() -> (&'static kernel::Kernel, Platform, &'static Cc2650) {
 
     // Enable the GPIO clocks
     prcm::Clock::enable_gpio();
+
+    // Enable the UART clocks
+    prcm::Clock::enable_uart();
+
+    uart::init_uart();
 
     let chip = static_init!(Cc2650, Cc2650::new());
     CHIP = Some(chip);
