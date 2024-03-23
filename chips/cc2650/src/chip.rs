@@ -6,7 +6,7 @@ use crate::{gpt::Gpt, peripheral_interrupts as irq};
 
 pub struct Cc2650<'a> {
     userspace_kernel_boundary: cortexm3::syscall::SysCall,
-    gpt: Gpt<'a>,
+    pub gpt: Gpt<'a>,
 }
 const MASK_AON_PROG: (u128, u128) = cortexm3::interrupt_mask!(irq::AON_PROG);
 
