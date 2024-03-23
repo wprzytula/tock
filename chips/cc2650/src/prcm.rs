@@ -90,4 +90,26 @@ impl Clock {
             Self::reload_clock_controller();
         }
     }
+    unsafe fn enable_uart_clock() {
+        // Enable the UART clock
+        cc2650::Peripherals::steal()
+            .PRCM
+            .uartclkgr
+            .write(|w| w.clk_en().set_bit());
+        cc2650::Peripherals::steal()
+            .PRCM
+            .uartclkgs
+            .write(|w| w.clk_en().set_bit());
+        cc2650::Peripherals::steal()
+            .PRCM
+            .uartclkgds
+            .write(|w| w.clk_en().set_bit());
+    }
+
+    pub fn enable_uart() {
+        unsafe {
+            Self::enable_uart_clock();
+            Self::reload_clock_controller();
+        }
+    }
 }
