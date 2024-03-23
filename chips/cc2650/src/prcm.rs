@@ -90,6 +90,30 @@ impl Clock {
             Self::reload_clock_controller();
         }
     }
+
+    unsafe fn enable_gpt_clock() {
+        // Enable the GPT0 clock
+        cc2650::Peripherals::steal()
+            .PRCM
+            .gptclkgr
+            .write(|w| w.clk_en().gpt0());
+        cc2650::Peripherals::steal()
+            .PRCM
+            .gptclkgs
+            .write(|w| w.clk_en().gpt0());
+        cc2650::Peripherals::steal()
+            .PRCM
+            .gptclkgds
+            .write(|w| w.clk_en().gpt0());
+    }
+
+    pub fn enable_gpt() {
+        unsafe {
+            Self::enable_gpt_clock();
+            Self::reload_clock_controller();
+        }
+    }
+
     unsafe fn enable_uart_clock() {
         // Enable the UART clock
         cc2650::Peripherals::steal()
