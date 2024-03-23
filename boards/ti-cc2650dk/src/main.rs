@@ -55,7 +55,7 @@ impl SyscallDriverLookup for Platform {
     }
 }
 
-impl KernelResources<Cc2650> for Platform {
+impl<'a> KernelResources<Cc2650<'a>> for Platform {
     type SyscallDriverLookup = Self;
     type SyscallFilter = ();
     type ProcessFault = ();
@@ -91,7 +91,7 @@ impl KernelResources<Cc2650> for Platform {
 /// removed when this function returns. Otherwise, the stack space used for
 /// these static_inits is wasted.
 #[inline(never)]
-unsafe fn start() -> (&'static kernel::Kernel, Platform, &'static Cc2650) {
+unsafe fn start() -> (&'static kernel::Kernel, Platform, &'static Cc2650<'static>) {
     cc2650_chip::init();
 
     // Create capabilities that the board needs to call certain protected kernel

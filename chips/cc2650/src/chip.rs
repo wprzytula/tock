@@ -2,22 +2,24 @@ use core::{arch::asm, fmt::Write};
 
 use cortexm3::{nvic, CortexM3, CortexMVariant as _};
 
-use crate::peripheral_interrupts as irq;
+use crate::{gpt::Gpt, peripheral_interrupts as irq};
 
-pub struct Cc2650 {
+pub struct Cc2650<'a> {
     userspace_kernel_boundary: cortexm3::syscall::SysCall,
+    gpt: Gpt<'a>,
 }
 const MASK_AON_PROG: (u128, u128) = cortexm3::interrupt_mask!(irq::AON_PROG);
 
-impl Cc2650 {
-    pub unsafe fn new() -> Cc2650 {
-        Cc2650 {
+impl<'a> Cc2650<'a> {
+    pub unsafe fn new() -> Self {
+        Self {
             userspace_kernel_boundary: cortexm3::syscall::SysCall::new(),
+            gpt: Gpt::new(),
         }
     }
 }
 
-impl kernel::platform::chip::Chip for Cc2650 {
+impl kernel::platform::chip::Chip for Cc2650<'_> {
     // type MPU = cortexm3::mpu::MPU;
     type MPU = ();
     type UserspaceKernelBoundary = cortexm3::syscall::SysCall;
@@ -47,14 +49,14 @@ impl kernel::platform::chip::Chip for Cc2650 {
                     irq::RF_CMD_ACK => todo!(),
                     irq::I2S => todo!(),
                     irq::WATCHDOG => todo!(),
-                    irq::GPT0A => todo!(),
-                    irq::GPT0B => todo!(),
-                    irq::GPT1A => todo!(),
-                    irq::GPT1B => todo!(),
-                    irq::GPT2A => todo!(),
-                    irq::GPT2B => todo!(),
-                    irq::GPT3A => todo!(),
-                    irq::GPT3B => todo!(),
+                    irq::GPT0A => self.gpt.handle_interrupt(),
+                    irq::GPT0B => unreachable!(),
+                    irq::GPT1A => unreachable!(),
+                    irq::GPT1B => unreachable!(),
+                    irq::GPT2A => unreachable!(),
+                    irq::GPT2B => unreachable!(),
+                    irq::GPT3A => unreachable!(),
+                    irq::GPT3B => unreachable!(),
                     irq::CRYPTO => todo!(),
                     irq::DMA_SD => todo!(),
                     irq::DMA_ERROR => todo!(),
