@@ -8,6 +8,7 @@ use kernel::{
     capabilities,
     component::Component as _,
     create_capability, debug,
+    hil::time::Alarm,
     platform::{KernelResources, SyscallDriverLookup},
     scheduler::round_robin::RoundRobinSched,
     static_init,
@@ -41,6 +42,7 @@ struct Platform {
         kernel::hil::led::LedHigh<'static, cc2650_chip::gpio::GPIOPin>,
         1,
     >,
+    alarm: &'static capsules_core::alarm::AlarmDriver<'static, cc2650_chip::gpt::Gpt<'static>>,
 }
 
 impl SyscallDriverLookup for Platform {
@@ -50,6 +52,7 @@ impl SyscallDriverLookup for Platform {
     {
         match driver_num {
             capsules_core::led::DRIVER_NUM => f(Some(self.led)),
+            capsules_core::alarm::DRIVER_NUM => f(Some(self.alarm)),
             _ => f(None),
         }
     }
@@ -98,7 +101,7 @@ unsafe fn start() -> (&'static kernel::Kernel, Platform, &'static Cc2650<'static
     // functions.
     let process_management_capability =
         create_capability!(capabilities::ProcessManagementCapability);
-    // let memory_allocation_capability = create_capability!(capabilities::MemoryAllocationCapability);
+    let memory_allocation_capability = create_capability!(capabilities::MemoryAllocationCapability);
 
     // Power on peripherals (eg. GPIO)
     // prcm::Power::enable_domain(prcm::PowerDomain::Peripherals);
@@ -122,6 +125,9 @@ unsafe fn start() -> (&'static kernel::Kernel, Platform, &'static Cc2650<'static
     // Enable the GPIO clocks
     prcm::Clock::enable_gpio();
 
+    // Enable the GPT clocks
+    prcm::Clock::enable_gpt();
+
     // Enable the UART clocks
     prcm::Clock::enable_uart();
 
@@ -137,6 +143,21 @@ unsafe fn start() -> (&'static kernel::Kernel, Platform, &'static Cc2650<'static
         kernel::hil::led::LedHigh::new(&cc2650_chip::gpio::PORT[25]),
     ));
 
+    // Alarm
+    // let alarm = components::alarm::AlarmDriverComponent::new(board_kernel, capsules_core::alarm::DRIVER_NUM, mux)
+
+    let alarm = static_init!(
+        capsules_core::alarm::AlarmDriver<'static, cc2650_chip::gpt::Gpt<'static>>,
+        capsules_core::alarm::AlarmDriver::new(
+            &chip.gpt,
+            board_kernel.create_grant(
+                capsules_core::alarm::DRIVER_NUM,
+                &memory_allocation_capability
+            )
+        )
+    );
+    chip.gpt.set_alarm_client(alarm);
+
     let process_printer = components::process_printer::ProcessPrinterTextComponent::new()
         .finalize(components::process_printer_text_component_static!());
     PROCESS_PRINTER = Some(process_printer);
@@ -147,6 +168,7 @@ unsafe fn start() -> (&'static kernel::Kernel, Platform, &'static Cc2650<'static
         scheduler,
         systick: cortexm3::systick::SysTick::new_with_calibration(HFREQ),
         led,
+        alarm,
     };
 
     // These symbols are defined in the linker script.
