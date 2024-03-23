@@ -14,6 +14,8 @@ pub enum PowerDomain {
     Mcu = driverlib::PRCM_DOMAIN_MCU,
 }
 
+// TODO: rewrite Power with the type-state pattern.
+
 pub struct Power(());
 
 impl Power {
