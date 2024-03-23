@@ -1,18 +1,23 @@
 //! The build script also sets the linker flags to tell it which link script to use.
 
-use std::env;
 use std::ffi::OsStr;
 use std::fs::File;
 use std::io::Write;
 use std::iter::FromIterator;
 use std::path::{Path, PathBuf};
 use std::process::Command;
+use std::{env, fs};
 
 const LIB_ROM_ORIGINAL: &str = "libROM_driverlib.elf";
 const LIB_ROM_FILTERED: &str = "libROM_driverlib_filtered.elf";
 
 const LIB_NOROM_ORIGINAL: &str = "libNOROM_driverlib.a";
 const LIB_NOROM_NOPREFIX: &str = "libdriverlib.a";
+
+const LIB_FULL_O: &str = "libdriverlib_full.o";
+const LIB_FULL: &str = "libdriverlib_full.a";
+
+const EXTERN_O_NAME: &str = "extern.o";
 
 fn main() {
     let out = PathBuf::from(env::var_os("OUT_DIR").unwrap());
@@ -27,20 +32,23 @@ fn driverlib_config(out: &PathBuf) {
     let cc26x0_crate_root = PathBuf::from(std::env::var_os("CARGO_MANIFEST_DIR").unwrap());
     let cc26x0_crate_driverlib = cc26x0_crate_root.join("src/driverlib");
 
-    generate_bindings(out, &driverlib_path);
+    let extern_o_path = generate_bindings(out, &driverlib_path);
 
     // ROM symbols are fetched first, so that `-zmuldefs` option enabled will first use them
     // if available.
     strip_disabled_rom_fns(out, &driverlib_path, &cc26x0_crate_driverlib);
-    fetch_rom_symbols(cc26x0_crate_driverlib.join(LIB_ROM_FILTERED));
+    // fetch_rom_symbols(cc26x0_crate_driverlib.join(LIB_ROM_FILTERED));
 
     // NOROM symbols are fetched next, so that `-zmuldefs` option enabled will use them
     // if ROM version is not available.
     transform_norom_symbols(out, &cc26x0_crate_driverlib);
-    link_norom_driverlib(out, &cc26x0_crate_root);
+
+    merge_lib(out, &extern_o_path);
+
+    link_driverlib(out, &cc26x0_crate_root);
 }
 
-fn generate_bindings(out: &PathBuf, driverlib_path: &str) {
+fn generate_bindings(out: &PathBuf, driverlib_path: &str) -> PathBuf {
     let extern_c_path = out.join("extern.c");
 
     println!(
@@ -82,16 +90,13 @@ fn generate_bindings(out: &PathBuf, driverlib_path: &str) {
         .write_to_file("src/driverlib/bindings.rs")
         .expect("Couldn't write bindings!");
 
-    compile_static_inline_extern_fns(out, &extern_c_path);
-
-    // Link the static inline bindings lib
-    println!("cargo:rustc-link-search=native={}", out.to_str().unwrap());
+    compile_static_inline_extern_fns(out, &extern_c_path)
 }
 
-fn compile_static_inline_extern_fns(_out: &PathBuf, extern_c_path: &PathBuf) {
+fn compile_static_inline_extern_fns(out: &PathBuf, extern_c_path: &PathBuf) -> PathBuf {
     // let extern_o_path = out.join("extern.o");
     // Compile extern.c containing (formerly) static inline functions
-    cc::Build::new()
+    let extern_bc_path = cc::Build::new()
         .compiler("clang")
         .target("arm-none-eabi")
         .file(extern_c_path)
@@ -100,17 +105,79 @@ fn compile_static_inline_extern_fns(_out: &PathBuf, extern_c_path: &PathBuf) {
         .include("/usr/arm-none-eabi/include")
         .flag("-flto=thin")
         .cargo_metadata(false) // We do not link to the chip crate lib, yet to the end board crate binary.
-        .compile("extern");
+        .compile_intermediates()
+        .into_iter()
+        .next()
+        .unwrap();
 
-    // let status = Command::new("ar")
-    //     .arg("crus")
-    //     .arg(out.join("libextern.a"))
-    //     .arg(&extern_o_path)
-    //     .spawn()
-    //     .unwrap()
-    //     .wait()
-    //     .unwrap();
-    // assert!(status.success(), "extern.o ar failed");
+    let extern_o_path = out.join(EXTERN_O_NAME);
+
+    // llc --filetype obj blahblah-extern.o -o extern.o
+    let status = Command::new("llc")
+        .arg("--filetype")
+        .arg("obj")
+        .arg(&extern_bc_path)
+        .arg("-o")
+        .arg(&extern_o_path)
+        .spawn()
+        .unwrap()
+        .wait()
+        .unwrap();
+    assert!(status.success(), "extern.o llc failed");
+
+    extern_o_path
+}
+
+fn merge_lib(out: &PathBuf, extern_o_path: &PathBuf) {
+    let libdriverlib_o_full_path = out.join(LIB_FULL_O);
+
+    const DRIVERLIB_O_PATH: &str = "driverlib";
+
+    let driverlib_os_path = out.join(DRIVERLIB_O_PATH);
+
+    // mkdir -p ${out}/driverlib
+    fs::create_dir_all(&driverlib_os_path).unwrap();
+
+    // ar x libdriverlib.a --output ${out}/driverlib
+    let status = Command::new("ar")
+        .arg("x")
+        .arg(out.join(LIB_NOROM_NOPREFIX))
+        .arg("--output")
+        .arg(&driverlib_os_path)
+        .status()
+        .unwrap();
+    assert!(status.success(), "ar extracting driverlib failed");
+
+    let mut driverlib_os = fs::read_dir(driverlib_os_path).unwrap();
+    let driverlib_os = std::iter::from_fn(|| {
+        driverlib_os
+            .next()
+            .transpose()
+            .unwrap()
+            .map(|entry| entry.path())
+    });
+
+    // arm-none-eabi-ld --relocatable --just-symbols libROM_driverlib_filtered.elf -zmuldefs extern.o libdriverlib.a -o libdriverlib_full.o
+    let status = Command::new("arm-none-eabi-ld")
+        .arg("--relocatable")
+        .arg("-zmuldefs")
+        .arg("--just-symbols")
+        .arg(out.join(LIB_ROM_FILTERED))
+        .arg(&extern_o_path)
+        .args(driverlib_os)
+        .arg("-o")
+        .arg(&libdriverlib_o_full_path)
+        .status()
+        .unwrap();
+    assert!(status.success(), "ld merging lib failed");
+
+    let status = Command::new("ar")
+        .arg("crus")
+        .arg(out.join(LIB_FULL))
+        .arg(&libdriverlib_o_full_path)
+        .status()
+        .unwrap();
+    assert!(status.success(), "libdriverlib_full.o ar failed");
 }
 
 // Strips those functions from ROM symbols ELF, which are disabled in rom.h.
@@ -227,14 +294,10 @@ fn transform_norom_symbols(out: &PathBuf, driverlib_artifacts_path: &PathBuf) {
     }
 }
 
-fn link_norom_driverlib(out: &PathBuf, root: &PathBuf) {
-    // Link the NOROM driverlib
+fn link_driverlib(out: &PathBuf, _root: &PathBuf) {
     let current_dir = std::env::current_dir().unwrap();
     println!("cargo:rustc-link-search={}", current_dir.to_str().unwrap());
-    println!("cargo:rustc-link-lib=static=driverlib");
-    println!("cargo:rustc-link-lib=static=extern");
-
-    println!("cargo:rustc-link-search=native={}", root.to_str().unwrap());
+    println!("cargo:rustc-link-lib=static=driverlib_full");
     println!("cargo:rustc-link-search=native={}", out.to_str().unwrap());
     println!("cargo:rustc-link-arg=-zmuldefs");
 }
