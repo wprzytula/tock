@@ -38,24 +38,6 @@ fn driverlib_config(out: &PathBuf) {
     // if ROM version is not available.
     transform_norom_symbols(out, &cc26x0_crate_driverlib);
     link_norom_driverlib(out, &cc26x0_crate_root);
-
-    // Copy the libraries to a directory that is shared with the end board crate.
-    expose_libs(out);
-}
-
-fn expose_libs(out: &PathBuf) {
-    let shared_dir = out.join("../../../").canonicalize().unwrap();
-    for file in [LIB_ROM_FILTERED, LIB_NOROM_NOPREFIX, "libextern.a"] {
-        let status = std::process::Command::new("ln")
-            .arg("-f")
-            .arg(out.join(file))
-            .arg(shared_dir.join(file))
-            .spawn()
-            .unwrap()
-            .wait()
-            .unwrap();
-        assert!(status.success(), "ln failed: {}", status)
-    }
 }
 
 fn generate_bindings(out: &PathBuf, driverlib_path: &str) {
@@ -247,9 +229,12 @@ fn transform_norom_symbols(out: &PathBuf, driverlib_artifacts_path: &PathBuf) {
 
 fn link_norom_driverlib(out: &PathBuf, root: &PathBuf) {
     // Link the NOROM driverlib
+    let current_dir = std::env::current_dir().unwrap();
+    println!("cargo:rustc-link-search={}", current_dir.to_str().unwrap());
+    println!("cargo:rustc-link-lib=static=driverlib");
+    println!("cargo:rustc-link-lib=static=extern");
+
     println!("cargo:rustc-link-search=native={}", root.to_str().unwrap());
     println!("cargo:rustc-link-search=native={}", out.to_str().unwrap());
-    println!("cargo:rustc-link-arg=-ldriverlib");
-    println!("cargo:rustc-link-arg=-lextern");
     println!("cargo:rustc-link-arg=-zmuldefs");
 }
