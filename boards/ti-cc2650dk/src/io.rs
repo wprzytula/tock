@@ -83,18 +83,21 @@ mod print {
     pub unsafe fn panic_fmt(pi: &PanicInfo) -> ! {
         use core::ptr::addr_of;
 
-        use crate::{CHIP, PROCESSES};
+        use crate::{CHIP, PROCESSES, PROCESS_PRINTER};
+        use cc2650_chip::gpio::PORT;
         use kernel::debug;
 
+        let led_kernel_pin = &PORT[25];
+        let led = &mut kernel::hil::led::LedLow::new(led_kernel_pin);
         let writer = &mut Writer;
         debug::panic(
-            &mut [] as &mut [&Writer],
+            &mut [led],
             writer,
             pi,
             &cortexm3::support::nop,
             &*addr_of!(PROCESSES),
             &*addr_of!(CHIP),
-            &None::<&capsules_system::process_printer::ProcessPrinterText>,
+            &*addr_of!(PROCESS_PRINTER), // &None::<&capsules_system::process_printer::ProcessPrinterText>,
         )
     }
 }

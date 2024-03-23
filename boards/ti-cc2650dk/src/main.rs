@@ -35,6 +35,8 @@ const NUM_PROCS: usize = 2;
 static mut PROCESSES: [Option<&'static dyn kernel::process::Process>; NUM_PROCS] = [None, None];
 
 static mut CHIP: Option<&'static Cc2650> = None;
+static mut PROCESS_PRINTER: Option<&'static capsules_system::process_printer::ProcessPrinterText> =
+    None;
 
 struct Platform {
     scheduler: &'static RoundRobinSched<'static>,
@@ -134,6 +136,10 @@ unsafe fn start() -> (&'static kernel::Kernel, Platform, &'static Cc2650) {
         kernel::hil::led::LedHigh<'static, cc2650_chip::gpio::GPIOPin>,
         kernel::hil::led::LedHigh::new(&cc2650_chip::gpio::PORT[25]),
     ));
+
+    let process_printer = components::process_printer::ProcessPrinterTextComponent::new()
+        .finalize(components::process_printer_text_component_static!());
+    PROCESS_PRINTER = Some(process_printer);
 
     let scheduler = components::sched::round_robin::RoundRobinComponent::new(&*addr_of!(PROCESSES))
         .finalize(components::round_robin_component_static!(NUM_PROCS));
