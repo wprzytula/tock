@@ -1,17 +1,52 @@
-pub fn init_uart() {
-    let peripherals = unsafe { cc2650::Peripherals::steal() };
+use crate::driverlib;
+
+// 48 MHz
+const CLOCK_FREQ: u32 = 48_000_000;
+const BAUD_RATE: u32 = 115_200;
+
+#[inline]
+fn uart_full_enable(uart: &cc2650::UART0) {
+    // Enable the FIFO.
+    uart.lcrh.modify(|_r, w| w.fen().en());
+
+    // Enable RX, TX, and the UART.
+    uart.ctl
+        .modify(|_r, w| w.uarten().en().txe().en().rxe().en());
+}
+
+#[allow(unused)]
+#[inline(always)]
+fn uart_full_disable(_uart: &cc2650::UART0) {
+    unsafe {
+        driverlib::UARTDisable(driverlib::UART0_BASE);
+    }
+}
+
+pub fn init_uart_full(uart: &cc2650::UART0) {
+    /*
     // 2. Configure the IOC module to map UART signals to the correct GPIO pins.
     // RF1.7_UART_RX EM -> DIO_2
     peripherals
         .IOC
-        .iocfg3
-        .modify(|_r, w| w.port_id().uart0_tx().ie().clear_bit());
+        .iocfg2
+        .modify(|_r, w| w.port_id().uart0_rx().ie().set_bit());
     // RF1.9_UART_TX EM -> DIO_3
     peripherals
         .IOC
-        .iocfg2
-        .modify(|_r, w| w.port_id().uart0_rx().ie().set_bit());
+        .iocfg3
+        .modify(|_r, w| w.port_id().uart0_tx().ie().clear_bit());
+    */
+    unsafe {
+        driverlib::IOCPinTypeUart(
+            driverlib::UART0_BASE,
+            driverlib::IOID_2,
+            driverlib::IOID_3,
+            driverlib::IOID_UNUSED,
+            driverlib::IOID_UNUSED,
+        )
+    };
 
+    /*
     // For this example, the UART clock is assumed to be 24 MHz, and the desired UART configuration is:
     // • Baud rate: 115 200
     // • Data length of 8 bits
@@ -49,4 +84,20 @@ pub fn init_uart() {
     // 5. Enable the UART by setting the UART:CTL UARTEN bit.
     uart.ctl
         .modify(|_r, w| w.uarten().en().txe().en().rxe().en());
+    */
+
+    unsafe {
+        driverlib::UARTConfigSetExpClk(
+            driverlib::UART0_BASE,
+            CLOCK_FREQ,
+            BAUD_RATE,
+            driverlib::UART_CONFIG_PAR_NONE
+                | driverlib::UART_CONFIG_STOP_ONE
+                | driverlib::UART_CONFIG_WLEN_8,
+        )
+    };
+
+    // UARTEnable is static inline, so better use our own version.
+    // unsafe { driverlib::UARTEnable(driverlib::UART0_BASE) }
+    uart_full_enable(&uart);
 }

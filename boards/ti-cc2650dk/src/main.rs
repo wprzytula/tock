@@ -95,6 +95,7 @@ impl<'a> KernelResources<Cc2650<'a>> for Platform {
 /// these static_inits is wasted.
 #[inline(never)]
 unsafe fn start() -> (&'static kernel::Kernel, Platform, &'static Cc2650<'static>) {
+    let peripherals = cc2650::Peripherals::take().unwrap();
     cc2650_chip::init();
 
     // Create capabilities that the board needs to call certain protected kernel
@@ -131,7 +132,7 @@ unsafe fn start() -> (&'static kernel::Kernel, Platform, &'static Cc2650<'static
     // Enable the UART clocks
     prcm::Clock::enable_uart();
 
-    uart::init_uart();
+    uart::init_uart_full(&peripherals.UART0);
 
     let chip = static_init!(Cc2650, Cc2650::new());
     CHIP = Some(chip);
