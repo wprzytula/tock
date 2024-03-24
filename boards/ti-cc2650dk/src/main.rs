@@ -104,14 +104,8 @@ unsafe fn start() -> (&'static kernel::Kernel, Platform, &'static Cc2650<'static
         create_capability!(capabilities::ProcessManagementCapability);
     let memory_allocation_capability = create_capability!(capabilities::MemoryAllocationCapability);
 
-    // Power on peripherals (eg. GPIO)
-    // prcm::Power::enable_domain(prcm::PowerDomain::Peripherals);
-
-    // Power on Serial domain
-    // prcm::Power::enable_domain(prcm::PowerDomain::Serial);
-
-    // TODO: remove (for debug only)
-    prcm::Power::power_on_domains();
+    // Power on peripherals (eg. GPIO) and Serial
+    prcm::Power::enable_domains(prcm::PowerDomains::empty().peripherals().serial());
 
     let board_kernel = static_init!(kernel::Kernel, kernel::Kernel::new(&PROCESSES));
 

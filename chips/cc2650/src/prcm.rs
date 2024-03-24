@@ -1,8 +1,8 @@
-use crate::driverlib::{self};
+use crate::driverlib;
 
 #[derive(Clone, Copy)]
 #[repr(u32)]
-pub enum PowerDomain {
+enum PowerDomain {
     Rfc = driverlib::PRCM_DOMAIN_RFCORE,
     Serial = driverlib::PRCM_DOMAIN_SERIAL,
     Peripherals = driverlib::PRCM_DOMAIN_PERIPH,
@@ -14,25 +14,93 @@ pub enum PowerDomain {
     Mcu = driverlib::PRCM_DOMAIN_MCU,
 }
 
+#[derive(Clone, Copy, Default)]
+pub struct PowerDomains(u32);
+
+impl PowerDomains {
+    pub const fn empty() -> Self {
+        Self(0)
+    }
+
+    pub const fn rfc(self) -> Self {
+        Self(self.0 | PowerDomain::Rfc as u32)
+    }
+
+    pub const fn serial(self) -> Self {
+        Self(self.0 | PowerDomain::Serial as u32)
+    }
+
+    pub const fn peripherals(self) -> Self {
+        Self(self.0 | PowerDomain::Peripherals as u32)
+    }
+
+    pub const fn sysbus(&self) -> Self {
+        Self(self.0 | PowerDomain::Sysbus as u32)
+    }
+
+    pub const fn vims(self) -> Self {
+        Self(self.0 | PowerDomain::Vims as u32)
+    }
+
+    pub const fn cpu(self) -> Self {
+        Self(self.0 | PowerDomain::Cpu as u32)
+    }
+
+    pub const fn timer(self) -> Self {
+        Self(self.0 | PowerDomain::Timer as u32)
+    }
+
+    pub const fn clkctrl(self) -> Self {
+        Self(self.0 | PowerDomain::Clkctrl as u32)
+    }
+
+    pub const fn mcu(self) -> Self {
+        Self(self.0 | PowerDomain::Mcu as u32)
+    }
+
+    pub const fn all(self) -> Self {
+        Self::empty()
+            .rfc()
+            .serial()
+            .sysbus()
+            .peripherals()
+            .vims()
+            .cpu()
+            .timer()
+            .clkctrl()
+            .mcu()
+    }
+}
+
+impl Into<u32> for PowerDomains {
+    fn into(self) -> u32 {
+        self.0
+    }
+}
+
 // TODO: rewrite Power with the type-state pattern.
 
 pub struct Power(());
 
 impl Power {
-    pub fn enable_domain(domain: PowerDomain) {
-        unsafe { driverlib::PRCMPowerDomainOn(domain as u32) };
-        while !Power::is_enabled(domain) {}
+    #[inline]
+    pub fn enable_domains(domains: PowerDomains) {
+        unsafe { driverlib::PRCMPowerDomainOn(domains.into()) };
+        while !Power::are_enabled(domains) {}
     }
 
-    pub fn disable_domain(domain: PowerDomain) {
-        unsafe { driverlib::PRCMPowerDomainOff(domain as u32) }
+    #[inline]
+    pub fn disable_domains(domains: PowerDomains) {
+        unsafe { driverlib::PRCMPowerDomainOff(domains.into()) }
     }
 
-    pub fn is_enabled(domain: PowerDomain) -> bool {
-        let status = unsafe { driverlib::PRCMPowerDomainStatus(domain as u32) };
+    #[inline]
+    fn are_enabled(domains: PowerDomains) -> bool {
+        let status = unsafe { driverlib::PRCMPowerDomainStatus(domains.into()) };
         status & driverlib::PRCM_DOMAIN_POWER_ON != 0
     }
 
+    // TODO: Driverlib version is probably better, consider throwing this away
     pub fn power_on_domains() {
         let prcm = unsafe { cc2650::Peripherals::steal().PRCM };
         // Enable the PERIPH and SERIAL power domains and wait for them to be powered up
