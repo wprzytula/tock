@@ -117,14 +117,8 @@ unsafe fn start() -> (&'static kernel::Kernel, Platform, &'static Cc2650<'static
     // );
     // DynamicDeferredCall::set_global_instance(dynamic_deferred_caller);
 
-    // Enable the GPIO clocks
-    prcm::Clock::enable_gpio();
-
-    // Enable the GPT clocks
-    prcm::Clock::enable_gpt();
-
-    // Enable the UART clocks
-    prcm::Clock::enable_uart();
+    // Enable the GPIO, UART and GPT clocks
+    prcm::Clock::enable_clocks(&peripherals.PRCM, prcm::Clocks::empty().gpio().uart().gpt());
 
     uart::init_uart_full(&peripherals.UART0);
 

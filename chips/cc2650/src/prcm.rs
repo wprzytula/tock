@@ -115,95 +115,68 @@ impl Power {
     }
 }
 
+#[derive(Clone, Copy, Default)]
+pub struct Clocks {
+    gpio: bool,
+    uart: bool,
+    gpt: bool,
+}
+
+impl Clocks {
+    pub const fn empty() -> Self {
+        Self {
+            gpio: false,
+            uart: false,
+            gpt: false,
+        }
+    }
+
+    pub const fn gpio(self) -> Self {
+        Self { gpio: true, ..self }
+    }
+
+    pub const fn uart(self) -> Self {
+        Self { uart: true, ..self }
+    }
+
+    pub const fn gpt(self) -> Self {
+        Self { gpt: true, ..self }
+    }
+}
+
 pub struct Clock(());
 
 impl Clock {
-    unsafe fn reload_clock_controller() {
+    fn reload_clock_controller(clkloadctl: &cc2650::prcm::CLKLOADCTL) {
+        // Unfortunately, static inline fns.
         // driverlib::PRCMLoadSet();
         // while !driverlib::PRCMLoadGet() {}
 
         // Load settings into CLKCTRL and wait for LOAD_DONE
-        let prcm = cc2650::Peripherals::steal().PRCM;
-        prcm.clkloadctl.modify(|_r, w| w.load().set_bit());
+        clkloadctl.modify(|_r, w| w.load().set_bit());
         loop {
-            if prcm.clkloadctl.read().load_done().bit_is_set() {
+            if clkloadctl.read().load_done().bit_is_set() {
                 break;
             }
         }
     }
 
-    unsafe fn enable_gpio_clock() {
-        // unsafe {
-        //     driverlib::PRCMPeripheralRunEnable(driverlib::PRCM_PERIPH_GPIO);
-        //     driverlib::PRCMPeripheralSleepEnable(driverlib::PRCM_PERIPH_GPIO);
-        //     driverlib::PRCMPeripheralDeepSleepEnable(driverlib::PRCM_PERIPH_GPIO);
-        // }
-
-        // Enable the GPIO clock
-        cc2650::Peripherals::steal()
-            .PRCM
-            .gpioclkgr
-            .write(|w| w.clk_en().set_bit());
-        cc2650::Peripherals::steal()
-            .PRCM
-            .gpioclkgs
-            .write(|w| w.clk_en().set_bit());
-        cc2650::Peripherals::steal()
-            .PRCM
-            .gpioclkgds
-            .write(|w| w.clk_en().set_bit());
-    }
-
-    pub fn enable_gpio() {
-        unsafe {
-            Self::enable_gpio_clock();
-            Self::reload_clock_controller();
+    pub fn enable_clocks(prcm: &cc2650::PRCM, clocks: Clocks) {
+        if clocks.gpio {
+            prcm.gpioclkgr.write(|w| w.clk_en().set_bit());
+            prcm.gpioclkgs.write(|w| w.clk_en().set_bit());
+            prcm.gpioclkgds.write(|w| w.clk_en().set_bit());
         }
-    }
-
-    unsafe fn enable_gpt_clock() {
-        // Enable the GPT0 clock
-        cc2650::Peripherals::steal()
-            .PRCM
-            .gptclkgr
-            .write(|w| w.clk_en().gpt0());
-        cc2650::Peripherals::steal()
-            .PRCM
-            .gptclkgs
-            .write(|w| w.clk_en().gpt0());
-        cc2650::Peripherals::steal()
-            .PRCM
-            .gptclkgds
-            .write(|w| w.clk_en().gpt0());
-    }
-
-    pub fn enable_gpt() {
-        unsafe {
-            Self::enable_gpt_clock();
-            Self::reload_clock_controller();
+        if clocks.uart {
+            prcm.uartclkgr.write(|w| w.clk_en().set_bit());
+            prcm.uartclkgs.write(|w| w.clk_en().set_bit());
+            prcm.uartclkgds.write(|w| w.clk_en().set_bit());
         }
-    }
-
-    unsafe fn enable_uart_clock() {
-        // Enable the UART clock
-        cc2650::Peripherals::steal()
-            .PRCM
-            .uartclkgr
-            .write(|w| w.clk_en().set_bit());
-        cc2650::Peripherals::steal()
-            .PRCM
-            .uartclkgs
-            .write(|w| w.clk_en().set_bit());
-        cc2650::Peripherals::steal()
-            .PRCM
-            .uartclkgds
-            .write(|w| w.clk_en().set_bit());
-    }
-
-    pub fn enable_uart() {
-        unsafe {
-            Self::enable_uart_clock();
-            Self::reload_clock_controller();
+        if clocks.gpt {
+            prcm.gptclkgr.write(|w| w.clk_en().gpt0());
+            prcm.gptclkgs.write(|w| w.clk_en().gpt0());
+            prcm.gptclkgds.write(|w| w.clk_en().gpt0());
         }
+        Self::reload_clock_controller(&prcm.clkloadctl);
     }
 }
