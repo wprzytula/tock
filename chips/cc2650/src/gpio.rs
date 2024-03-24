@@ -1,17 +1,39 @@
 use core::ops::{Index, IndexMut};
-use kernel::hil::gpio::{self, Input};
+use kernel::hil;
 use tock_cells::optional_cell::OptionalCell;
 
-use crate::{driverlib, peripheral_interrupts as irqs};
+use crate::driverlib;
+
+mod internals {
+    use core::ops::Deref;
+
+    pub(super) struct Gpio(*const cc2650::gpio::RegisterBlock);
+    unsafe impl Send for Gpio {}
+    unsafe impl Sync for Gpio {}
+
+    // taken straight from cc2650 crate
+    const GPIO_REGISTER_BLOCK_ADDR: usize = 1073881088;
+    pub(super) static GPIO: Gpio = Gpio(GPIO_REGISTER_BLOCK_ADDR as *const _);
+
+    impl Deref for Gpio {
+        type Target = cc2650::gpio::RegisterBlock;
+
+        fn deref(&self) -> &Self::Target {
+            unsafe { &*self.0 }
+        }
+    }
+}
+use internals::GPIO;
 
 pub struct GPIOPin {
     pin: u32,
     pin_mask: u32,
-    client: OptionalCell<&'static dyn gpio::Client>,
+    client: OptionalCell<&'static dyn hil::gpio::Client>,
 }
 
 impl GPIOPin {
     const fn new(pin: u32) -> GPIOPin {
+        debug_assert!(pin < 32);
         GPIOPin {
             pin,
             pin_mask: 1 << pin,
@@ -19,7 +41,7 @@ impl GPIOPin {
         }
     }
 
-    pub fn set_client(&self, client: &'static dyn gpio::Client) {
+    pub fn set_client(&self, client: &'static dyn hil::gpio::Client) {
         self.client.set(client);
     }
 
@@ -30,109 +52,109 @@ impl GPIOPin {
     }
 }
 
-impl gpio::Input for GPIOPin {
+impl hil::gpio::Input for GPIOPin {
     fn read(&self) -> bool {
-        unsafe { driverlib::GPIO_readDio(self.pin) != 0 }
+        // unsafe { driverlib::GPIO_readDio(self.pin) != 0 }
+        GPIO.din31_0.read().bits() & self.pin_mask != 0
     }
 }
 
-impl gpio::Output for GPIOPin {
+impl hil::gpio::Output for GPIOPin {
     fn toggle(&self) -> bool {
-        unsafe { driverlib::GPIO_toggleDio(self.pin) };
-        self.read()
+        // unsafe { driverlib::GPIO_toggleDio(self.pin) };
+        GPIO.douttgl31_0
+            .modify(|_r, w| unsafe { w.bits(self.pin_mask) });
+        GPIO.dout31_0.read().bits() & self.pin_mask != 0
     }
 
     fn set(&self) {
         // unsafe { driverlib::GPIO_setDio(self.pin) }
-        if self.pin == 25 {
-            let gpio = unsafe { cc2650::Peripherals::steal().GPIO };
-            gpio.dout27_24.modify(|_r, w| w.dio25().set_bit());
-        }
+        GPIO.doutset31_0.write(|w| unsafe { w.bits(self.pin_mask) });
     }
 
     fn clear(&self) {
-        if self.pin == 25 {
-            // unsafe { driverlib::GPIO_clearDio(self.pin) }
-            let gpio = unsafe { cc2650::Peripherals::steal().GPIO };
-            gpio.dout27_24.modify(|_r, w| w.dio25().clear_bit());
-        }
+        // unsafe { driverlib::GPIO_clearDio(self.pin) }
+        GPIO.doutclr31_0.write(|w| unsafe { w.bits(self.pin_mask) });
     }
 }
 
 /// Pinmux implementation (IOC)
 impl GPIOPin {
     pub fn enable_gpio(&self) {
-        if self.pin == 25 {
-            let ioc = unsafe { cc2650::Peripherals::steal().IOC };
-            ioc.iocfg25
-                .modify(|_r, w| w.port_id().gpio().ie().clear_bit().iostr().max());
-        } else {
-            let pin_config = unsafe { driverlib::IOCPortConfigureGet(self.pin) };
-            unsafe {
-                driverlib::IOCPortConfigureSet(self.pin, driverlib::IOC_PORT_GPIO, pin_config)
-            };
-        }
+        // let ioc = unsafe { cc2650::Peripherals::steal().IOC };
+        // let modifier = |_r, w| w.port_id().gpio().ie().clear_bit().iostr().max();
+        // let ioc_register_block: *const cc2650::ioc::RegisterBlock = ioc.deref();
+        // let pin_block = unsafe { &*ioc_register_block.add(self.pin as usize) };
+        // pin_block.
+
+        // Driverlib is better here: cc2650 crate requires either matching over 32 options or a lot of unsafe.
+        // OTOH both IOCPortConfigure{G,S}et are present in ROM.
+        let pin_config = unsafe { driverlib::IOCPortConfigureGet(self.pin) };
+        unsafe { driverlib::IOCPortConfigureSet(self.pin, driverlib::IOC_PORT_GPIO, pin_config) };
     }
 
     fn enable_output(&self) {
-        if self.pin == 25 {
-            let gpio = unsafe { cc2650::Peripherals::steal().GPIO };
-            gpio.doe31_0.modify(|_r, w| w.dio25().set_bit());
-        } else {
-            unsafe { driverlib::GPIO_setOutputEnableDio(self.pin, driverlib::GPIO_OUTPUT_ENABLE) };
-        }
+        // unsafe { driverlib::GPIO_setOutputEnableDio(self.pin, driverlib::GPIO_OUTPUT_ENABLE) };
+        GPIO.doe31_0
+            .modify(|_r, w| unsafe { w.bits(self.pin_mask) });
     }
 
     fn enable_input(&self) {
+        // Driverlib is better here: cc2650 crate requires either matching over 32 options or a lot of unsafe.
+        // OTOH both IOCPortConfigure{G,S}et are present in ROM.
         let mut pin_config = unsafe { driverlib::IOCPortConfigureGet(self.pin) };
         pin_config |= driverlib::IOC_INPUT_ENABLE;
         unsafe { driverlib::IOCPortConfigureSet(self.pin, driverlib::IOC_PORT_GPIO, pin_config) };
     }
 }
 
-impl gpio::Configure for GPIOPin {
-    fn floating_state(&self) -> gpio::FloatingState {
+impl hil::gpio::Configure for GPIOPin {
+    fn floating_state(&self) -> hil::gpio::FloatingState {
+        // Driverlib is better here: cc2650 crate requires either matching over 32 options or a lot of unsafe.
+        // OTOH IOCPortConfigureGet is present in ROM.
         let pin_config = unsafe { driverlib::IOCPortConfigureGet(self.pin) };
         match (
             pin_config & driverlib::IOC_IOPULL_DOWN,
             pin_config & driverlib::IOC_IOPULL_UP,
             pin_config & driverlib::IOC_NO_IOPULL,
         ) {
-            (driverlib::IOC_IOPULL_DOWN, 0, 0) => gpio::FloatingState::PullDown,
-            (0, driverlib::IOC_IOPULL_UP, 0) => gpio::FloatingState::PullUp,
-            (0, 0, driverlib::IOC_NO_IOPULL) => gpio::FloatingState::PullNone,
+            (driverlib::IOC_IOPULL_DOWN, 0, 0) => hil::gpio::FloatingState::PullDown,
+            (0, driverlib::IOC_IOPULL_UP, 0) => hil::gpio::FloatingState::PullUp,
+            (0, 0, driverlib::IOC_NO_IOPULL) => hil::gpio::FloatingState::PullNone,
             _ => unreachable!("invalid floating state value"),
         }
     }
 
-    fn set_floating_state(&self, mode: gpio::FloatingState) {
+    fn set_floating_state(&self, mode: hil::gpio::FloatingState) {
+        // Driverlib is better here: IOCIOPortPullSet is present in ROM.
         let mode = match mode {
-            gpio::FloatingState::PullDown => driverlib::IOC_IOPULL_DOWN,
-            gpio::FloatingState::PullUp => driverlib::IOC_IOPULL_UP,
-            gpio::FloatingState::PullNone => driverlib::IOC_NO_IOPULL,
+            hil::gpio::FloatingState::PullDown => driverlib::IOC_IOPULL_DOWN,
+            hil::gpio::FloatingState::PullUp => driverlib::IOC_IOPULL_UP,
+            hil::gpio::FloatingState::PullNone => driverlib::IOC_NO_IOPULL,
         };
 
         unsafe { driverlib::IOCIOPortPullSet(self.pin, mode) }
     }
 
     fn deactivate_to_low_power(&self) {
-        self.set_floating_state(gpio::FloatingState::PullNone);
+        self.set_floating_state(hil::gpio::FloatingState::PullNone);
         self.disable_input();
         self.disable_output();
     }
 
     fn is_output(&self) -> bool {
-        unsafe { driverlib::GPIO_getOutputEnableDio(self.pin) != 0 }
+        // unsafe { driverlib::GPIO_getOutputEnableDio(self.pin) != 0 }
+        GPIO.doe31_0.read().bits() & self.pin_mask != 0
     }
 
-    fn make_output(&self) -> gpio::Configuration {
+    fn make_output(&self) -> hil::gpio::Configuration {
         self.enable_gpio();
         self.enable_output();
 
-        gpio::Configuration::Output
+        hil::gpio::Configuration::Output
     }
 
-    fn disable_output(&self) -> gpio::Configuration {
+    fn disable_output(&self) -> hil::gpio::Configuration {
         unsafe { driverlib::GPIO_setOutputEnableDio(self.pin, 0) };
         self.configuration()
     }
@@ -141,28 +163,28 @@ impl gpio::Configure for GPIOPin {
         unsafe { driverlib::IOCPortConfigureGet(self.pin) & driverlib::IOC_INPUT_ENABLE != 0 }
     }
 
-    fn make_input(&self) -> gpio::Configuration {
+    fn make_input(&self) -> hil::gpio::Configuration {
         self.enable_gpio();
         self.enable_input();
-        gpio::Configuration::Input
+        hil::gpio::Configuration::Input
     }
 
-    fn disable_input(&self) -> gpio::Configuration {
+    fn disable_input(&self) -> hil::gpio::Configuration {
         let mut pin_config = unsafe { driverlib::IOCPortConfigureGet(self.pin) };
         pin_config &= !driverlib::IOC_INPUT_ENABLE;
         unsafe { driverlib::IOCPortConfigureSet(self.pin, driverlib::IOC_PORT_GPIO, pin_config) };
         self.configuration()
     }
 
-    fn configuration(&self) -> gpio::Configuration {
+    fn configuration(&self) -> hil::gpio::Configuration {
         let input = self.is_input();
         let output = self.is_output();
         let config = (input, output);
         match config {
-            (false, false) => gpio::Configuration::LowPower,
-            (false, true) => gpio::Configuration::Output,
-            (true, false) => gpio::Configuration::Input,
-            (true, true) => gpio::Configuration::InputOutput,
+            (false, false) => hil::gpio::Configuration::LowPower,
+            (false, true) => hil::gpio::Configuration::Output,
+            (true, false) => hil::gpio::Configuration::Input,
+            (true, true) => hil::gpio::Configuration::InputOutput,
         }
     }
 }
