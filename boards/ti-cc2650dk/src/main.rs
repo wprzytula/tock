@@ -3,8 +3,9 @@
 
 use core::ptr::{addr_of, addr_of_mut};
 
+use capsules_core::console;
 use capsules_system::process_policies::PanicFaultPolicy;
-use cc2650_chip::chip::Cc2650;
+use cc2650_chip::{chip::Cc2650, uart};
 
 use kernel::{
     capabilities,
@@ -46,6 +47,7 @@ struct Platform {
         1,
     >,
     alarm: &'static capsules_core::alarm::AlarmDriver<'static, cc2650_chip::gpt::Gpt<'static>>,
+    console: &'static capsules_core::console::Console<'static>,
 }
 
 impl SyscallDriverLookup for Platform {
@@ -56,6 +58,7 @@ impl SyscallDriverLookup for Platform {
         match driver_num {
             capsules_core::led::DRIVER_NUM => f(Some(self.led)),
             capsules_core::alarm::DRIVER_NUM => f(Some(self.alarm)),
+            capsules_core::console::DRIVER_NUM => f(Some(self.console)),
             _ => f(None),
         }
     }
@@ -146,6 +149,11 @@ unsafe fn start() -> (&'static kernel::Kernel, Platform, &'static Cc2650<'static
     );
     chip.gpt.set_alarm_client(alarm);
 
+    let uart_mux = components::console::UartMuxComponent::new(&chip.uart_full, uart::BAUD_RATE)
+        .finalize(components::uart_mux_component_static!());
+    let console =
+        components::console::ConsoleComponent::new(board_kernel, console::DRIVER_NUM, &uart_mux)
+            .finalize(components::console_component_static!());
     /* END CAPSULES CONFIGURATION */
 
     /* PLATFORM CONFIGURATION */
@@ -160,6 +168,7 @@ unsafe fn start() -> (&'static kernel::Kernel, Platform, &'static Cc2650<'static
         systick: cortexm3::systick::SysTick::new_with_calibration(HFREQ),
         led,
         alarm,
+        console,
     };
     /* END PLATFORM CONFIGURATION */
 

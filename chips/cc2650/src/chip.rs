@@ -6,11 +6,13 @@ use crate::{
     gpt::Gpt,
     peripheral_interrupts as irq,
     prcm::{self, Prcm},
+    uart::UartFull,
 };
 
 pub struct Cc2650<'a> {
     userspace_kernel_boundary: cortexm3::syscall::SysCall,
     pub gpt: Gpt<'a>,
+    pub uart_full: UartFull<'a>,
     pub prcm: Prcm,
 }
 const MASK_AON_PROG: (u128, u128) = cortexm3::interrupt_mask!(irq::AON_PROG);
@@ -26,13 +28,15 @@ impl<'a> Cc2650<'a> {
         // Enable the GPIO, UART and GPT clocks
         prcm.enable_clocks(prcm::Clocks::empty().gpio().uart().gpt());
 
-        crate::uart::init_uart_full(&peripherals.UART0);
-
         let gpt = Gpt::new(peripherals.GPT0);
+
+        let uart_full = UartFull::new(peripherals.UART0);
+        uart_full.initialize();
 
         Self {
             userspace_kernel_boundary: cortexm3::syscall::SysCall::new(),
             gpt,
+            uart_full,
             prcm,
         }
     }
