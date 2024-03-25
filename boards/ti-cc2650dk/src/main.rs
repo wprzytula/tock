@@ -1,8 +1,7 @@
 #![no_std]
 #![cfg_attr(not(doc), no_main)]
 
-use cc2650_chip::prcm;
-use cc2650_chip::{chip::Cc2650, uart};
+use cc2650_chip::chip::Cc2650;
 
 use kernel::{
     capabilities,
@@ -95,7 +94,6 @@ impl<'a> KernelResources<Cc2650<'a>> for Platform {
 /// these static_inits is wasted.
 #[inline(never)]
 unsafe fn start() -> (&'static kernel::Kernel, Platform, &'static Cc2650<'static>) {
-    let peripherals = cc2650::Peripherals::take().unwrap();
     cc2650_chip::init();
 
     // Create capabilities that the board needs to call certain protected kernel
@@ -104,8 +102,8 @@ unsafe fn start() -> (&'static kernel::Kernel, Platform, &'static Cc2650<'static
         create_capability!(capabilities::ProcessManagementCapability);
     let memory_allocation_capability = create_capability!(capabilities::MemoryAllocationCapability);
 
-    // Power on peripherals (eg. GPIO) and Serial
-    prcm::Power::enable_domains(prcm::PowerDomains::empty().peripherals().serial());
+    /* PERIPHERALS CONFIGURATION */
+    let chip = static_init!(Cc2650, Cc2650::new());
 
     let board_kernel = static_init!(kernel::Kernel, kernel::Kernel::new(&PROCESSES));
 
@@ -117,15 +115,12 @@ unsafe fn start() -> (&'static kernel::Kernel, Platform, &'static Cc2650<'static
     // );
     // DynamicDeferredCall::set_global_instance(dynamic_deferred_caller);
 
-    // Enable the GPIO, UART and GPT clocks
-    prcm::Clock::enable_clocks(&peripherals.PRCM, prcm::Clocks::empty().gpio().uart().gpt());
+    // Powering on domains and clock gating is done in Cc2650::new().
 
-    uart::init_uart_full(&peripherals.UART0);
-
-    let chip = static_init!(Cc2650, Cc2650::new());
     CHIP = Some(chip);
+    /* END PERIPHERALS CONFIGURATION */
 
-    // Capsules go here!
+    /* CAPSULES CONFIGURATION */
     // LEDs
     let led = components::led::LedsComponent::new().finalize(components::led_component_static!(
         kernel::hil::led::LedHigh<'static, cc2650_chip::gpio::GPIOPin>,
@@ -147,6 +142,9 @@ unsafe fn start() -> (&'static kernel::Kernel, Platform, &'static Cc2650<'static
     );
     chip.gpt.set_alarm_client(alarm);
 
+    /* END CAPSULES CONFIGURATION */
+
+    /* PLATFORM CONFIGURATION */
     let process_printer = components::process_printer::ProcessPrinterTextComponent::new()
         .finalize(components::process_printer_text_component_static!());
     PROCESS_PRINTER = Some(process_printer);
@@ -159,7 +157,9 @@ unsafe fn start() -> (&'static kernel::Kernel, Platform, &'static Cc2650<'static
         led,
         alarm,
     };
+    /* END PLATFORM CONFIGURATION */
 
+    /* LOAD PROCESSES */
     // These symbols are defined in the linker script.
     extern "C" {
         /// Beginning of the ROM region containing app images.
@@ -191,6 +191,7 @@ unsafe fn start() -> (&'static kernel::Kernel, Platform, &'static Cc2650<'static
         debug!("Error loading processes!");
         debug!("{:?}", err);
     });
+    /* END LOAD PROCESSES */
 
     (board_kernel, smartrf, chip)
 }
