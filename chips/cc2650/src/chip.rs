@@ -2,19 +2,38 @@ use core::{arch::asm, fmt::Write};
 
 use cortexm3::{nvic, CortexM3, CortexMVariant as _};
 
-use crate::{gpt::Gpt, peripheral_interrupts as irq};
+use crate::{
+    gpt::Gpt,
+    peripheral_interrupts as irq,
+    prcm::{self, Prcm},
+};
 
 pub struct Cc2650<'a> {
     userspace_kernel_boundary: cortexm3::syscall::SysCall,
     pub gpt: Gpt<'a>,
+    pub prcm: Prcm,
 }
 const MASK_AON_PROG: (u128, u128) = cortexm3::interrupt_mask!(irq::AON_PROG);
 
 impl<'a> Cc2650<'a> {
     pub unsafe fn new() -> Self {
+        let peripherals = cc2650::Peripherals::take().unwrap();
+
+        let prcm = Prcm::new(peripherals.PRCM);
+        // Power on peripherals (eg. GPIO) and Serial
+        prcm.enable_domains(prcm::PowerDomains::empty().peripherals().serial());
+
+        // Enable the GPIO, UART and GPT clocks
+        prcm.enable_clocks(prcm::Clocks::empty().gpio().uart().gpt());
+
+        crate::uart::init_uart_full(&peripherals.UART0);
+
+        let gpt = Gpt::new(peripherals.GPT0);
+
         Self {
             userspace_kernel_boundary: cortexm3::syscall::SysCall::new(),
-            gpt: Gpt::new(),
+            gpt,
+            prcm,
         }
     }
 }

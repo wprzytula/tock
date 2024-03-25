@@ -78,19 +78,23 @@ impl Into<u32> for PowerDomains {
     }
 }
 
-// TODO: rewrite Power with the type-state pattern.
+pub struct Prcm {
+    prcm: cc2650::PRCM,
+}
 
-pub struct Power(());
-
-impl Power {
-    #[inline]
-    pub fn enable_domains(domains: PowerDomains) {
-        unsafe { driverlib::PRCMPowerDomainOn(domains.into()) };
-        while !Power::are_enabled(domains) {}
+impl Prcm {
+    pub fn new(prcm: cc2650::PRCM) -> Self {
+        Self { prcm }
     }
 
     #[inline]
-    pub fn disable_domains(domains: PowerDomains) {
+    pub fn enable_domains(&self, domains: PowerDomains) {
+        unsafe { driverlib::PRCMPowerDomainOn(domains.into()) };
+        while !Self::are_enabled(domains) {}
+    }
+
+    #[inline]
+    pub fn disable_domains(&self, domains: PowerDomains) {
         unsafe { driverlib::PRCMPowerDomainOff(domains.into()) }
     }
 
@@ -100,18 +104,9 @@ impl Power {
         status & driverlib::PRCM_DOMAIN_POWER_ON != 0
     }
 
-    // TODO: Driverlib version is probably better, consider throwing this away
-    pub fn power_on_domains() {
-        let prcm = unsafe { cc2650::Peripherals::steal().PRCM };
-        // Enable the PERIPH and SERIAL power domains and wait for them to be powered up
-        prcm.pdctl0
-            .modify(|_r, w| w.periph_on().set_bit().serial_on().set_bit());
-        loop {
-            let stat = prcm.pdstat0.read();
-            if stat.periph_on().bit_is_set() && stat.serial_on().bit_is_set() {
-                break;
-            }
-        }
+    #[inline]
+    pub fn enable_clocks(&self, clocks: Clocks) {
+        Clock::enable_clocks(&self.prcm, clocks);
     }
 }
 
@@ -144,7 +139,7 @@ impl Clocks {
     }
 }
 
-pub struct Clock(());
+struct Clock;
 
 impl Clock {
     fn reload_clock_controller(clkloadctl: &cc2650::prcm::CLKLOADCTL) {

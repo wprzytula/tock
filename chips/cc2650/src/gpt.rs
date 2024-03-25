@@ -24,10 +24,7 @@ pub struct Gpt<'a> {
 }
 
 impl<'a> Gpt<'a> {
-    pub fn new() -> Self {
-        // Safety: this is the only object that ever accesses GPT0.
-        let gpt = unsafe { cc2650::Peripherals::steal().GPT0 };
-
+    pub fn new(gpt: cc2650::GPT0) -> Self {
         // Use 32-bit mode.
         gpt.cfg.write(|w| w.cfg()._32bit_timer());
 
