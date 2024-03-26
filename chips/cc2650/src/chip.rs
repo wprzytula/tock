@@ -26,7 +26,7 @@ impl<'a> Cc2650<'a> {
         prcm.enable_domains(prcm::PowerDomains::empty().peripherals().serial());
 
         // Enable the GPIO, UART and GPT clocks
-        prcm.enable_clocks(prcm::Clocks::empty().gpio().uart().gpt());
+        prcm.enable_clocks(prcm::Clocks::empty().gpio().uart().gpt().dma());
 
         let gpt = Gpt::new(peripherals.GPT0);
 

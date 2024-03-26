@@ -115,6 +115,7 @@ pub struct Clocks {
     gpio: bool,
     uart: bool,
     gpt: bool,
+    dma: bool,
 }
 
 impl Clocks {
@@ -123,6 +124,7 @@ impl Clocks {
             gpio: false,
             uart: false,
             gpt: false,
+            dma: false,
         }
     }
 
@@ -136,6 +138,10 @@ impl Clocks {
 
     pub const fn gpt(self) -> Self {
         Self { gpt: true, ..self }
+    }
+
+    pub const fn dma(self) -> Self {
+        Self { dma: true, ..self }
     }
 }
 
@@ -171,6 +177,11 @@ impl Clock {
             prcm.gptclkgr.write(|w| w.clk_en().gpt0());
             prcm.gptclkgs.write(|w| w.clk_en().gpt0());
             prcm.gptclkgds.write(|w| w.clk_en().gpt0());
+        }
+        if clocks.dma {
+            prcm.secdmaclkgr.write(|w| w.dma_clk_en().set_bit());
+            prcm.secdmaclkgs.write(|w| w.dma_clk_en().set_bit());
+            prcm.secdmaclkgds.write(|w| w.dma_clk_en().set_bit());
         }
         Self::reload_clock_controller(&prcm.clkloadctl);
     }
