@@ -1,21 +1,18 @@
 //! The build script also sets the linker flags to tell it which link script to use.
 
+use std::env;
 use std::ffi::OsStr;
 use std::fs::File;
 use std::io::Write;
 use std::iter::FromIterator;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::process::Command;
-use std::{env, fs};
 
 const LIB_ROM_ORIGINAL: &str = "libROM_driverlib.elf";
 const LIB_ROM_FILTERED: &str = "libROM_driverlib_filtered.elf";
 
 const LIB_NOROM_ORIGINAL: &str = "libNOROM_driverlib.a";
 const LIB_NOROM_NOPREFIX: &str = "libdriverlib.a";
-
-const LIB_FULL_O: &str = "libdriverlib_full.o";
-const LIB_FULL: &str = "libdriverlib_full.a";
 
 const EXTERN_O_NAME: &str = "extern.o";
 
@@ -34,16 +31,15 @@ fn driverlib_config(out: &PathBuf) {
 
     let extern_o_path = generate_bindings(out, &driverlib_path);
 
-    // ROM symbols are fetched first, so that `-zmuldefs` option enabled will first use them
-    // if available.
-    strip_disabled_rom_fns(out, &driverlib_path, &cc26x0_crate_driverlib);
-    // fetch_rom_symbols(cc26x0_crate_driverlib.join(LIB_ROM_FILTERED));
+    let enabled_rom_fns_path =
+        strip_disabled_rom_fns(out, &driverlib_path, &cc26x0_crate_driverlib);
 
-    // NOROM symbols are fetched next, so that `-zmuldefs` option enabled will use them
-    // if ROM version is not available.
     transform_norom_symbols(out, &cc26x0_crate_driverlib);
 
-    merge_lib(out, &extern_o_path);
+    let lib_norom_path = out.join(LIB_NOROM_NOPREFIX);
+    strip_rom_symbols_from_norom_lib(&lib_norom_path, &enabled_rom_fns_path);
+
+    merge_lib(out, &lib_norom_path, &extern_o_path);
 
     link_driverlib(out, &cc26x0_crate_root);
 }
@@ -94,7 +90,6 @@ fn generate_bindings(out: &PathBuf, driverlib_path: &str) -> PathBuf {
 }
 
 fn compile_static_inline_extern_fns(out: &PathBuf, extern_c_path: &PathBuf) -> PathBuf {
-    // let extern_o_path = out.join("extern.o");
     // Compile extern.c containing (formerly) static inline functions
     let extern_bc_path = cc::Build::new()
         .compiler("clang")
@@ -104,7 +99,7 @@ fn compile_static_inline_extern_fns(out: &PathBuf, extern_c_path: &PathBuf) -> P
         .define("DOXYGEN", None)
         .include("/usr/arm-none-eabi/include")
         .flag("-flto=thin")
-        .cargo_metadata(false) // We do not link to the chip crate lib, yet to the end board crate binary.
+        .cargo_metadata(false) // We want to first merge everything into one big library, only then link.
         .compile_intermediates()
         .into_iter()
         .next()
@@ -116,6 +111,8 @@ fn compile_static_inline_extern_fns(out: &PathBuf, extern_c_path: &PathBuf) -> P
     let status = Command::new("llc")
         .arg("--filetype")
         .arg("obj")
+        .arg("--function-sections")
+        .arg("--data-sections")
         .arg(&extern_bc_path)
         .arg("-o")
         .arg(&extern_o_path)
@@ -128,39 +125,49 @@ fn compile_static_inline_extern_fns(out: &PathBuf, extern_c_path: &PathBuf) -> P
     extern_o_path
 }
 
-fn merge_lib(out: &PathBuf, extern_o_path: &PathBuf) {
-    let status = Command::new("ar")
-        .arg("x")
-        .arg(out.join(LIB_NOROM_NOPREFIX))
-        .arg("setup.o")
-        .arg("--output")
-        .arg(out)
+fn merge_lib(out: &PathBuf, lib_norom_path: &PathBuf, extern_o_path: &PathBuf) {
+    // Create empty C file
+    let empty_c_path = out.join("empty.c");
+    {
+        File::create(&empty_c_path).unwrap();
+        // close file here
+    }
+
+    let empty_o_path = out.join("empty.o");
+    let rom_symbols_o_path = out.join("rom_symbols.o");
+
+    // Create empty REL ELF
+    // arm-none-eabi-gcc -c empty.c -o empty.o
+    let status = Command::new("arm-none-eabi-gcc")
+        .arg("-c")
+        .arg(&empty_c_path)
+        .arg("-o")
+        .arg(&empty_o_path)
         .status()
         .unwrap();
-    assert!(status.success(), "ar extract setup.o failed");
+    assert!(status.success(), "gcc compiling empty.c failed");
 
-    let setup_o_path = out.join("setup.o");
-    let setup2_o_path = out.join("setup2.o");
-    fs::rename(&setup_o_path, &setup2_o_path).unwrap();
-
-    // arm-none-eabi-ld --relocatable --just-symbols libROM_driverlib_filtered.elf setup.o setup2.o
+    // Extract ROM symbols to the empty REL ELF
+    // arm-none-eabi-ld --relocatable --just-symbols libROM_driverlib_global.elf empty.o -o rom_symbols.o
     let status = Command::new("arm-none-eabi-ld")
         .arg("--relocatable")
-        .arg("-zmuldefs")
         .arg("--just-symbols")
         .arg(out.join(LIB_ROM_FILTERED))
-        .arg(&setup2_o_path)
+        .arg(&empty_o_path)
         .arg("-o")
-        .arg(&setup_o_path)
+        .arg(&rom_symbols_o_path)
         .status()
         .unwrap();
-    assert!(status.success(), "ld adding symbols to setup.o failed");
+    assert!(
+        status.success(),
+        "ld extracting symbols to rom_symbols.o failed"
+    );
 
     let status = Command::new("ar")
         .arg("rb")
         .arg("adi.o")
-        .arg(out.join(LIB_NOROM_NOPREFIX))
-        .arg(&setup_o_path)
+        .arg(lib_norom_path)
+        .arg(&rom_symbols_o_path)
         .arg(extern_o_path)
         .status()
         .unwrap();
@@ -168,7 +175,11 @@ fn merge_lib(out: &PathBuf, extern_o_path: &PathBuf) {
 }
 
 // Strips those functions from ROM symbols ELF, which are disabled in rom.h.
-fn strip_disabled_rom_fns(out: &PathBuf, driverlib_path: &str, driverlib_artifacts_path: &PathBuf) {
+fn strip_disabled_rom_fns(
+    out: &PathBuf,
+    driverlib_path: &str,
+    driverlib_artifacts_path: &PathBuf,
+) -> PathBuf {
     let enabled_rom_fns = out.join("enabled_rom_fns.txt");
     get_enabled_rom_fns(&enabled_rom_fns, driverlib_path);
 
@@ -199,20 +210,24 @@ fn strip_disabled_rom_fns(out: &PathBuf, driverlib_path: &str, driverlib_artifac
                 PathBuf::from(driverlib_path).join(rom_h).to_str().unwrap(),
                 enabled_rom_fns.to_str().unwrap(),
             ))
-            .spawn()
-            .unwrap()
-            .wait()
+            .status()
             .unwrap();
         assert!(status.success(), "getting enabled ROM fns failed")
     }
+
+    enabled_rom_fns
 }
 
-// Makes linker use symbols from the given ELF. Intended for usage with stripped ROM ELF.
-fn fetch_rom_symbols(rom_elf: impl AsRef<Path>) {
-    println!(
-        "cargo:rustc-link-arg=--just-symbols={}",
-        rom_elf.as_ref().to_str().unwrap()
-    );
+fn strip_rom_symbols_from_norom_lib(lib_norom_path: &PathBuf, enabled_rom_fns_path: &PathBuf) {
+    let symbols = std::fs::read_to_string(enabled_rom_fns_path).unwrap();
+    for symbol in symbols.split('\n') {
+        Command::new("arm-none-eabi-objcopy")
+            .arg("--strip-symbol")
+            .arg(symbol)
+            .arg(lib_norom_path)
+            .status()
+            .unwrap();
+    }
 }
 
 fn transform_norom_symbols(out: &PathBuf, driverlib_artifacts_path: &PathBuf) {
@@ -282,9 +297,6 @@ fn transform_norom_symbols(out: &PathBuf, driverlib_artifacts_path: &PathBuf) {
 }
 
 fn link_driverlib(out: &PathBuf, _root: &PathBuf) {
-    let current_dir = std::env::current_dir().unwrap();
-    println!("cargo:rustc-link-search={}", current_dir.to_str().unwrap());
     println!("cargo:rustc-link-lib=static=driverlib");
     println!("cargo:rustc-link-search=native={}", out.to_str().unwrap());
-    println!("cargo:rustc-link-arg=-zmuldefs");
 }
