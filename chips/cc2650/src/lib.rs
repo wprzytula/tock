@@ -10,5 +10,6 @@ pub mod gpt;
 mod peripheral_interrupts;
 pub mod prcm;
 pub mod uart;
+pub mod udma;
 
 pub use crate::crt1::init;

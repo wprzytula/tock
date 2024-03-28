@@ -7,6 +7,7 @@ use crate::{
     peripheral_interrupts as irq,
     prcm::{self, Prcm},
     uart::UartFull,
+    udma::Udma,
 };
 
 pub struct Cc2650<'a> {
@@ -27,6 +28,9 @@ impl<'a> Cc2650<'a> {
 
         // Enable the GPIO, UART and GPT clocks
         prcm.enable_clocks(prcm::Clocks::empty().gpio().uart().gpt().dma());
+
+        let udma = Udma::new(peripherals.UDMA0);
+        udma.enable();
 
         let gpt = Gpt::new(peripherals.GPT0);
 
