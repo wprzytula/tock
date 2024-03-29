@@ -150,6 +150,8 @@ unsafe fn start() -> (&'static kernel::Kernel, Platform, &'static Cc2650<'static
     let console =
         components::console::ConsoleComponent::new(board_kernel, console::DRIVER_NUM, &uart_mux)
             .finalize(components::console_component_static!());
+    let _debug_writer = components::debug_writer::DebugWriterComponent::new(&uart_mux)
+        .finalize(components::debug_writer_component_static!());
     /* END CAPSULES CONFIGURATION */
 
     /* PLATFORM CONFIGURATION */
