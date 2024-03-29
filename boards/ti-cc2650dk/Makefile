@@ -7,5 +7,6 @@ OPENOCD ?= openocd
 
 include ../Makefile.common
 
+.PHONY: flash
 flash: $(TOCK_ROOT_DIRECTORY)target/$(TARGET)/release/$(TOCK_BOARD).bin
 	$(OPENOCD) -f flash-kernel.openocd
