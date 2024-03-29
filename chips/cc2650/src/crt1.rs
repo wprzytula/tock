@@ -1,5 +1,3 @@
-use core::arch::asm;
-
 use cortexm3::{
     initialize_ram_jump_to_main,
     nvic::{self, Nvic},
@@ -22,9 +20,7 @@ extern "C" {
 }
 
 unsafe extern "C" fn hard_fault_handler() {
-    loop {
-        asm!("nop");
-    }
+    panic!("HARD FAULT...");
 }
 
 unsafe extern "C" fn aon_programmable_handler() {
