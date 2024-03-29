@@ -34,7 +34,7 @@ impl kernel::debug::IoWrite for Writer {
 
 #[macro_export]
 macro_rules! print {
-    ($($arg:tt)*) => ($crate::io::print::_print(format_args!($($arg)*)));
+    ($($arg:tt)*) => ($crate::io::_print(format_args!($($arg)*)));
 }
 
 #[macro_export]
