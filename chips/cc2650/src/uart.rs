@@ -474,8 +474,9 @@ impl<'a> hil::uart::Transmit<'a> for UartFull<'a> {
 
 impl<'a> hil::uart::Configure for UartFull<'a> {
     fn configure(&self, params: hil::uart::Parameters) -> Result<(), ErrorCode> {
-        // These could probably be implemented, but are currently ignored, so
-        // throw an error.
+        // These could probably be implemented, but are currently ignored,
+        // so throw an error.
+
         // TODO: implement missing CTS/RTS
         if params.stop_bits != hil::uart::StopBits::One {
             return Err(ErrorCode::NOSUPPORT);
@@ -487,6 +488,9 @@ impl<'a> hil::uart::Configure for UartFull<'a> {
             return Err(ErrorCode::NOSUPPORT);
         }
 
+        if params.baud_rate == 0 {
+            return Err(ErrorCode::INVAL);
+        }
         self.set_baud_rate(params.baud_rate);
 
         Ok(())
