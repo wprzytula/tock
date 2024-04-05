@@ -41,26 +41,27 @@ impl Udma {
         self.udma.cfg.write(|w| w.masterenable().clear_bit());
     }
 
+    // No separate `uart_enable_{tx,rx}` functions because enabling is done
+    // only in `uart_transfer_{tx,rx}`.
+
     #[inline]
-    pub fn uart_channels_enable(&self) {
+    pub fn uart_disable_tx(&self) {
         unsafe {
-            CHANNEL_CONTROL_MAP.primary_channel_1.enable(&self.udma); // RX
-            CHANNEL_CONTROL_MAP.primary_channel_2.enable(&self.udma); // TX
+            CHANNEL_CONTROL_MAP.primary_channel_2.disable(&self.udma); // TX
         }
     }
 
     #[inline]
-    pub fn uart_channels_disable(&self) {
+    pub fn uart_disable_rx(&self) {
         unsafe {
             CHANNEL_CONTROL_MAP.primary_channel_1.disable(&self.udma); // RX
-            CHANNEL_CONTROL_MAP.primary_channel_2.disable(&self.udma); // TX
         }
     }
 
     #[inline]
     pub fn uart_channels_configure(&self) {
         let data_size = DataSize::Size8;
-        let arbitration_size = ArbitrationSize::Arb128;
+        let arbitration_size = ArbitrationSize::Arb32;
 
         let control_rx = ControlWord {
             data_size,
@@ -92,7 +93,8 @@ impl Udma {
                 &(*cc2650::UART0::ptr()).dr as *const cc2650::uart0::DR as *mut (),
                 mem.as_mut_ptr() as *mut (),
                 mem.len() as u32,
-            )
+            );
+            CHANNEL_CONTROL_MAP.primary_channel_1.enable(&self.udma);
         }
     }
 
@@ -103,7 +105,8 @@ impl Udma {
                 mem.as_ptr() as *mut (),
                 &(*cc2650::UART0::ptr()).dr as *const cc2650::uart0::DR as *mut (),
                 mem.len() as u32,
-            )
+            );
+            CHANNEL_CONTROL_MAP.primary_channel_2.enable(&self.udma);
         }
     }
 
@@ -115,6 +118,42 @@ impl Udma {
     #[inline]
     pub fn uart_is_enabled_tx(&self) -> bool {
         unsafe { CHANNEL_CONTROL_MAP.primary_channel_2.is_enabled(&self.udma) }
+    }
+
+    #[inline]
+    pub fn uart_request_done_rx(&self) -> bool {
+        unsafe {
+            CHANNEL_CONTROL_MAP
+                .primary_channel_1
+                .request_done(&self.udma)
+        }
+    }
+
+    #[inline]
+    pub fn uart_request_done_tx(&self) -> bool {
+        unsafe {
+            CHANNEL_CONTROL_MAP
+                .primary_channel_2
+                .request_done(&self.udma)
+        }
+    }
+
+    #[inline]
+    pub fn uart_request_done_rx_clear(&self) {
+        unsafe {
+            CHANNEL_CONTROL_MAP
+                .primary_channel_1
+                .request_done_clear(&self.udma)
+        }
+    }
+
+    #[inline]
+    pub fn uart_request_done_tx_clear(&self) {
+        unsafe {
+            CHANNEL_CONTROL_MAP
+                .primary_channel_2
+                .request_done_clear(&self.udma)
+        }
     }
 }
 
@@ -209,17 +248,19 @@ struct ChannelControlEntry<KIND: ChannelControlEntryKind, const INDEX: u32> {
 
 impl<const INDEX: u32> ChannelControlEntry<Primary, INDEX> {
     fn enable(&self, udma: &cc2650::UDMA0) {
-        // We do not use any of these; TRM suggests clearing them explicitly.
-        unsafe {
-            driverlib::uDMAChannelAttributeDisable(
-                driverlib::UDMA0_BASE,
-                INDEX,
-                driverlib::UDMA_ATTR_USEBURST
-                    | driverlib::UDMA_ATTR_ALTSELECT
-                    | driverlib::UDMA_ATTR_HIGH_PRIORITY
-                    | driverlib::UDMA_ATTR_REQMASK,
-            )
-        };
+        // We do not use any of these; TRM suggests clearing them explicitly,
+        // but at the same time says it's not needed.
+        // unsafe {
+        //     driverlib::uDMAChannelAttributeDisable(
+        //         driverlib::UDMA0_BASE,
+        //         INDEX,
+        //         driverlib::UDMA_ATTR_USEBURST
+        //             | driverlib::UDMA_ATTR_ALTSELECT
+        //             | driverlib::UDMA_ATTR_HIGH_PRIORITY
+        //             | driverlib::UDMA_ATTR_REQMASK,
+        //     )
+        // };
+
         udma.setchannelen
             .write(|w| unsafe { w.chnls().bits(1 << INDEX) })
     }
@@ -235,6 +276,15 @@ impl<const INDEX: u32> ChannelControlEntry<Primary, INDEX> {
 
     fn software_request(&self, udma: &cc2650::UDMA0) {
         udma.softreq
+            .write(|w| unsafe { w.chnls().bits(1 << INDEX) })
+    }
+
+    fn request_done(&self, udma: &cc2650::UDMA0) -> bool {
+        udma.reqdone.read().chnls().bits() & (1 << INDEX) != 0
+    }
+
+    fn request_done_clear(&self, udma: &cc2650::UDMA0) {
+        udma.reqdone
             .write(|w| unsafe { w.chnls().bits(1 << INDEX) })
     }
 }

@@ -15,114 +15,16 @@
 // selected for the receive FIFO, the UART generates a receive interrupt after 4 data bytes are received. Out
 // of reset, both FIFOs are configured to trigger an interrupt at the ½ mark.
 
-use core::cell::Cell;
+use core::{arch::asm, cell::Cell};
 
 use kernel::{hil, ErrorCode};
 use tock_cells::{map_cell::MapCell, optional_cell::OptionalCell};
 
-use crate::driverlib;
+use crate::{driverlib, udma};
 
 // 48 MHz
 const CLOCK_FREQ: u32 = 48_000_000;
 pub const BAUD_RATE: u32 = 115_200;
-
-#[inline]
-fn uart_full_enable(uart: &cc2650::UART0) {
-    // Enable the FIFO.
-    uart.lcrh.modify(|_r, w| w.fen().en());
-
-    // Enable RX, TX, and the UART.
-    uart.ctl
-        .modify(|_r, w| w.uarten().en().txe().en().rxe().en());
-}
-
-#[allow(unused)]
-#[inline(always)]
-fn uart_full_disable(_uart: &cc2650::UART0) {
-    unsafe {
-        driverlib::UARTDisable(driverlib::UART0_BASE);
-    }
-}
-
-fn init_uart_full(uart: &cc2650::UART0) {
-    /*
-    // 2. Configure the IOC module to map UART signals to the correct GPIO pins.
-    // RF1.7_UART_RX EM -> DIO_2
-    peripherals
-        .IOC
-        .iocfg2
-        .modify(|_r, w| w.port_id().uart0_rx().ie().set_bit());
-    // RF1.9_UART_TX EM -> DIO_3
-    peripherals
-        .IOC
-        .iocfg3
-        .modify(|_r, w| w.port_id().uart0_tx().ie().clear_bit());
-    */
-    unsafe {
-        driverlib::IOCPinTypeUart(
-            driverlib::UART0_BASE,
-            driverlib::IOID_2,
-            driverlib::IOID_3,
-            driverlib::IOID_UNUSED,
-            driverlib::IOID_UNUSED,
-        )
-    };
-
-    /*
-    // For this example, the UART clock is assumed to be 24 MHz, and the desired UART configuration is:
-    // • Baud rate: 115 200
-    // • Data length of 8 bits
-    // • One stop bit
-    // • No parity
-    // • FIFOs disabled
-    // • No interrupts
-    //
-    // The first thing to consider when programming the UART is the BRD because the UART:IBRD and
-    // UART:FBRD registers must be written before the UART:LCRH register.
-    // The BRD can be calculated using the equation:
-    //      BRD = 24 000 000 / (16 × 115 200) = 13.0208
-    // The result of Equation 3 indicates that the UART:IBRD DIVINT field must be set to 13 decimal or 0xD.
-    //
-    // Equation 4 calculates the value to be loaded into the UART:FBRD register.
-    //      UART:FBRD.DIVFRAC = integer (0.0208 × 64 + 0.5) = 1
-    //
-    // With the BRD values available, the UART configuration is written to the module in the following order:
-    let uart = &peripherals.UART0;
-
-    // 1. Disable the UART by clearing the UART:CTL UARTEN bit.
-    uart.ctl.modify(|_r, w| w.uarten().dis());
-
-    // 2. Write the integer portion of the BRD to the UART:IBRD register.
-    // uart.ibrd.modify(|_r, w| unsafe { w.divint().bits(13) });
-    uart.ibrd.modify(|_r, w| unsafe { w.divint().bits(26) }); // for 48 MHz
-
-    // 3. Write the fractional portion of the BRD to the UART:FBRD register.
-    // uart.fbrd.modify(|_r, w| unsafe { w.divfrac().bits(1) });
-    uart.fbrd.modify(|_r, w| unsafe { w.divfrac().bits(3) }); // for 48 MHz
-
-    // 4. Write the desired serial parameters to the UART:LCRH register (in this case, a value of 0x0000 0060).
-    uart.lcrh.modify(|_r, w| w.pen().dis().wlen()._8());
-
-    // 5. Enable the UART by setting the UART:CTL UARTEN bit.
-    uart.ctl
-        .modify(|_r, w| w.uarten().en().txe().en().rxe().en());
-    */
-
-    unsafe {
-        driverlib::UARTConfigSetExpClk(
-            driverlib::UART0_BASE,
-            CLOCK_FREQ,
-            BAUD_RATE,
-            driverlib::UART_CONFIG_PAR_NONE
-                | driverlib::UART_CONFIG_STOP_ONE
-                | driverlib::UART_CONFIG_WLEN_8,
-        )
-    };
-
-    // UARTEnable is static inline, so better use our own version.
-    // unsafe { driverlib::UARTEnable(driverlib::UART0_BASE) }
-    uart_full_enable(&uart);
-}
 
 /// Stores an ongoing TX/RX transaction
 struct Transaction {
@@ -137,6 +39,7 @@ struct Transaction {
 
 pub struct UartFull<'a> {
     uart: cc2650::UART0,
+    udma: udma::Udma,
     tx_client: OptionalCell<&'a dyn hil::uart::TransmitClient>,
     rx_client: OptionalCell<&'a dyn hil::uart::ReceiveClient>,
     tx_transaction: MapCell<Transaction>,
@@ -150,6 +53,10 @@ impl<'a> UartFull<'a> {
     pub fn new(uart: cc2650::UART0) -> Self {
         Self {
             uart,
+            // Currently no better idea how to make it cleaner.
+            // Stealing implies that this code won't work in debug builds,
+            // because of debug_assert! inside...
+            udma: udma::Udma::new(unsafe { cc2650::Peripherals::steal().UDMA0 }),
             tx_client: OptionalCell::empty(),
             rx_client: OptionalCell::empty(),
             tx_transaction: MapCell::empty(),
@@ -158,9 +65,84 @@ impl<'a> UartFull<'a> {
         }
     }
 
+    /// The idea is that this is only called once per MCU reboot.
     #[inline]
     pub fn initialize(&self) {
-        init_uart_full(&self.uart);
+        /*
+        // 2. Configure the IOC module to map UART signals to the correct GPIO pins.
+        // RF1.7_UART_RX EM -> DIO_2
+        peripherals
+            .IOC
+            .iocfg2
+            .modify(|_r, w| w.port_id().uart0_rx().ie().set_bit());
+        // RF1.9_UART_TX EM -> DIO_3
+        peripherals
+            .IOC
+            .iocfg3
+            .modify(|_r, w| w.port_id().uart0_tx().ie().clear_bit());
+        */
+        unsafe {
+            driverlib::IOCPinTypeUart(
+                driverlib::UART0_BASE,
+                driverlib::IOID_2,
+                driverlib::IOID_3,
+                driverlib::IOID_UNUSED,
+                driverlib::IOID_UNUSED,
+            )
+        };
+
+        /*
+        // For this example, the UART clock is assumed to be 24 MHz, and the desired UART configuration is:
+        // • Baud rate: 115 200
+        // • Data length of 8 bits
+        // • One stop bit
+        // • No parity
+        // • FIFOs disabled
+        // • No interrupts
+        //
+        // The first thing to consider when programming the UART is the BRD because the UART:IBRD and
+        // UART:FBRD registers must be written before the UART:LCRH register.
+        // The BRD can be calculated using the equation:
+        //      BRD = 24 000 000 / (16 × 115 200) = 13.0208
+        // The result of Equation 3 indicates that the UART:IBRD DIVINT field must be set to 13 decimal or 0xD.
+        //
+        // Equation 4 calculates the value to be loaded into the UART:FBRD register.
+        //      UART:FBRD.DIVFRAC = integer (0.0208 × 64 + 0.5) = 1
+        //
+        // With the BRD values available, the UART configuration is written to the module in the following order:
+        let uart = &peripherals.UART0;
+
+        // 1. Disable the UART by clearing the UART:CTL UARTEN bit.
+        uart.ctl.modify(|_r, w| w.uarten().dis());
+
+        // 2. Write the integer portion of the BRD to the UART:IBRD register.
+        // uart.ibrd.modify(|_r, w| unsafe { w.divint().bits(13) });
+        uart.ibrd.modify(|_r, w| unsafe { w.divint().bits(26) }); // for 48 MHz
+
+        // 3. Write the fractional portion of the BRD to the UART:FBRD register.
+        // uart.fbrd.modify(|_r, w| unsafe { w.divfrac().bits(1) });
+        uart.fbrd.modify(|_r, w| unsafe { w.divfrac().bits(3) }); // for 48 MHz
+
+        // 4. Write the desired serial parameters to the UART:LCRH register (in this case, a value of 0x0000 0060).
+        uart.lcrh.modify(|_r, w| w.pen().dis().wlen()._8());
+
+        // 5. Enable the UART by setting the UART:CTL UARTEN bit.
+        uart.ctl
+            .modify(|_r, w| w.uarten().en().txe().en().rxe().en());
+        */
+
+        unsafe {
+            driverlib::UARTConfigSetExpClk(
+                driverlib::UART0_BASE,
+                CLOCK_FREQ,
+                BAUD_RATE,
+                driverlib::UART_CONFIG_PAR_NONE
+                    | driverlib::UART_CONFIG_STOP_ONE
+                    | driverlib::UART_CONFIG_WLEN_8,
+            )
+        };
+
+        self.udma.uart_channels_configure();
     }
 
     fn set_baud_rate(&self, baud_rate: u32) {
@@ -173,14 +155,39 @@ impl<'a> UartFull<'a> {
             .write(|w| unsafe { w.divfrac().bits((div % 64).try_into().unwrap()) })
     }
 
-    // Enable UART peripheral, this need to disabled for low power applications
-    fn enable_uart(&self) {
-        uart_full_enable(&self.uart);
+    /// The idea is that this is run each time MCU stops deep sleep.
+    pub fn enable(&self) {
+        // Disable, because they should be enabled only upon a transfer/receive request.
+        self.udma.uart_disable_tx();
+        self.udma.uart_disable_rx();
+
+        // UARTEnable is static inline, so better use our own version.
+        // unsafe { driverlib::UARTEnable(driverlib::UART0_BASE) }
+
+        // Enable the FIFO.
+        self.uart.lcrh.modify(|_r, w| w.fen().en());
+
+        // Enable RX, TX, and the UART.
+        self.uart
+            .ctl
+            .modify(|_r, w| w.uarten().en().txe().en() /*.rxe().en()*/);
     }
 
     #[allow(dead_code)]
-    fn disable_uart(&self) {
+    pub fn disable(&self) {
+        self.dma_stop_tx();
+        self.udma.uart_disable_tx();
+        self.udma.uart_disable_rx();
         unsafe { driverlib::UARTDisable(driverlib::UART0_BASE) };
+    }
+
+    fn dma_start_tx(&self) {
+        self.uart.dmactl.modify(|_r, w| w.txdmae().set_bit());
+    }
+
+    fn dma_stop_tx(&self) {
+        self.udma.uart_disable_tx();
+        self.uart.dmactl.modify(|_r, w| w.txdmae().clear_bit());
     }
 
     fn enable_rx_interrupts(&self) {
@@ -213,23 +220,62 @@ impl<'a> UartFull<'a> {
         self.uart.imsc.modify(|_r, w| w.txim().clear_bit())
     }
 
-    /// UART interrupt handler that listens for both tx_end and rx_end events
+    /// UART interrupt handler that listens for both TX and RX end events
     #[inline(never)]
-    pub fn handle_interrupt(&self) {
+    pub(crate) fn handle_interrupt(&self) {
         // TODO: handle rx timeout
+
+        let tx_completed = self.udma.uart_request_done_tx();
+        if tx_completed {
+            self.udma.uart_request_done_tx_clear()
+        }
+
+        // FIXME: debug prints
+        let ris = self.uart.ris.read();
+        if ris.txris().bit_is_set() {
+            unsafe {
+                asm!("nop");
+            }
+            // kernel::debug!("TXRIS set");
+        }
+        if ris.oeris().bit_is_set() {
+            unsafe {
+                asm!("nop");
+            }
+            // kernel::debug!("OERIS set");
+        }
+
+        let mis = self.uart.mis.read();
+        if mis.txmis().bit_is_set() {
+            unsafe {
+                asm!("nop");
+            }
+            // kernel::debug!("TXMIS set");
+        }
+        if mis.oemis().bit_is_set() {
+            unsafe {
+                asm!("nop");
+            }
+            // kernel::debug!("OEMIS set");
+        }
+
+        if self.udma.uart_is_enabled_tx() {
+            // kernel::debug!("UART TX is enabled.");
+        }
+        // FIXME END: debug prints
 
         // clear interrupt flags
         self.uart.icr.write(|w| {
             w
-                // .beic()
+                // .beic()              // break error
                 // .set_bit()
-                // .ctsmic()
+                // .ctsmic()            // Clear-To-Send ...
                 // .set_bit()
-                // .feic()
+                // .feic()              // framing error
                 // .set_bit()
-                // .oeic()
+                // .oeic()              // buffer overrun error
                 // .set_bit()
-                // .peic()
+                // .peic()              // parity error
                 // .set_bit()
                 .rtic() // reception timeout
                 .set_bit()
@@ -238,27 +284,39 @@ impl<'a> UartFull<'a> {
                 .txic() // transmit
                 .set_bit()
         });
-        if self.tx_fifo_empty() {
-            self.disable_tx_interrupts();
-            self.tx_transaction.take().map(|mut tx| {
-                if tx.index == tx.length {
-                    // Transaction has completed.
-                    self.tx_client.map(move |client| {
-                        client.transmitted_buffer(tx.buffer, tx.length, Ok(()));
-                    });
-                } else {
-                    // Transaction can be continued.
-                    while !self.tx_fifo_full() && tx.index < tx.length {
-                        // Safety: we have just checked that the FIFO is not full.
-                        unsafe { self.send_byte(tx.buffer[tx.index]) };
-                        tx.index += 1;
+
+        // TX transfer finished
+        if !self.udma.uart_is_enabled_tx() {
+            self.tx_transaction.take().map(
+                |Transaction {
+                     buffer,
+                     length,
+                     index,
+                 }| {
+                    let remaining_len = length - index;
+                    if remaining_len == 0 {
+                        // Transaction has completed.
+                        self.dma_stop_tx();
+                        self.tx_client.map(move |client| {
+                            client.transmitted_buffer(buffer, length, Ok(()));
+                        });
+                    } else {
+                        // There are more transfers to be done for this request,
+                        // due to the upper bound on uDMA transfer size (1024).
+                        let next_transfer_len =
+                            usize::min(remaining_len, driverlib::UDMA_XFER_SIZE_MAX as usize);
+
+                        self.udma
+                            .uart_transfer_tx(&buffer[index..index + next_transfer_len]);
+
+                        self.tx_transaction.put(Transaction {
+                            buffer,
+                            length,
+                            index: index + next_transfer_len,
+                        });
                     }
-                }
-            });
-
-            // TODO: consider using DMA
-
-            self.enable_tx_interrupts();
+                },
+            );
         }
 
         /* FIXME: RX
@@ -330,33 +388,24 @@ impl<'a> UartFull<'a> {
 
     // Pulls a byte out of the RX FIFO.
     #[inline]
-    pub fn read(&self) -> u8 {
+    fn read(&self) -> u8 {
         self.uart.dr.read().data().bits()
     }
 
     /// Check if the UART transmission is done
-    pub fn tx_fifo_empty(&self) -> bool {
+    fn tx_fifo_empty(&self) -> bool {
         self.uart.fr.read().txfe().bit_is_set()
     }
 
     // Check if no more bytes can be enqueued in TX FIFO
-    pub fn tx_fifo_full(&self) -> bool {
+    fn tx_fifo_full(&self) -> bool {
         self.uart.fr.read().txff().bit_is_set()
     }
 
     /// Check if either the rx_buffer is full or the UART has timed out
-    pub fn rx_ready(&self) -> bool {
+    fn rx_ready(&self) -> bool {
         self.uart.fr.read().rxff().bit_is_clear()
     }
-
-    // TODO: DMA
-    // fn set_tx_dma_pointer_to_buffer(&self) {
-    //     self.tx_transaction.map(|tx| {
-    //         self.registers
-    //             .txd_ptr
-    //             .set(tx.buffer[tx.index..].as_ptr() as u32);
-    //     });
-    // }
 
     // fn set_rx_dma_pointer_to_buffer(&self) {
     //     self.rx_transaction.map(|rx| {
@@ -368,26 +417,17 @@ impl<'a> UartFull<'a> {
 
     // Helper function used by both transmit_word and transmit_buffer
     fn setup_buffer_transmit(&self, buf: &'static mut [u8], tx_len: usize) {
-        let mut tx = Transaction {
+        let first_transfer_len = usize::min(tx_len, driverlib::UDMA_XFER_SIZE_MAX as usize);
+
+        self.udma.uart_transfer_tx(&buf[..first_transfer_len]);
+        self.dma_start_tx();
+
+        let tx = Transaction {
             buffer: buf,
             length: tx_len,
-            index: 0,
+            index: first_transfer_len,
         };
-        while !self.tx_fifo_full() && tx.index < tx.length {
-            // Safety: we have just checked that the FIFO is not full.
-            unsafe { self.send_byte(tx.buffer[tx.index]) };
-            tx.index += 1;
-        }
         self.tx_transaction.put(tx);
-
-        // TODO: DMA
-        // self.set_tx_dma_pointer_to_buffer();
-        // self.registers
-        //     .txd_maxcnt
-        //     .write(Counter::COUNTER.val(min(tx_len as u32, UARTE_MAX_BUFFER_SIZE)));
-        // self.registers.task_starttx.write(Task::ENABLE::SET);
-
-        self.enable_tx_interrupts();
     }
 }
 

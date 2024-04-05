@@ -37,6 +37,7 @@ impl<'a> Cc2650<'a> {
 
         let uart_full = UartFull::new(peripherals.UART0);
         uart_full.initialize();
+        uart_full.enable();
 
         Self {
             userspace_kernel_boundary: cortexm3::syscall::SysCall::new(),
