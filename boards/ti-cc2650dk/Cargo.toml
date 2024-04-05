@@ -19,7 +19,6 @@ cortexm3 = { path = "../../arch/cortex-m3" }
 kernel = { path = "../../kernel" }
 cc2650 = "0.1.1"
 cc2650_chip = { package = "cc2650", path = "../../chips/cc2650" }
-enum_primitive = { path = "../../libraries/enum_primitive" }
 
 capsules-core = { path = "../../capsules/core" }
 capsules-extra = { path = "../../capsules/extra" }
