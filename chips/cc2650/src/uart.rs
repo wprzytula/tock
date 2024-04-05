@@ -456,7 +456,19 @@ impl<'a> hil::uart::Transmit<'a> for UartFull<'a> {
     }
 
     fn transmit_abort(&self) -> Result<(), ErrorCode> {
-        Err(ErrorCode::FAIL)
+        // Experimental:
+        // because of DMA, this may (and probably will) return bigger
+        // amount of data transferred than it really was.
+
+        if let Some(Transaction { buffer, index, .. }) = self.tx_transaction.take() {
+            self.dma_stop_tx();
+            self.udma.uart_disable_tx();
+            self.tx_client
+                .map(|client| client.transmitted_buffer(buffer, index, Err(ErrorCode::CANCEL)));
+            Err(ErrorCode::BUSY)
+        } else {
+            Ok(())
+        }
     }
 }
 
