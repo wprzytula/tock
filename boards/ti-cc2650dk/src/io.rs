@@ -1,32 +1,65 @@
 use core::fmt;
 
-use cc2650::Peripherals;
+mod internals {
+    use core::ops::Deref;
 
-struct Writer;
+    pub(super) struct UartFull(*const cc2650::uart0::RegisterBlock);
+    unsafe impl Send for UartFull {}
+    unsafe impl Sync for UartFull {}
 
-impl Writer {
-    fn write_byte(&mut self, byte: u8) {
-        let uart = unsafe { Peripherals::steal().UART0 };
-        while uart.fr.read().txfe().bit_is_clear() {
-            // Wait until send queue is empty
+    // taken straight from cc2650 crate
+    const UART_REGISTER_BLOCK_ADDR: usize = 0x40001000;
+    pub(super) static UART: UartFull = UartFull(UART_REGISTER_BLOCK_ADDR as *const _);
+
+    impl Deref for UartFull {
+        type Target = cc2650::uart0::RegisterBlock;
+
+        fn deref(&self) -> &Self::Target {
+            unsafe { &*self.0 }
         }
-        uart.dr.write(|w| unsafe { w.data().bits(byte) })
+    }
+}
+use internals::UART;
+
+struct PanicWriter;
+
+impl PanicWriter {
+    // Best-effort turn off other users of UART to prevent colisions
+    // when printing panic message.
+    fn capture_uart(&mut self) {
+        UART.dmactl.write(|w| {
+            w.rxdmae()
+                .clear_bit()
+                .txdmae()
+                .clear_bit()
+                .dmaonerr()
+                .clear_bit()
+        })
+    }
+
+    // SAFETY: make sure that other users of UART were turned off
+    // and prevented further interaction.
+    unsafe fn write_byte(&mut self, byte: u8) {
+        while UART.fr.read().txff().bit_is_set() {
+            // Wait until send queue is nonfull
+        }
+        UART.dr.write(|w| unsafe { w.data().bits(byte) })
     }
 }
 
-impl fmt::Write for Writer {
+impl fmt::Write for PanicWriter {
     fn write_str(&mut self, s: &str) -> fmt::Result {
         for byte in s.bytes() {
-            self.write_byte(byte);
+            unsafe { self.write_byte(byte) };
         }
         Ok(())
     }
 }
 
-impl kernel::debug::IoWrite for Writer {
+impl kernel::debug::IoWrite for PanicWriter {
     fn write(&mut self, buf: &[u8]) -> usize {
         for byte in buf.iter().copied() {
-            self.write_byte(byte);
+            unsafe { self.write_byte(byte) };
         }
         buf.len()
     }
@@ -46,10 +79,10 @@ macro_rules! println {
 #[doc(hidden)]
 pub fn _print(args: fmt::Arguments) {
     use core::fmt::Write;
-    Writer.write_fmt(args).unwrap();
+    PanicWriter.write_fmt(args).unwrap();
 }
 
-impl kernel::hil::led::Led for Writer {
+impl kernel::hil::led::Led for PanicWriter {
     fn init(&self) {
         ()
     }
@@ -86,7 +119,9 @@ pub unsafe fn panic_fmt(pi: &PanicInfo) -> ! {
 
     let led_kernel_pin = &PORT[25];
     let led = &mut kernel::hil::led::LedHigh::new(led_kernel_pin);
-    let writer = &mut Writer;
+    let writer = &mut PanicWriter;
+
+    writer.capture_uart();
     debug::panic(
         &mut [led],
         writer,
