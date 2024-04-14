@@ -8,7 +8,6 @@ use kernel::{
     capabilities,
     component::Component as _,
     create_capability, debug,
-    hil::time::Alarm,
     platform::{KernelResources, SyscallDriverLookup},
     scheduler::round_robin::RoundRobinSched,
     static_init,
@@ -42,7 +41,13 @@ struct Platform {
         kernel::hil::led::LedHigh<'static, cc2650_chip::gpio::GPIOPin>,
         1,
     >,
-    alarm: &'static capsules_core::alarm::AlarmDriver<'static, cc2650_chip::gpt::Gpt<'static>>,
+    alarm: &'static capsules_core::alarm::AlarmDriver<
+        'static,
+        capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<
+            'static,
+            cc2650_chip::gpt::Gpt<'static>,
+        >,
+    >,
     console: &'static capsules_core::console::Console<'static>,
 }
 
@@ -103,7 +108,6 @@ unsafe fn start() -> (&'static kernel::Kernel, Platform, &'static Cc2650<'static
     // functions.
     let process_management_capability =
         create_capability!(capabilities::ProcessManagementCapability);
-    let memory_allocation_capability = create_capability!(capabilities::MemoryAllocationCapability);
 
     /* PERIPHERALS CONFIGURATION */
     let chip = static_init!(Cc2650, Cc2650::new());
@@ -131,25 +135,22 @@ unsafe fn start() -> (&'static kernel::Kernel, Platform, &'static Cc2650<'static
     ));
 
     // Alarm
-    // let alarm = components::alarm::AlarmDriverComponent::new(board_kernel, capsules_core::alarm::DRIVER_NUM, mux)
-
-    let alarm = static_init!(
-        capsules_core::alarm::AlarmDriver<'static, cc2650_chip::gpt::Gpt<'static>>,
-        capsules_core::alarm::AlarmDriver::new(
-            &chip.gpt,
-            board_kernel.create_grant(
-                capsules_core::alarm::DRIVER_NUM,
-                &memory_allocation_capability
-            )
-        )
+    let alarm_mux = components::alarm::AlarmMuxComponent::new(&chip.gpt).finalize(
+        components::alarm_mux_component_static!(cc2650_chip::gpt::Gpt),
     );
-    chip.gpt.set_alarm_client(alarm);
+
+    let alarm = components::alarm::AlarmDriverComponent::new(
+        board_kernel,
+        capsules_core::alarm::DRIVER_NUM,
+        &alarm_mux,
+    )
+    .finalize(components::alarm_component_static!(cc2650_chip::gpt::Gpt));
 
     let uart_mux = components::console::UartMuxComponent::new(&chip.uart_full, uart::BAUD_RATE)
         .finalize(components::uart_mux_component_static!());
     let console =
         components::console::ConsoleComponent::new(board_kernel, console::DRIVER_NUM, &uart_mux)
-            .finalize(components::console_component_static!());
+            .finalize(components::console_component_static!(128, 128)); // (64, 64) is the default
     let _debug_writer = components::debug_writer::DebugWriterComponent::new(&uart_mux)
         .finalize(components::debug_writer_component_static!());
     /* END CAPSULES CONFIGURATION */
@@ -182,6 +183,10 @@ unsafe fn start() -> (&'static kernel::Kernel, Platform, &'static Cc2650<'static
         /// End of the RAM region for app memory.
         static _eappmem: u8;
     }
+
+    println!("Hello world from initialised board!");
+    println!("Proceeding to loading processes...!");
+    debug!("Checking that kernel debug prints work...");
 
     kernel::process::load_processes(
         board_kernel,
