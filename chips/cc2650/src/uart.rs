@@ -407,24 +407,21 @@ impl<'a> UartFull<'a> {
         self.uart.fr.read().rxff().bit_is_clear()
     }
 
-    // fn set_rx_dma_pointer_to_buffer(&self) {
-    //     self.rx_transaction.map(|rx| {
-    //         self.registers
-    //             .rxd_ptr
-    //             .set(rx.buffer[self.index..].as_ptr() as u32);
-    //     });
-    // }
-
+    // FIXME: transmit_word unused
     // Helper function used by both transmit_word and transmit_buffer
     fn setup_buffer_transmit(&self, buf: &'static mut [u8], tx_len: usize) {
-        let first_transfer_len = usize::min(tx_len, driverlib::UDMA_XFER_SIZE_MAX as usize);
+        // truncate tx_len if necessary
+        let truncated_length = core::cmp::min(tx_len, buf.len());
+
+        let first_transfer_len =
+            usize::min(truncated_length, driverlib::UDMA_XFER_SIZE_MAX as usize);
 
         self.udma.uart_transfer_tx(&buf[..first_transfer_len]);
         self.dma_start_tx();
 
         let tx = Transaction {
             buffer: buf,
-            length: tx_len,
+            length: truncated_length,
             index: first_transfer_len,
         };
         self.tx_transaction.put(tx);
