@@ -155,6 +155,12 @@ impl<'a> UartFull<'a> {
             .write(|w| unsafe { w.divfrac().bits((div % 64).try_into().unwrap()) })
     }
 
+    fn set_hw_flow_control(&self, on: bool) {
+        self.uart
+            .ctl
+            .modify(|_r, w| w.ctsen().bit(on).rtsen().bit(on))
+    }
+
     /// The idea is that this is run each time MCU stops deep sleep.
     pub fn enable(&self) {
         // Disable, because they should be enabled only upon a transfer/receive request.
@@ -474,16 +480,14 @@ impl<'a> hil::uart::Configure for UartFull<'a> {
         // These could probably be implemented, but are currently ignored,
         // so throw an error.
 
-        // TODO: implement missing CTS/RTS
         if params.stop_bits != hil::uart::StopBits::One {
             return Err(ErrorCode::NOSUPPORT);
         }
         if params.parity != hil::uart::Parity::None {
             return Err(ErrorCode::NOSUPPORT);
         }
-        if params.hw_flow_control {
-            return Err(ErrorCode::NOSUPPORT);
-        }
+
+        self.set_hw_flow_control(params.hw_flow_control);
 
         if params.baud_rate == 0 {
             return Err(ErrorCode::INVAL);
