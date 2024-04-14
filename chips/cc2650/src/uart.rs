@@ -176,7 +176,7 @@ impl<'a> UartFull<'a> {
         // Enable RX, TX, and the UART.
         self.uart
             .ctl
-            .modify(|_r, w| w.uarten().en().txe().en() /*.rxe().en()*/);
+            .modify(|_r, w| w.uarten().en().txe().en().rxe().en());
     }
 
     #[allow(dead_code)]
@@ -191,9 +191,18 @@ impl<'a> UartFull<'a> {
         self.uart.dmactl.modify(|_r, w| w.txdmae().set_bit());
     }
 
+    fn dma_start_rx(&self) {
+        self.uart.dmactl.modify(|_r, w| w.rxdmae().set_bit());
+    }
+
     fn dma_stop_tx(&self) {
         self.udma.uart_disable_tx();
         self.uart.dmactl.modify(|_r, w| w.txdmae().clear_bit());
+    }
+
+    fn dma_stop_rx(&self) {
+        self.udma.uart_disable_rx();
+        self.uart.dmactl.modify(|_r, w| w.rxdmae().clear_bit());
     }
 
     fn enable_rx_interrupts(&self) {
@@ -235,6 +244,11 @@ impl<'a> UartFull<'a> {
         if tx_completed {
             self.udma.uart_request_done_tx_clear()
         }
+        let rx_completed = self.udma.uart_request_done_rx();
+        if rx_completed {
+            // kernel::debug!("RX DMA transfer has completed");
+            self.udma.uart_request_done_rx_clear()
+        }
 
         // FIXME: debug prints
         let ris = self.uart.ris.read();
@@ -264,10 +278,6 @@ impl<'a> UartFull<'a> {
             }
             // kernel::debug!("OEMIS set");
         }
-
-        if self.udma.uart_is_enabled_tx() {
-            // kernel::debug!("UART TX is enabled.");
-        }
         // FIXME END: debug prints
 
         // clear interrupt flags
@@ -292,7 +302,7 @@ impl<'a> UartFull<'a> {
         });
 
         // TX transfer finished
-        if !self.udma.uart_is_enabled_tx() {
+        if tx_completed && !self.udma.uart_is_enabled_tx() {
             self.tx_transaction.take().map(
                 |Transaction {
                      buffer,
@@ -325,66 +335,45 @@ impl<'a> UartFull<'a> {
             );
         }
 
-        /* FIXME: RX
-        if self.rx_ready() {
-            self.disable_rx_interrupts();
-
-            // Get the number of bytes in the buffer that was received this time
-            let rx_bytes = self.registers.rxd_amount.get() as usize;
-
-            // Check if this ENDRX is due to an abort. If so, we want to
-            // do the receive callback immediately.
-            if self.rx_abort_in_progress.get() {
-                self.rx_abort_in_progress.set(false);
-                self.rx_client.map(|client| {
-                    self.rx_buffer.take().map(|rx_buffer| {
-                        client.received_buffer(
-                            rx_buffer,
-                            self.offset.get() + rx_bytes,
-                            Err(ErrorCode::CANCEL),
-                            hil::uart::Error::None,
-                        );
-                    });
-                });
-            } else {
-                // In the normal case, we need to either pass call the callback
-                // or do another read to get more bytes.
-
-                // Update how many bytes we still need to receive and
-                // where we are storing in the buffer.
-                self.rx_remaining_bytes
-                    .set(self.rx_remaining_bytes.get().saturating_sub(rx_bytes));
-                self.offset.set(self.offset.get() + rx_bytes);
-
-                let rem = self.rx_remaining_bytes.get();
-                if rem == 0 {
-                    // Signal client that the read is done
-                    self.rx_client.map(|client| {
-                        self.rx_buffer.take().map(|rx_buffer| {
+        // RX transfer finished
+        if rx_completed && !self.udma.uart_is_enabled_rx() {
+            self.rx_transaction.take().map(
+                |Transaction {
+                     buffer,
+                     length,
+                     index,
+                 }| {
+                    let remaining_len = length - index;
+                    if remaining_len == 0 {
+                        // Transaction has completed.
+                        self.dma_stop_rx();
+                        self.rx_client.map(move |client| {
+                            // kernel::debug!("Notifying RX client");
                             client.received_buffer(
-                                rx_buffer,
-                                self.offset.get(),
+                                buffer,
+                                length,
                                 Ok(()),
-                                uart::Error::None,
+                                kernel::hil::uart::Error::None,
                             );
                         });
-                    });
-                } else {
-                    // Setup how much we can read. We already made sure that
-                    // this will fit in the buffer.
-                    let to_read = core::cmp::min(rem, 255);
-                    self.registers
-                        .rxd_maxcnt
-                        .write(Counter::COUNTER.val(to_read as u32));
+                    } else {
+                        // There are more receptions to be done for this request,
+                        // due to the upper bound on uDMA transfer size (1024).
+                        let next_transfer_len =
+                            usize::min(remaining_len, driverlib::UDMA_XFER_SIZE_MAX as usize);
 
-                    // Actually do the receive.
-                    self.set_rx_dma_pointer_to_buffer();
-                    self.registers.task_startrx.write(Task::ENABLE::SET);
-                    self.enable_rx_interrupts();
-                }
-            }
+                        self.udma
+                            .uart_transfer_rx(&mut buffer[index..index + next_transfer_len]);
+
+                        self.rx_transaction.put(Transaction {
+                            buffer,
+                            length,
+                            index: index + next_transfer_len,
+                        });
+                    }
+                },
+            );
         }
-        */
     }
 
     /// Transmit one byte at the time
@@ -431,6 +420,27 @@ impl<'a> UartFull<'a> {
             index: first_transfer_len,
         };
         self.tx_transaction.put(tx);
+    }
+
+    // FIXME: receive_word unused
+    // Helper function used by both receive_word and receive_buffer
+    fn setup_buffer_receive(&self, rx_buf: &'static mut [u8], rx_len: usize) {
+        // truncate rx_len if necessary
+        let truncated_length = core::cmp::min(rx_len, rx_buf.len());
+
+        let first_transfer_len =
+            usize::min(truncated_length, driverlib::UDMA_XFER_SIZE_MAX as usize);
+
+        self.udma
+            .uart_transfer_rx(&mut rx_buf[..first_transfer_len]);
+        self.dma_start_rx();
+
+        let rx = Transaction {
+            buffer: rx_buf,
+            length: truncated_length,
+            index: first_transfer_len,
+        };
+        self.rx_transaction.put(rx);
     }
 }
 
@@ -503,58 +513,43 @@ impl<'a> hil::uart::Receive<'a> for UartFull<'a> {
         self.rx_client.set(client);
     }
 
-    /* fn receive_buffer(
+    fn receive_buffer(
         &self,
         rx_buf: &'static mut [u8],
         rx_len: usize,
     ) -> Result<(), (ErrorCode, &'static mut [u8])> {
-        if self.rx_buffer.is_some() {
-            return Err((ErrorCode::BUSY, rx_buf));
+        if rx_len == 0 || rx_len > rx_buf.len() {
+            Err((ErrorCode::SIZE, rx_buf))
+        } else if self.rx_transaction.is_some() {
+            Err((ErrorCode::BUSY, rx_buf))
+        } else {
+            self.setup_buffer_receive(rx_buf, rx_len);
+            Ok(())
         }
-        // truncate rx_len if necessary
-        let truncated_length = core::cmp::min(rx_len, rx_buf.len());
-
-        self.rx_remaining_bytes.set(truncated_length);
-        self.offset.set(0);
-        self.rx_buffer.replace(rx_buf);
-        self.set_rx_dma_pointer_to_buffer();
-
-        let truncated_uart_max_length = core::cmp::min(truncated_length, 255);
-
-        self.registers
-            .rxd_maxcnt
-            .write(Counter::COUNTER.val(truncated_uart_max_length as u32));
-        self.registers.task_stoprx.write(Task::ENABLE::SET);
-        self.registers.task_startrx.write(Task::ENABLE::SET);
-
-        self.enable_rx_interrupts();
-        Ok(())
-    } */
+    }
 
     fn receive_word(&self) -> Result<(), ErrorCode> {
         Err(ErrorCode::FAIL)
     }
 
-    fn receive_buffer(
-        &self,
-        rx_buffer: &'static mut [u8],
-        rx_len: usize,
-    ) -> Result<(), (ErrorCode, &'static mut [u8])> {
-        Err((ErrorCode::NOSUPPORT, rx_buffer))
-    }
-
     fn receive_abort(&self) -> Result<(), ErrorCode> {
-        Err(ErrorCode::NOSUPPORT)
-    }
-
-    /* fn receive_abort(&self) -> Result<(), ErrorCode> {
-        // Trigger the STOPRX event to cancel the current receive call.
-        if self.rx_buffer.is_none() {
-            Ok(())
-        } else {
-            self.rx_abort_in_progress.set(true);
-            self.registers.task_stoprx.write(Task::ENABLE::SET);
+        // Experimental:
+        // because of DMA, this may (and probably will) return bigger
+        // amount of data received than it really was.
+        if let Some(Transaction { buffer, index, .. }) = self.rx_transaction.take() {
+            self.dma_stop_rx();
+            self.udma.uart_disable_rx();
+            self.rx_client.map(|client| {
+                client.received_buffer(
+                    buffer,
+                    index,
+                    Err(ErrorCode::CANCEL),
+                    kernel::hil::uart::Error::Aborted,
+                )
+            });
             Err(ErrorCode::BUSY)
+        } else {
+            Ok(())
         }
-    } */
+    }
 }
