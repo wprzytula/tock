@@ -149,7 +149,6 @@ impl DriverlibBuilder {
         // Compile extern.c containing (formerly) static inline functions
         let extern_bc_path = cc::Build::new()
             .compiler("clang")
-            .target("arm-none-eabi")
             .file(&self.extern_c_path)
             .warnings(false)
             .define("DOXYGEN", None)
