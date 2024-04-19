@@ -6,4 +6,5 @@
         "RUSTUP_TOOLCHAIN": "nightly-2024-01-01"
     },
     "rust-analyzer.check.allTargets": false,
+    "rust-analyzer.cargo.target": "thumbv7m-none-eabi"
 }
