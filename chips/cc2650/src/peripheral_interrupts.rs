@@ -4,7 +4,7 @@ pub const RF_CORE_PE_1: u32 = 2;
 // 3 is unassigned
 pub const AON_RTC: u32 = 4;
 pub const UART0: u32 = 5;
-pub const UART1: u32 = 6;
+pub const AUX_SWEV0: u32 = 6;
 pub const SSI0: u32 = 7;
 pub const SSI1: u32 = 8;
 pub const RF_CORE_PE_2: u32 = 9;

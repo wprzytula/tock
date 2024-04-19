@@ -69,7 +69,7 @@ pub static IRQS: [unsafe extern "C" fn(); 34] = [
     unhandled_interrupt,      // unassigned
     CortexM3::GENERIC_ISR,    // AON RTC
     CortexM3::GENERIC_ISR,    // UART0 Rx and Tx
-    CortexM3::GENERIC_ISR,    // UART1 Rx and Tx
+    CortexM3::GENERIC_ISR,    // AUX Software Event 0
     CortexM3::GENERIC_ISR,    // SSI0 Rx and Tx
     CortexM3::GENERIC_ISR,    // SSI1 Rx and Tx
     CortexM3::GENERIC_ISR,    // RF Core & Packet Engine 2
