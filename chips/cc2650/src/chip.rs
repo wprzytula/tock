@@ -106,7 +106,7 @@ impl kernel::platform::chip::InterruptService for Cc2650<'_> {
             irq::RF_CORE_PE_1 => todo!(),
             irq::AON_RTC => todo!(),
             irq::UART0 => self.uart_full.handle_interrupt(),
-            irq::UART1 => todo!(),
+            irq::AUX_SWEV0 => todo!(),
             irq::SSI0 => todo!(),
             irq::SSI1 => todo!(),
             irq::RF_CORE_PE_2 => todo!(),
