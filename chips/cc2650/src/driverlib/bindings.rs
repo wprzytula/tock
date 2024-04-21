@@ -103,7 +103,7 @@ pub const __SVID_VISIBLE: u32 = 1;
 pub const __XSI_VISIBLE: u32 = 0;
 pub const __SSP_FORTIFY_LEVEL: u32 = 0;
 pub const __have_longlong64: u32 = 1;
-pub const __have_long64: u32 = 1;
+pub const __have_long32: u32 = 1;
 pub const ___int8_t_defined: u32 = 1;
 pub const ___int16_t_defined: u32 = 1;
 pub const ___int32_t_defined: u32 = 1;
@@ -116,13 +116,13 @@ pub const __int20: u32 = 2;
 pub const __int20__: u32 = 2;
 pub const __INT8: &[u8; 3] = b"hh\0";
 pub const __INT16: &[u8; 2] = b"h\0";
-pub const __INT64: &[u8; 2] = b"l\0";
+pub const __INT64: &[u8; 3] = b"ll\0";
 pub const __FAST8: &[u8; 3] = b"hh\0";
 pub const __FAST16: &[u8; 2] = b"h\0";
-pub const __FAST64: &[u8; 2] = b"l\0";
+pub const __FAST64: &[u8; 3] = b"ll\0";
 pub const __LEAST8: &[u8; 3] = b"hh\0";
 pub const __LEAST16: &[u8; 2] = b"h\0";
-pub const __LEAST64: &[u8; 2] = b"l\0";
+pub const __LEAST64: &[u8; 3] = b"ll\0";
 pub const __int8_t_defined: u32 = 1;
 pub const __int16_t_defined: u32 = 1;
 pub const __int32_t_defined: u32 = 1;
@@ -17543,17 +17543,7 @@ pub const LINE_MAX: u32 = 2048;
 pub const RE_DUP_MAX: u32 = 255;
 pub const MB_LEN_MAX: u32 = 1;
 pub const NL_ARGMAX: u32 = 32;
-pub const CHAR_WIDTH: u32 = 8;
-pub const SCHAR_WIDTH: u32 = 8;
-pub const UCHAR_WIDTH: u32 = 8;
-pub const SHRT_WIDTH: u32 = 16;
-pub const USHRT_WIDTH: u32 = 16;
-pub const INT_WIDTH: u32 = 32;
-pub const UINT_WIDTH: u32 = 32;
-pub const LLONG_WIDTH: u32 = 64;
-pub const ULLONG_WIDTH: u32 = 64;
-pub const BOOL_MAX: u32 = 1;
-pub const BOOL_WIDTH: u32 = 1;
+pub const CHAR_MIN: u32 = 0;
 pub const _POSIX2_RE_DUP_MAX: u32 = 255;
 pub const ECRYPT_NAME: &[u8; 8] = b"ChaCha8\0";
 pub const ECRYPT_PROFILE: &[u8; 6] = b"_____\0";
@@ -18667,20 +18657,20 @@ pub type __int16_t = cty::c_short;
 pub type __uint16_t = cty::c_ushort;
 pub type __int32_t = cty::c_int;
 pub type __uint32_t = cty::c_uint;
-pub type __int64_t = cty::c_long;
-pub type __uint64_t = cty::c_ulong;
+pub type __int64_t = cty::c_longlong;
+pub type __uint64_t = cty::c_ulonglong;
 pub type __int_least8_t = cty::c_schar;
 pub type __uint_least8_t = cty::c_uchar;
 pub type __int_least16_t = cty::c_short;
 pub type __uint_least16_t = cty::c_ushort;
 pub type __int_least32_t = cty::c_int;
 pub type __uint_least32_t = cty::c_uint;
-pub type __int_least64_t = cty::c_long;
-pub type __uint_least64_t = cty::c_ulong;
-pub type __intmax_t = cty::c_long;
-pub type __uintmax_t = cty::c_ulong;
-pub type __intptr_t = cty::c_long;
-pub type __uintptr_t = cty::c_ulong;
+pub type __int_least64_t = cty::c_longlong;
+pub type __uint_least64_t = cty::c_ulonglong;
+pub type __intmax_t = cty::c_longlong;
+pub type __uintmax_t = cty::c_ulonglong;
+pub type __intptr_t = cty::c_int;
+pub type __uintptr_t = cty::c_uint;
 pub type intmax_t = __intmax_t;
 pub type uintmax_t = __uintmax_t;
 pub type int_least8_t = __int_least8_t;
@@ -18697,8 +18687,8 @@ pub type int_fast16_t = cty::c_short;
 pub type uint_fast16_t = cty::c_ushort;
 pub type int_fast32_t = cty::c_int;
 pub type uint_fast32_t = cty::c_uint;
-pub type int_fast64_t = cty::c_long;
-pub type uint_fast64_t = cty::c_ulong;
+pub type int_fast64_t = cty::c_longlong;
+pub type uint_fast64_t = cty::c_ulonglong;
 pub type FPTR_VOID_VOID_T = ::core::option::Option<unsafe extern "C" fn()>;
 pub type FPTR_VOID_UINT8_T = ::core::option::Option<unsafe extern "C" fn(arg1: u8)>;
 pub type __UINT32 = cty::c_uint;
@@ -20319,16 +20309,14 @@ extern "C" {
     #[link_name = "PowerCtrlIOFreezeDisable__extern"]
     pub fn PowerCtrlIOFreezeDisable();
 }
-pub type wchar_t = cty::c_int;
+pub type wchar_t = cty::c_uint;
 #[repr(C)]
-#[repr(align(16))]
 #[derive(Debug, Copy, Clone)]
 pub struct max_align_t {
     pub __clang_max_align_nonce1: cty::c_longlong,
-    pub __bindgen_padding_0: u64,
-    pub __clang_max_align_nonce2: u128,
+    pub __clang_max_align_nonce2: f64,
 }
-pub type wint_t = cty::c_uint;
+pub type wint_t = cty::c_int;
 pub type __blkcnt_t = cty::c_long;
 pub type __blksize_t = cty::c_long;
 pub type __fsblkcnt_t = __uint64_t;
@@ -20346,8 +20334,8 @@ pub type __off_t = _off_t;
 pub type __loff_t = _off64_t;
 pub type __key_t = cty::c_long;
 pub type _fpos_t = cty::c_long;
-pub type __size_t = cty::c_ulong;
-pub type _ssize_t = cty::c_long;
+pub type __size_t = cty::c_uint;
+pub type _ssize_t = cty::c_int;
 pub type __ssize_t = _ssize_t;
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -20363,7 +20351,7 @@ pub union _mbstate_t__bindgen_ty_1 {
 }
 pub type _iconv_t = *mut cty::c_void;
 pub type __clock_t = cty::c_ulong;
-pub type __time_t = cty::c_long;
+pub type __time_t = __int_least64_t;
 pub type __clockid_t = cty::c_ulong;
 pub type __daddr_t = cty::c_long;
 pub type __timer_t = cty::c_ulong;
@@ -20373,8 +20361,8 @@ pub type __nl_item = cty::c_int;
 pub type __nlink_t = cty::c_ushort;
 pub type __suseconds_t = cty::c_long;
 pub type __useconds_t = cty::c_ulong;
-pub type __va_list = __builtin_va_list;
-pub type __ULong = cty::c_uint;
+pub type __va_list = u32;
+pub type __ULong = cty::c_ulong;
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct __lock {
@@ -20613,14 +20601,14 @@ extern "C" {
     pub fn bcmp(
         arg1: *const cty::c_void,
         arg2: *const cty::c_void,
-        arg3: cty::c_ulong,
+        arg3: cty::c_uint,
     ) -> cty::c_int;
 }
 extern "C" {
     pub fn bcopy(arg1: *const cty::c_void, arg2: *mut cty::c_void, arg3: usize);
 }
 extern "C" {
-    pub fn bzero(arg1: *mut cty::c_void, arg2: cty::c_ulong);
+    pub fn bzero(arg1: *mut cty::c_void, arg2: cty::c_uint);
 }
 extern "C" {
     pub fn explicit_bzero(arg1: *mut cty::c_void, arg2: usize);
@@ -20656,7 +20644,7 @@ extern "C" {
     pub fn strncasecmp(
         arg1: *const cty::c_char,
         arg2: *const cty::c_char,
-        arg3: cty::c_ulong,
+        arg3: cty::c_uint,
     ) -> cty::c_int;
 }
 extern "C" {
@@ -20678,33 +20666,32 @@ extern "C" {
     pub fn memchr(
         arg1: *const cty::c_void,
         arg2: cty::c_int,
-        arg3: cty::c_ulong,
+        arg3: cty::c_uint,
     ) -> *mut cty::c_void;
 }
 extern "C" {
     pub fn memcmp(
         arg1: *const cty::c_void,
         arg2: *const cty::c_void,
-        arg3: cty::c_ulong,
+        arg3: cty::c_uint,
     ) -> cty::c_int;
 }
 extern "C" {
     pub fn memcpy(
         arg1: *mut cty::c_void,
         arg2: *const cty::c_void,
-        arg3: cty::c_ulong,
+        arg3: cty::c_uint,
     ) -> *mut cty::c_void;
 }
 extern "C" {
     pub fn memmove(
         arg1: *mut cty::c_void,
         arg2: *const cty::c_void,
-        arg3: cty::c_ulong,
+        arg3: cty::c_uint,
     ) -> *mut cty::c_void;
 }
 extern "C" {
-    pub fn memset(arg1: *mut cty::c_void, arg2: cty::c_int, arg3: cty::c_ulong)
-        -> *mut cty::c_void;
+    pub fn memset(arg1: *mut cty::c_void, arg2: cty::c_int, arg3: cty::c_uint) -> *mut cty::c_void;
 }
 extern "C" {
     pub fn strcat(arg1: *mut cty::c_char, arg2: *const cty::c_char) -> *mut cty::c_char;
@@ -20722,33 +20709,33 @@ extern "C" {
     pub fn strcpy(arg1: *mut cty::c_char, arg2: *const cty::c_char) -> *mut cty::c_char;
 }
 extern "C" {
-    pub fn strcspn(arg1: *const cty::c_char, arg2: *const cty::c_char) -> cty::c_ulong;
+    pub fn strcspn(arg1: *const cty::c_char, arg2: *const cty::c_char) -> cty::c_uint;
 }
 extern "C" {
     pub fn strerror(arg1: cty::c_int) -> *mut cty::c_char;
 }
 extern "C" {
-    pub fn strlen(arg1: *const cty::c_char) -> cty::c_ulong;
+    pub fn strlen(arg1: *const cty::c_char) -> cty::c_uint;
 }
 extern "C" {
     pub fn strncat(
         arg1: *mut cty::c_char,
         arg2: *const cty::c_char,
-        arg3: cty::c_ulong,
+        arg3: cty::c_uint,
     ) -> *mut cty::c_char;
 }
 extern "C" {
     pub fn strncmp(
         arg1: *const cty::c_char,
         arg2: *const cty::c_char,
-        arg3: cty::c_ulong,
+        arg3: cty::c_uint,
     ) -> cty::c_int;
 }
 extern "C" {
     pub fn strncpy(
         arg1: *mut cty::c_char,
         arg2: *const cty::c_char,
-        arg3: cty::c_ulong,
+        arg3: cty::c_uint,
     ) -> *mut cty::c_char;
 }
 extern "C" {
@@ -20758,7 +20745,7 @@ extern "C" {
     pub fn strrchr(arg1: *const cty::c_char, arg2: cty::c_int) -> *mut cty::c_char;
 }
 extern "C" {
-    pub fn strspn(arg1: *const cty::c_char, arg2: *const cty::c_char) -> cty::c_ulong;
+    pub fn strspn(arg1: *const cty::c_char, arg2: *const cty::c_char) -> cty::c_uint;
 }
 extern "C" {
     pub fn strstr(arg1: *const cty::c_char, arg2: *const cty::c_char) -> *mut cty::c_char;
@@ -20770,8 +20757,8 @@ extern "C" {
     pub fn strxfrm(
         arg1: *mut cty::c_char,
         arg2: *const cty::c_char,
-        arg3: cty::c_ulong,
-    ) -> cty::c_ulong;
+        arg3: cty::c_uint,
+    ) -> cty::c_uint;
 }
 extern "C" {
     pub fn strcoll_l(
@@ -20817,7 +20804,7 @@ extern "C" {
         arg1: *mut cty::c_void,
         arg2: *const cty::c_void,
         arg3: cty::c_int,
-        arg4: cty::c_ulong,
+        arg4: cty::c_uint,
     ) -> *mut cty::c_void;
 }
 extern "C" {
@@ -20827,7 +20814,7 @@ extern "C" {
     pub fn stpncpy(
         arg1: *mut cty::c_char,
         arg2: *const cty::c_char,
-        arg3: cty::c_ulong,
+        arg3: cty::c_uint,
     ) -> *mut cty::c_char;
 }
 extern "C" {
@@ -20837,7 +20824,7 @@ extern "C" {
     pub fn _strdup_r(arg1: *mut _reent, arg2: *const cty::c_char) -> *mut cty::c_char;
 }
 extern "C" {
-    pub fn strndup(arg1: *const cty::c_char, arg2: cty::c_ulong) -> *mut cty::c_char;
+    pub fn strndup(arg1: *const cty::c_char, arg2: cty::c_uint) -> *mut cty::c_char;
 }
 extern "C" {
     pub fn _strndup_r(arg1: *mut _reent, arg2: *const cty::c_char, arg3: usize)
@@ -20859,15 +20846,15 @@ extern "C" {
     pub fn strlcat(
         arg1: *mut cty::c_char,
         arg2: *const cty::c_char,
-        arg3: cty::c_ulong,
-    ) -> cty::c_ulong;
+        arg3: cty::c_uint,
+    ) -> cty::c_uint;
 }
 extern "C" {
     pub fn strlcpy(
         arg1: *mut cty::c_char,
         arg2: *const cty::c_char,
-        arg3: cty::c_ulong,
-    ) -> cty::c_ulong;
+        arg3: cty::c_uint,
+    ) -> cty::c_uint;
 }
 extern "C" {
     pub fn strnlen(arg1: *const cty::c_char, arg2: usize) -> usize;
@@ -34666,8 +34653,8 @@ pub type s16 = cty::c_short;
 pub type u16_ = cty::c_ushort;
 pub type s32 = cty::c_int;
 pub type u32_ = cty::c_uint;
-pub type s64 = cty::c_long;
-pub type u64_ = cty::c_ulong;
+pub type s64 = cty::c_longlong;
+pub type u64_ = cty::c_ulonglong;
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct ECRYPT_ctx {
@@ -35342,13 +35329,4 @@ extern "C" {
 extern "C" {
     #[link_name = "WatchdogStallDisable__extern"]
     pub fn WatchdogStallDisable();
-}
-pub type __builtin_va_list = [__va_list_tag; 1usize];
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct __va_list_tag {
-    pub gp_offset: cty::c_uint,
-    pub fp_offset: cty::c_uint,
-    pub overflow_arg_area: *mut cty::c_void,
-    pub reg_save_area: *mut cty::c_void,
 }
