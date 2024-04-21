@@ -7,7 +7,7 @@ use crate::{
     gpt::Gpt,
     peripheral_interrupts as irq,
     prcm::{self, Prcm},
-    uart::UartFull,
+    uart::{UartFull, UartLite},
     udma::Udma,
 };
 
@@ -15,6 +15,7 @@ pub struct Cc2650<'a> {
     userspace_kernel_boundary: cortexm3::syscall::SysCall,
     pub gpt: Gpt<'a>,
     pub uart_full: UartFull<'a>,
+    pub uart_lite: UartLite<'a>,
     pub prcm: Prcm,
 }
 const MASK_AON_PROG: (u128, u128) = cortexm3::interrupt_mask!(irq::AON_PROG);
@@ -35,6 +36,18 @@ impl<'a> Cc2650<'a> {
 
         let gpt = Gpt::new(peripherals.GPT0);
 
+        let uart_lite = UartLite::new(
+            peripherals.AON_WUC,
+            peripherals.AUX_AIODIO0,
+            peripherals.AUX_AIODIO1,
+            peripherals.AUX_EVCTL,
+            peripherals.AUX_SCE,
+            peripherals.AUX_TIMER,
+            peripherals.AUX_WUC,
+        );
+        uart_lite.initialize();
+        // uart_lite.enable();
+
         let uart_full = UartFull::new(peripherals.UART0);
         uart_full.initialize();
         uart_full.enable();
@@ -43,6 +56,7 @@ impl<'a> Cc2650<'a> {
             userspace_kernel_boundary: cortexm3::syscall::SysCall::new(),
             gpt,
             uart_full,
+            uart_lite,
             prcm,
         }
     }
@@ -106,7 +120,7 @@ impl kernel::platform::chip::InterruptService for Cc2650<'_> {
             irq::RF_CORE_PE_1 => todo!(),
             irq::AON_RTC => todo!(),
             irq::UART0 => self.uart_full.handle_interrupt(),
-            irq::AUX_SWEV0 => todo!(),
+            irq::AUX_SWEV0 => (), // FIXME: don't just ignore AUX_SWEV0
             irq::SSI0 => todo!(),
             irq::SSI1 => todo!(),
             irq::RF_CORE_PE_2 => todo!(),

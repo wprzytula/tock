@@ -558,3 +558,500 @@ mod full {
     }
 }
 pub use full::{UartFull, BAUD_RATE};
+
+mod lite {
+    use kernel::{
+        hil::{self, uart::Transmit},
+        ErrorCode,
+    };
+    use tock_cells::optional_cell::OptionalCell;
+
+    use crate::{
+        driverlib,
+        scif::{
+            SCIFData, SCIFIntData, SCIFTaskCtrl, SCIFTaskStructType, Scif, AUXIOMODE_INPUT,
+            AUXIOMODE_OUTPUT,
+        },
+    };
+
+    use super::Transaction;
+
+    /// Maximum number of characters that can be stored in the UART TX FIFO
+    const SCIF_UART_TX_BUFFER_LEN: usize = 768;
+    const SCIF_UART_TX_FIFO_MAX_COUNT: u32 = (SCIF_UART_TX_BUFFER_LEN - 1) as u32;
+
+    /// UART Emulator I/O mapping: UART RX
+    const SCIF_UART_EMULATOR_DIO_UART_RX: u32 = 29;
+    /// UART Emulator I/O mapping: UART TX
+    const SCIF_UART_EMULATOR_DIO_UART_TX: u32 = 28;
+
+    const SCIF_UART_EMULATOR_TASK_ID: u32 = 0;
+
+    const SCIF_UART_BAUD_RATE: u32 = 230400;
+    const LOST_BUFFER_SIZE: usize = 16;
+    const SC_UART_FREE_THRESHOLD: u32 = 2 * SCIF_UART_TX_FIFO_MAX_COUNT / 4;
+
+    // All shared data structures in AUX RAM need to be packed
+
+    type TxBuffer = [u16; SCIF_UART_TX_BUFFER_LEN];
+
+    /// UART Emulator: Task input data structure
+    #[repr(packed)]
+    struct SCIFUartEmulatorInput {
+        /// TX FIFO ring buffer
+        tx_buffer: TxBuffer,
+    }
+
+    /// UART Emulator: Task state structure
+    #[repr(packed)]
+    struct SCIFUartEmulatorState {
+        /// TX FIFO head index (updated by the application)
+        tx_head: u16,
+        /// TX FIFO tail index (updated by the Sensor Controller)
+        tx_tail: u16,
+    }
+
+    /// Sensor Controller task data (configuration, input buffer(s), output buffer(s) and internal state)
+    #[repr(packed)]
+    struct SCIFTaskData {
+        uart_emulator: UARTEmulator,
+    }
+
+    #[repr(packed)]
+    struct UARTEmulator {
+        input: SCIFUartEmulatorInput,
+        state: SCIFUartEmulatorState,
+    }
+
+    /// Sensor Controller task generic control (located in AUX RAM)
+    const SCIF_TASK_DATA: *mut SCIFTaskData = 0x400E00E6 as *mut SCIFTaskData;
+
+    // Initialized internal driver data, to be used in the call to \ref scifInit()
+    // extern const SCIF_DATA_T scifDriverSetup;
+
+    // UART TX FIFO access functions
+    // uint32_t scifUartGetTxFifoCount(void);
+    // void scifUartTxPutTwoChars(char c1, char c2);
+    // void scifUartTxPutChar(char c);
+    // void scifUartTxPutChars(char* pBuffer, uint32_t count);
+
+    /// Firmware image to be uploaded to the AUX RAM
+    #[rustfmt::skip]
+    static AUX_RAM_IMAGE: [u16; 941] = [
+    /*0x0000*/ 0x1408, 0x040C, 0x1408, 0x042C, 0x1408, 0x0447, 0x1408, 0x044D, 0x4436, 0x2437, 0xAEFE, 0xADB7, 0x6442, 0x7000, 0x7C6B, 0x6870, 
+    /*0x0020*/ 0x0068, 0x1425, 0x6871, 0x0069, 0x1425, 0x6872, 0x006A, 0x1425, 0x786B, 0xF801, 0xFA01, 0xBEF2, 0x786E, 0x6870, 0xFD0E, 0x6872, 
+    /*0x0040*/ 0xED92, 0xFD06, 0x7C6E, 0x642D, 0x0451, 0x786B, 0x8F1F, 0xED8F, 0xEC01, 0xBE01, 0xADB7, 0x8DB7, 0x6630, 0x6542, 0x0000, 0x186E, 
+    /*0x0060*/ 0x9D88, 0x9C01, 0xB60D, 0x1067, 0xAF19, 0xAA00, 0xB609, 0xA8FF, 0xAF39, 0xBE06, 0x0C6B, 0x8869, 0x8F08, 0xFD47, 0x9DB7, 0x086B, 
+    /*0x0080*/ 0x8801, 0x8A01, 0xBEEC, 0x262F, 0xAEFE, 0x4630, 0x0451, 0x5527, 0x6642, 0x0000, 0x0C6B, 0x140B, 0x0451, 0x6742, 0x86FF, 0x03FF, 
+    /*0x00A0*/ 0x0C6D, 0x786C, 0xCD47, 0x686D, 0xCD06, 0xB605, 0x0000, 0x0C6C, 0x7C6F, 0x652D, 0x0C6D, 0x786D, 0xF801, 0xE92B, 0xFD0E, 0xBE01, 
+    /*0x00C0*/ 0x6436, 0xBDB7, 0x241A, 0xA6FE, 0xADB7, 0x641A, 0xADB7, 0x0000, 0x0375, 0x0376, 0x0378, 0x0000, 0x0000, 0xFFFF, 0x0000, 0x0000, 
+    /*0x00E0*/ 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 
+    /*0x0100*/ 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 
+    /*0x0120*/ 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 
+    /*0x0140*/ 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 
+    /*0x0160*/ 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 
+    /*0x0180*/ 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 
+    /*0x01A0*/ 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 
+    /*0x01C0*/ 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 
+    /*0x01E0*/ 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 
+    /*0x0200*/ 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 
+    /*0x0220*/ 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 
+    /*0x0240*/ 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 
+    /*0x0260*/ 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 
+    /*0x0280*/ 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 
+    /*0x02A0*/ 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 
+    /*0x02C0*/ 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 
+    /*0x02E0*/ 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 
+    /*0x0300*/ 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 
+    /*0x0320*/ 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 
+    /*0x0340*/ 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 
+    /*0x0360*/ 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 
+    /*0x0380*/ 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 
+    /*0x03A0*/ 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 
+    /*0x03C0*/ 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 
+    /*0x03E0*/ 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 
+    /*0x0400*/ 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 
+    /*0x0420*/ 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 
+    /*0x0440*/ 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 
+    /*0x0460*/ 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 
+    /*0x0480*/ 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 
+    /*0x04A0*/ 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 
+    /*0x04C0*/ 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 
+    /*0x04E0*/ 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 
+    /*0x0500*/ 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 
+    /*0x0520*/ 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 
+    /*0x0540*/ 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 
+    /*0x0560*/ 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 
+    /*0x0580*/ 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 
+    /*0x05A0*/ 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 
+    /*0x05C0*/ 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 
+    /*0x05E0*/ 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 
+    /*0x0600*/ 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 
+    /*0x0620*/ 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 
+    /*0x0640*/ 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 
+    /*0x0660*/ 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 
+    /*0x0680*/ 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 
+    /*0x06A0*/ 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 
+    /*0x06C0*/ 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 
+    /*0x06E0*/ 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0xADB7, 0x1779, 0xADB7, 0xADB7, 0x8603, 0x0380, 0x0FAC, 0x6000, 0x0BAC, 0xCDB1, 0x8DB7, 
+    /*0x0700*/ 0xED36, 0xBE06, 0x2B73, 0x1B74, 0x9D2A, 0xB605, 0x9873, 0xEF09, 0x8603, 0x138C, 0x1FAC, 0x077D, 0x460E, 0x7008, 0x8603, 0x1392, 
+    /*0x0720*/ 0x1FAC, 0x077D, 0xEC01, 0xBE02, 0x460E, 0x8E01, 0x660E, 0xEDA9, 0xF8FF, 0xBE03, 0x8603, 0x139E, 0x1FAC, 0x077D, 0x8603, 0x1380, 
+    /*0x0740*/ 0x1FAC, 0x660E, 0xED36, 0xBED9, 0x1B74, 0x9801, 0x8603, 0x9A00, 0xAE01, 0x1000, 0x1F74, 0x077D, 0x0000
+    ];
+
+    /// Look-up table that converts from AUX I/O index to MCU IOCFG offset
+    static AUX_TO_INDEX_TO_MCU_IOCFG_OFFSET_LUT: [u8; 0x10] = [
+        120, 116, 112, 108, 104, 100, 96, 92, 28, 24, 20, 16, 12, 8, 4, 0,
+    ];
+
+    /** \brief Look-up table of data structure information for each task
+     *
+     * There is one entry per data structure (\c cfg, \c input, \c output and \c state) per task:
+     * - [31:20] Data structure size (number of 16-bit words)
+     * - [19:12] Buffer count (when 2+, first data structure is preceded by buffering control variables)
+     * - [11:0] Address of the first data structure
+     */
+    static SCIF_TASK_DATA_STRUCT_INFO_LUT: [u32; 0x4] = [
+        //  cfg         input       output      state
+        0x00000000, 0x300010E6, 0x00000000, 0x002016E6, // UART Emulator
+    ];
+
+    // No task-specific initialization functions
+
+    // No task-specific uninitialization functions
+
+    /** \brief Initilializes task resource hardware dependencies
+     *
+     * This function is called by the internal driver initialization function, \ref scifInit().
+     */
+    unsafe fn scif_task_resource_init(scif: &Scif) {
+        scif.scif_init_io(2, AUXIOMODE_OUTPUT, 1, 1);
+        scif.scif_init_io(1, AUXIOMODE_INPUT, 1, 0);
+    } // scifTaskResourceInit
+
+    /** \brief Uninitilializes task resource hardware dependencies
+     *
+     * This function is called by the internal driver uninitialization function, \ref scifUninit().
+     */
+    unsafe fn scif_task_resource_uninit(scif: &Scif) {
+        scif.scif_uninit_io(2, 1);
+        scif.scif_uninit_io(1, 1);
+    } // scifTaskResourceUninit
+
+    impl Scif {
+        /** \brief Sets the UART baud rate
+         *
+         * This function must be called to start baud rate generation before or after starting the UART
+         * emulation task. This function can be called during operation to change the baud rate on-the-fly.
+         *
+         * \param[in]      baudRate
+         *     The new baud rate (e.g. 115200 or 9600). 0 disables baud rate generation.
+         */
+        pub(crate) fn uart_set_baud_rate(&self, baud_rate: u32) {
+            // Start baud rate generation?
+            if baud_rate > 0 {
+                // Calculate the AUX timer 0 period
+                let mut t0_period = 24000000 / baud_rate;
+
+                // The period must be 256 clock cycles or less, so up the prescaler until it is
+                let mut t0_prescaler_exp = 0;
+                while t0_period > 256 {
+                    t0_prescaler_exp += 1;
+                    t0_period >>= 1;
+                }
+
+                // Stop baud rate generation while reconfiguring
+                self.aux_timer.t0ctl.write(|w| w.en().clear_bit());
+
+                // Set period and prescaler, and select reload mode
+                self.aux_timer
+                    .t0cfg
+                    .write(|w| unsafe { w.pre().bits(t0_prescaler_exp).reload().set_bit() });
+                self.aux_timer
+                    .t0target
+                    .write(|w| unsafe { w.value().bits(t0_period as u16 - 1) });
+
+                // Start baud rate generation
+                self.aux_timer.t0ctl.write(|w| w.en().set_bit());
+
+            // Baud rate 0 -> stop baud rate generation
+            } else {
+                self.aux_timer.t0ctl.write(|w| w.en().clear_bit());
+            }
+        }
+
+        /** \brief Re-initializes I/O pins used by the specified tasks
+         *
+         * It is possible to stop a Sensor Controller task and let the System CPU borrow and operate its I/O
+         * pins. For example, the Sensor Controller can operate an SPI interface in one application state while
+         * the System CPU with SSI operates the SPI interface in another application state.
+         *
+         * This function must be called before \ref scifExecuteTasksOnceNbl() or \ref scifStartTasksNbl() if
+         * I/O pins belonging to Sensor Controller tasks have been borrowed System CPU peripherals.
+         *
+         * \param[in]      bvTaskIds
+         *     Bit-vector of task IDs for the task I/Os to be re-initialized
+         */
+        unsafe fn scif_reinit_task_io(&self, bv_task_ids: u32) {
+            if bv_task_ids & (1 << SCIF_UART_EMULATOR_TASK_ID) != 0 {
+                self.scif_reinit_io(2, 1);
+                self.scif_reinit_io(1, 1);
+            }
+        } // scifReinitTaskIo
+    }
+
+    pub struct UartLite<'a> {
+        scif: Scif,
+        tx_client: OptionalCell<&'a dyn hil::uart::TransmitClient>,
+        tx: OptionalCell<Transaction>,
+    }
+
+    impl<'a> UartLite<'a> {
+        pub(crate) fn new(
+            aon_wuc: cc2650::AON_WUC,
+            aux_aiodio0: cc2650::AUX_AIODIO0,
+            aux_aiodio1: cc2650::AUX_AIODIO1,
+            aux_evctl: cc2650::AUX_EVCTL,
+            aux_sce: cc2650::AUX_SCE,
+            aux_timer: cc2650::AUX_TIMER,
+            aux_wuc: cc2650::AUX_WUC,
+        ) -> Self {
+            let scif = Scif::new(
+                aon_wuc,
+                aux_aiodio0,
+                aux_aiodio1,
+                aux_evctl,
+                aux_sce,
+                aux_timer,
+                aux_wuc,
+            );
+
+            Self {
+                scif,
+                tx_client: OptionalCell::empty(),
+                tx: OptionalCell::empty(),
+            }
+        }
+
+        /// Driver setup data, to be used in the call to \ref scifInit()
+        fn scif_driver_data() -> SCIFData {
+            SCIFData {
+                int_data: 0x400E00D6 as *mut SCIFIntData,
+                task_ctrl: 0x400E00DC as *mut SCIFTaskCtrl,
+                task_execute_schedule: 0x400E00CE as *mut u16,
+                bv_dirty_tasks: 0x0000,
+                aux_ram_image_size: core::mem::size_of_val(&AUX_RAM_IMAGE) as u16,
+                aux_ram_image: AUX_RAM_IMAGE.as_ptr(),
+                task_data_struct_info_lut: &SCIF_TASK_DATA_STRUCT_INFO_LUT,
+                aux_io_index_to_mcu_iocfg_offset_lut: &AUX_TO_INDEX_TO_MCU_IOCFG_OFFSET_LUT,
+                fptr_task_resource_init: scif_task_resource_init,
+                fptr_task_resource_uninit: scif_task_resource_uninit,
+            }
+        }
+
+        pub(crate) fn initialize(&self) {
+            unsafe {
+                driverlib::AONWUCAuxWakeupEvent(driverlib::AONWUC_AUX_WAKEUP);
+                while driverlib::AONWUCPowerStatusGet() & driverlib::AONWUC_AUX_POWER_ON == 0 {}
+                aux_ctrl_register_consumer();
+                driverlib::AONWUCMcuPowerDownConfig(driverlib::AONWUC_CLOCK_SRC_LF);
+                driverlib::AONWUCAuxPowerDownConfig(driverlib::AONWUC_CLOCK_SRC_LF);
+
+                self.scif.scif_init(Self::scif_driver_data());
+                self.scif.scif_reset_task_structs(
+                    1 << SCIF_UART_EMULATOR_TASK_ID,
+                    (1 << SCIFTaskStructType::SCIFStructCfg as u32)
+                        | (1 << SCIFTaskStructType::SCIFStructInput as u32)
+                        | (1 << SCIFTaskStructType::SCIFStructOutput as u32),
+                );
+                self.scif
+                    .scif_execute_tasks_once_nbl(1 << SCIF_UART_EMULATOR_TASK_ID);
+
+                self.scif.uart_set_baud_rate(SCIF_UART_BAUD_RATE);
+            }
+        }
+    }
+
+    unsafe fn aux_ctrl_register_consumer() {
+        let interrupts_disabled = driverlib::IntMasterDisable();
+
+        driverlib::AONWUCAuxWakeupEvent(driverlib::AONWUC_AUX_WAKEUP);
+        while driverlib::AONWUCPowerStatusGet() & driverlib::AONWUC_AUX_POWER_ON == 0 {}
+
+        driverlib::AUXWUCClockEnable(driverlib::AUX_WUC_SMPH_CLOCK);
+        while driverlib::AUXWUCClockStatus(driverlib::AUX_WUC_SMPH_CLOCK)
+            != driverlib::AUX_WUC_CLOCK_READY
+        {}
+
+        if !interrupts_disabled {
+            driverlib::IntMasterEnable();
+        }
+    }
+
+    /** \brief Calculates the number of cells currently used in the TX FIFO
+     *
+     * The TX FIFO is divided into 2-byte cells and only a whole cell can be used.
+     *
+     * The count is decremented when all characters from the current cell (stop bits of the last one) are transmitted.
+     *
+     * \return
+     *     The number of cells used in the TX FIFO, waiting to be transmitted
+     */
+    unsafe fn scif_uart_get_tx_fifo_count() -> u16 {
+        let SCIFUartEmulatorState {
+            tx_tail,
+            mut tx_head,
+        } = (*SCIF_TASK_DATA).uart_emulator.state;
+        if tx_head < tx_tail {
+            tx_head += (core::mem::size_of::<TxBuffer>() / core::mem::size_of::<u16>()) as u16;
+        }
+        tx_head - tx_tail
+    } // scifUartGetTxFifoCount
+
+    unsafe fn scif_uart_get_tx_fifo_free_slots() -> u16 {
+        SCIF_UART_TX_FIFO_MAX_COUNT as u16 - scif_uart_get_tx_fifo_count()
+    } // scifUartGetTxFifoCount
+
+    /** \brief Transmits two characters
+     *
+     * This function must not be called when the TX FIFO is full. Both characters use only one TX FIFO cell.
+     * Calling this function when the FIFO is full will cause overflow, without warning. The number of free cells in the FIFO is:
+     * \code
+     * SCIF_UART_TX_FIFO_MAX_COUNT - scifUartGetTxFifoCount()
+     * \endcode
+     *
+     * \param[in]      c1
+     *     The first character to transmit
+     * \param[in]      c2
+     *     The second character to transmit
+     */
+    unsafe fn scif_uart_tx_put_two_chars(c1: u8, c2: u8) {
+        // Put the character
+        let mut tx_head = (*SCIF_TASK_DATA).uart_emulator.state.tx_head;
+        let entry = (c2 as u16) << 8 | c1 as u16;
+        (*SCIF_TASK_DATA).uart_emulator.input.tx_buffer[tx_head as usize] = entry;
+
+        // Update the TX FIFO head index
+        tx_head += 1;
+        if tx_head == (core::mem::size_of::<TxBuffer>() / core::mem::size_of::<u16>()) as u16 {
+            tx_head = 0;
+        }
+        (*SCIF_TASK_DATA).uart_emulator.state.tx_head = tx_head as u16;
+    } // scifUartTxPutTwoChars
+
+    /** \brief Transmits one character
+     *
+     * This function must not be called when the TX FIFO is full.
+     * Calling this function when the FIFO is full will cause overflow, without warning. The number of free cells in the FIFO is:
+     * \code
+     * SCIF_UART_TX_FIFO_MAX_COUNT - scifUartGetTxFifoCount()
+     * \endcode
+     *
+     * \param[in]      c
+     *     The character to transmit
+     */
+    unsafe fn scif_uart_tx_put_char(c: u8) {
+        scif_uart_tx_put_two_chars(c, 0);
+    } // scifUartTxPutChar
+
+    /** \brief Transmits the specified number of character
+     *
+     * This function must not be called with count higher than the number of free entries in the TX FIFO.
+     * Calling this function with too high count will cause overflow, without warning. The number of free
+     * entries in the FIFO is:
+     * \code
+     * SCIF_UART_TX_FIFO_MAX_COUNT - scifUartGetTxFifoCount()
+     * \endcode
+     *
+     * \param[in,out]  *pBuffer
+     *     Pointer to the character source buffer
+     * \param[in]      count
+     *     Number of characters to put
+     */
+    unsafe fn scif_uart_tx_put_chars(buff: &[u8], count: u32) {
+        let mut entry: u16;
+
+        // For each character ...
+        let mut tx_head: u32 =
+            core::ptr::addr_of_mut!((*SCIF_TASK_DATA).uart_emulator.state.tx_head).read_volatile()
+                as u32;
+        for n in (0..count as usize).step_by(2) {
+            // Get it
+            if n + 1 == count as usize {
+                entry = buff[n] as u16;
+            } else {
+                entry = buff[n + 1] as u16;
+                entry <<= 8;
+                entry |= buff[n] as u16;
+            }
+
+            (*SCIF_TASK_DATA).uart_emulator.input.tx_buffer[tx_head as usize] = entry;
+
+            // Update the TX FIFO head index
+            tx_head += 1;
+            if tx_head == (core::mem::size_of::<TxBuffer>() / core::mem::size_of::<u16>()) as u32 {
+                tx_head = 0;
+            }
+        }
+        core::ptr::addr_of_mut!((*SCIF_TASK_DATA).uart_emulator.state.tx_head)
+            .write_volatile(tx_head as u16);
+    } // scifUartTxPutChars
+
+    impl<'a> Transmit<'a> for UartLite<'a> {
+        fn set_transmit_client(&self, client: &'a dyn kernel::hil::uart::TransmitClient) {
+            self.tx_client.set(client)
+        }
+
+        fn transmit_buffer(
+            &self,
+            tx_buffer: &'static mut [u8],
+            tx_len: usize,
+        ) -> Result<(), (ErrorCode, &'static mut [u8])> {
+            if tx_len > tx_buffer.len() {
+                return Err((ErrorCode::SIZE, tx_buffer));
+            }
+
+            let mut idx = 0;
+            unsafe {
+                while idx < tx_len {
+                    let remaining = tx_len - idx;
+                    let written;
+
+                    if remaining > 2 && 2 * scif_uart_get_tx_fifo_free_slots() as usize >= remaining
+                    {
+                        written = remaining;
+                        scif_uart_tx_put_chars(&tx_buffer[idx..idx + written], written as u32);
+                    } else if remaining == 1 {
+                        written = 1;
+                        while 2 * scif_uart_get_tx_fifo_free_slots() < written as u16 {}
+                        scif_uart_tx_put_char(tx_buffer[idx]);
+                    } else {
+                        // remaining >= 2
+                        written = 2;
+                        while 2 * scif_uart_get_tx_fifo_free_slots() < written as u16 {}
+                        scif_uart_tx_put_two_chars(tx_buffer[idx], tx_buffer[idx + 1])
+                    }
+
+                    idx += written;
+                }
+            }
+
+            Ok(())
+        }
+
+        fn transmit_word(&self, _word: u32) -> Result<(), ErrorCode> {
+            Err(ErrorCode::FAIL)
+        }
+
+        fn transmit_abort(&self) -> Result<(), ErrorCode> {
+            if let Some(Transaction { buffer, length, .. }) = self.tx.take() {
+                self.tx_client
+                    .map(|client| client.transmitted_buffer(buffer, length, Err(ErrorCode::FAIL)));
+                Err(ErrorCode::FAIL)
+            } else {
+                Ok(())
+            }
+        }
+    }
+}
+pub use lite::UartLite;
