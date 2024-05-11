@@ -213,6 +213,28 @@ impl Scif {
         );
     } // scifUninit
 
+    // General Purpose Input Output Data Out
+    const AUX_AIODIO_O_GPIODOUT: u32 = 0x00000000;
+
+    // Input Output Mode
+    const AUX_AIODIO_O_IOMODE: u32 = 0x00000004;
+
+    // General Purpose Input Output Digital Input Enable
+    const AUX_AIODIO_O_GPIODIE: u32 = 0x00000018;
+
+    unsafe fn read_reg(addr: u32) -> u32 {
+        let ptr = addr as *mut u32;
+        let read = ptr.read_volatile();
+        read
+    }
+
+    unsafe fn modify_reg(addr: u32, modifier: impl FnOnce(u32) -> u32) {
+        let ptr = addr as *mut u32;
+        let read = ptr.read_volatile();
+        let modified = modifier(read);
+        ptr.write_volatile(modified);
+    }
+
     /** \brief Initializes a single I/O pin for Sensor Controller usage
      *
      * This function must be called for each I/O pin to be used after AUX I/O latching has been set
@@ -251,6 +273,27 @@ impl Scif {
         output_value: u32,
     ) {
         // Calculate access parameters from the AUX I/O index
+        let (aux_aiodio_base, aux_aiodio_pin) = if aux_io_index >= 8 {
+            (driverlib::AUX_AIODIO1_BASE, aux_io_index - 8)
+        } else {
+            (driverlib::AUX_AIODIO0_BASE, aux_io_index)
+        };
+
+        // Setup the AUX I/O controller
+        Self::modify_reg(aux_aiodio_base + Self::AUX_AIODIO_O_IOMODE, |read| {
+            read & !(0x03 << (2 * aux_aiodio_pin)) | (io_mode << (2 * aux_aiodio_pin))
+        });
+        Self::modify_reg(aux_aiodio_base + Self::AUX_AIODIO_O_GPIODOUT, |read| {
+            read & !(0x01 << (aux_aiodio_pin)) | (output_value << aux_aiodio_pin)
+        });
+        Self::modify_reg(aux_aiodio_base + Self::AUX_AIODIO_O_GPIODIE, |read| {
+            read & !(0x01 << (aux_aiodio_pin)) | ((io_mode >> 16) << aux_aiodio_pin)
+        });
+        // Ensure that the settings have taken effect
+        Self::read_reg(aux_aiodio_base + Self::AUX_AIODIO_O_GPIODIE);
+
+        // THIS WAS WRONG! THIS CAUSED ERRONEOUS FIRST PRINTS!
+        /* // Calculate access parameters from the AUX I/O index
         if aux_io_index >= 8 {
             let (aux_aiodio, aux_aiodio_pin) = (&self.aux_aiodio1, aux_io_index - 8);
 
@@ -281,7 +324,7 @@ impl Scif {
                 .modify(|_r, w| w.io7_0().bits(((io_mode >> 16) << aux_aiodio_pin) as u8));
             // Ensure that the settings have taken effect
             aux_aiodio.gpiodie.read();
-        };
+        }; */
 
         // Configure pull level and transfer control of the I/O pin to AUX
         self.scif_reinit_io(aux_io_index, pull_level);
