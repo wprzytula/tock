@@ -560,6 +560,11 @@ mod full {
 pub use full::{UartFull, BAUD_RATE};
 
 mod lite {
+    use core::{
+        fmt::{self, Write as _},
+        sync::atomic::{AtomicUsize, Ordering},
+    };
+
     use kernel::{
         hil::{self, uart::Transmit},
         ErrorCode,
@@ -589,7 +594,7 @@ mod lite {
 
     const SCIF_UART_BAUD_RATE: u32 = 230400;
     const LOST_BUFFER_SIZE: usize = 16;
-    const SC_UART_FREE_THRESHOLD: u32 = 2 * SCIF_UART_TX_FIFO_MAX_COUNT / 4;
+    const SC_UART_FREE_THRESHOLD: usize = (2 * SCIF_UART_TX_FIFO_MAX_COUNT / 4) as usize;
 
     // All shared data structures in AUX RAM need to be packed
 
@@ -914,17 +919,19 @@ mod lite {
      * \return
      *     The number of cells used in the TX FIFO, waiting to be transmitted
      */
-    unsafe fn scif_uart_get_tx_fifo_count() -> u16 {
-        let state = safe_packed_ref!(SCIF_TASK_DATA().uart_emulator.state);
-        let mut tx_head = safe_packed_ref!(state.tx_head).get();
-        let tx_tail = safe_packed_ref!(state.tx_tail).get();
-        if tx_head < tx_tail {
-            tx_head += SCIF_UART_TX_BUFFER_LEN as u16;
+    fn scif_uart_get_tx_fifo_count() -> u16 {
+        unsafe {
+            let state = safe_packed_ref!(SCIF_TASK_DATA().uart_emulator.state);
+            let mut tx_head = safe_packed_ref!(state.tx_head).get();
+            let tx_tail = safe_packed_ref!(state.tx_tail).get();
+            if tx_head < tx_tail {
+                tx_head += SCIF_UART_TX_BUFFER_LEN as u16;
+            }
+            tx_head - tx_tail
         }
-        tx_head - tx_tail
     } // scifUartGetTxFifoCount
 
-    unsafe fn scif_uart_get_tx_fifo_free_slots() -> u16 {
+    fn scif_uart_get_tx_fifo_free_slots() -> u16 {
         SCIF_UART_TX_FIFO_MAX_COUNT as u16 - scif_uart_get_tx_fifo_count()
     } // scifUartGetTxFifoCount
 
@@ -1022,40 +1029,124 @@ mod lite {
         // space in the cyclic buffer, so that the whole message is sent.
         fn transmit_buffer(
             &self,
-            tx_buffer: &'static mut [u8],
-            tx_len: usize,
+            s: &'static mut [u8],
+            mut len: usize,
         ) -> Result<(), (ErrorCode, &'static mut [u8])> {
-            if tx_len > tx_buffer.len() {
-                return Err((ErrorCode::SIZE, tx_buffer));
+            if len > s.len() {
+                return Err((ErrorCode::SIZE, s));
             }
 
-            let mut idx = 0;
-            unsafe {
-                while idx < tx_len {
-                    let remaining = tx_len - idx;
-                    let written;
+            static BYTES_LOST: AtomicUsize = AtomicUsize::new(0);
+            let mut lost_buffer = [0_u8; 16];
 
-                    if remaining > 2 && 2 * scif_uart_get_tx_fifo_free_slots() as usize >= remaining
-                    {
-                        written = remaining;
-                        scif_uart_tx_put_chars(&tx_buffer[idx..idx + written], written as u32);
-                    } else if remaining == 1 {
-                        written = 1;
-                        while 2 * scif_uart_get_tx_fifo_free_slots() < written as u16 {}
-                        scif_uart_tx_put_char(tx_buffer[idx]);
-                    } else {
-                        // remaining >= 2
-                        written = 2;
-                        while 2 * scif_uart_get_tx_fifo_free_slots() < written as u16 {}
-                        scif_uart_tx_put_two_chars(tx_buffer[idx], tx_buffer[idx + 1])
-                    }
+            // Based on: https://stackoverflow.com/a/39491059
+            struct LostBytesWriter<'a> {
+                buf: &'a mut [u8],
+                offset: usize,
+            }
 
-                    idx += written;
+            impl<'a> LostBytesWriter<'a> {
+                fn new(buf: &'a mut [u8]) -> Self {
+                    LostBytesWriter { buf, offset: 0 }
                 }
             }
 
+            impl<'a> fmt::Write for LostBytesWriter<'a> {
+                fn write_str(&mut self, s: &str) -> fmt::Result {
+                    let bytes = s.as_bytes();
+
+                    // Skip over already-copied data
+                    let remainder = &mut self.buf[self.offset..];
+                    // Check if there is space remaining (return error instead of panicking)
+                    if remainder.len() < bytes.len() {
+                        return Err(core::fmt::Error);
+                    }
+                    // Make the two slices the same length
+                    let remainder = &mut remainder[..bytes.len()];
+                    // Copy
+                    remainder.copy_from_slice(bytes);
+
+                    // Update offset to avoid overwriting
+                    self.offset += bytes.len();
+
+                    Ok(())
+                }
+            }
+
+            let free_bytes = 2 * scif_uart_get_tx_fifo_free_slots() as usize;
+            let bytes_lost = BYTES_LOST.load(Ordering::Relaxed);
+            let mut i = 0;
+
+            if bytes_lost > 0 {
+                // We have already lost some bytes and haven't reported that yet.
+                if free_bytes >= SC_UART_FREE_THRESHOLD {
+                    // We have enough space to report the past loss.
+                    // Let's try creating the loss message.
+
+                    let message_size = {
+                        let lost_buffer = &mut lost_buffer;
+                        let len_before = lost_buffer.len();
+                        // Safety: number of bytes written won't ever exceed size of the buffer (16).
+                        unsafe {
+                            write!(LostBytesWriter::new(lost_buffer), "\nLOST:{}\n", bytes_lost)
+                                .unwrap_unchecked()
+                        };
+                        let len_after = lost_buffer.len();
+
+                        len + len_before - len_after
+                    };
+
+                    if free_bytes < message_size {
+                        // If we can't fit both the LOST message and our new message, just continue
+                        // accounting the loss.
+                        BYTES_LOST.fetch_add(len, Ordering::Relaxed);
+                        return Err((ErrorCode::BUSY, s));
+                    } else {
+                        // Report the past loss, zeroing the loss counter.
+                        unsafe {
+                            scif_uart_tx_put_chars(&lost_buffer, message_size as u32);
+                        }
+                        BYTES_LOST.store(0, Ordering::Relaxed);
+                    }
+                } else {
+                    // Not only did we lose bytes that we haven't reported yet,
+                    // but also we can't even report them yet. Too bad.
+                    BYTES_LOST.fetch_add(len, Ordering::Relaxed);
+                    return Err((ErrorCode::BUSY, s));
+                }
+            } else {
+                // We didn't lose any bytes that we haven't yet reported.
+                if free_bytes < len {
+                    // Some bytes can't fit the buffer; remember that they are lost.
+                    BYTES_LOST.fetch_add(len - free_bytes, Ordering::Relaxed);
+                    len = free_bytes;
+                }
+            }
+
+            // Actually write the message (at least its prefix that fits).
+
+            // Put pairs of bytes.
+            while i + 1 < len
+            /* && s[i] != b'\0' && s[i + 1] != b'\0' */
+            {
+                unsafe {
+                    scif_uart_tx_put_two_chars(s[i], s[i + 1]);
+                }
+                i += 2;
+            }
+            // Put the last, odd byte if present.
+            if i < len
+            /* && s[i] != b'\0' */
+            {
+                unsafe {
+                    scif_uart_tx_put_char(s[i]);
+                }
+                i += 1
+            }
+            assert_eq!(i, len);
+
             self.tx_client
-                .map(|client| client.transmitted_buffer(tx_buffer, tx_len, Ok(())));
+                .map(|client| client.transmitted_buffer(s, len, Ok(())));
             Ok(())
         }
 
