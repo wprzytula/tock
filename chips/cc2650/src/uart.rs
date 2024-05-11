@@ -916,15 +916,12 @@ mod lite {
      */
     unsafe fn scif_uart_get_tx_fifo_count() -> u16 {
         let state = safe_packed_ref!(SCIF_TASK_DATA().uart_emulator.state);
-        let tx_head = safe_packed_ref!(state.tx_head);
-        let tx_tail = safe_packed_ref!(state.tx_tail);
-        if tx_head.get() < tx_tail.get() {
-            tx_head.set(
-                tx_head.get()
-                    - (core::mem::size_of::<TxBuffer>() / core::mem::size_of::<u16>()) as u16,
-            );
+        let mut tx_head = safe_packed_ref!(state.tx_head).get();
+        let tx_tail = safe_packed_ref!(state.tx_tail).get();
+        if tx_head < tx_tail {
+            tx_head += SCIF_UART_TX_BUFFER_LEN as u16;
         }
-        tx_head.get() - tx_tail.get()
+        tx_head - tx_tail
     } // scifUartGetTxFifoCount
 
     unsafe fn scif_uart_get_tx_fifo_free_slots() -> u16 {
@@ -1009,7 +1006,7 @@ mod lite {
 
             // Update the TX FIFO head index
             tx_head += 1;
-            if tx_head == (core::mem::size_of::<TxBuffer>() / core::mem::size_of::<u16>()) as u32 {
+            if tx_head == SCIF_UART_TX_BUFFER_LEN as u32 {
                 tx_head = 0;
             }
         }
