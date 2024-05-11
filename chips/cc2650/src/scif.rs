@@ -1079,10 +1079,13 @@ type SCIFVfptr = unsafe fn(&Scif);
 #[repr(packed)]
 pub(crate) struct SCIFIntData {
     /// ID of currently executed Sensor Controller task
+    #[allow(unused)]
     task_id: VolatileCell<u16>,
     /// Pending input/output data alert (LSB = normal exchange, MSB = overflow or underflow)
+    #[allow(unused)]
     bv_task_io_alert: VolatileCell<u16>,
     /// ALERT interrupt generation mask
+    #[allow(unused)]
     alert_gen_mask: VolatileCell<u16>,
 }
 
@@ -1092,6 +1095,7 @@ pub(crate) struct SCIFTaskCtrl {
     /// Indicates which tasks are currently active (only valid while ready)
     bv_active_tasks: VolatileCell<u16>,
     /// Input/output data alert (LSB = normal exchange, MSB = overflow or underflow)
+    #[allow(unused)]
     bv_task_io_alert: VolatileCell<u16>,
     /// Requests tasks to start
     bv_task_initialize_req: VolatileCell<u16>,
@@ -1105,6 +1109,7 @@ pub(crate) struct SCIFTaskCtrl {
 #[derive(Clone, Copy)]
 pub(crate) struct SCIFData {
     /// Sensor Controller internal data (located in AUX RAM)
+    #[allow(unused)]
     pub(crate) int_data: &'static SCIFIntData,
     /// Sensor Controller task generic control (located in AUX RAM)
     pub(crate) task_ctrl: &'static SCIFTaskCtrl,
