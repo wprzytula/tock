@@ -11,6 +11,7 @@ use kernel::{
     platform::{KernelResources, SyscallDriverLookup},
     scheduler::round_robin::RoundRobinSched,
     static_init,
+    utilities::cells::TakeCell,
 };
 
 mod io;
@@ -218,6 +219,54 @@ pub unsafe fn main() {
     let main_loop_capability = create_capability!(capabilities::MainLoopCapability);
 
     let (board_kernel, smartrf, chip) = start();
+
+    let buf = static_init!(
+        [u8; 12],
+        [b'A', b'l', b'a', b' ', b'm', b'a', b'k', b'o', b't', b'a', b'.', b'.']
+    );
+    let buf_len = buf.len();
+    struct Buf {
+        cell: kernel::utilities::cells::TakeCell<'static, [u8]>,
+    }
+    let buf = static_init!(
+        Buf,
+        Buf {
+            cell: TakeCell::new(buf)
+        }
+    );
+    impl kernel::hil::uart::TransmitClient for Buf {
+        fn transmitted_buffer(
+            &self,
+            tx_buffer: &'static mut [u8],
+            _tx_len: usize,
+            _rval: Result<(), kernel::ErrorCode>,
+        ) {
+            self.cell.replace(tx_buffer);
+        }
+    }
+    {
+        use kernel::hil::uart::Transmit as _;
+        chip.uart_lite.set_transmit_client(buf);
+        let mut delay = 1;
+        loop {
+            // let buf = static_init!(
+            //     [u8; 10],
+            //     [b'K', b'o', b't', b' ', b'm', b'a', b'A', b'l', b'e', b'.',]
+            // );
+            // let buf = static_init!([u8; 10], [b'.'; 10]);
+
+            match chip
+                .uart_lite
+                .transmit_buffer(buf.cell.take().unwrap(), buf_len)
+            {
+                Ok(()) => (),
+                Err((_err, cell)) => buf.cell.put(Some(cell)),
+            }
+            cc2650_chip::driverlib::CPUdelay(delay);
+            delay = (delay + 10) % 10_000;
+        }
+    }
+
     board_kernel.kernel_loop(
         &smartrf,
         chip,
