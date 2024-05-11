@@ -47,7 +47,6 @@ impl<'a> Cc2650<'a> {
             peripherals.AUX_WUC,
         );
         uart_lite.initialize();
-        // uart_lite.enable();
 
         let uart_full = UartFull::new(peripherals.UART0);
         uart_full.initialize();
