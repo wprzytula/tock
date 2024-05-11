@@ -870,7 +870,8 @@ mod lite {
             unsafe {
                 driverlib::AONWUCAuxWakeupEvent(driverlib::AONWUC_AUX_WAKEUP);
                 while driverlib::AONWUCPowerStatusGet() & driverlib::AONWUC_AUX_POWER_ON == 0 {}
-                aux_ctrl_register_consumer();
+                let clocks = driverlib::AUX_WUC_SMPH_CLOCK;
+                aux_ctrl_register_consumer(clocks);
                 driverlib::AONWUCMcuPowerDownConfig(driverlib::AONWUC_CLOCK_SRC_LF);
                 driverlib::AONWUCAuxPowerDownConfig(driverlib::AONWUC_CLOCK_SRC_LF);
 
@@ -890,18 +891,16 @@ mod lite {
         }
     }
 
-    unsafe fn aux_ctrl_register_consumer() {
-        let interrupts_disabled = driverlib::IntMasterDisable();
+    unsafe fn aux_ctrl_register_consumer(clocks: u32) {
+        let interrupts_were_disabled = driverlib::IntMasterDisable();
 
         driverlib::AONWUCAuxWakeupEvent(driverlib::AONWUC_AUX_WAKEUP);
         while driverlib::AONWUCPowerStatusGet() & driverlib::AONWUC_AUX_POWER_ON == 0 {}
 
-        driverlib::AUXWUCClockEnable(driverlib::AUX_WUC_SMPH_CLOCK);
-        while driverlib::AUXWUCClockStatus(driverlib::AUX_WUC_SMPH_CLOCK)
-            != driverlib::AUX_WUC_CLOCK_READY
-        {}
+        driverlib::AUXWUCClockEnable(clocks);
+        while driverlib::AUXWUCClockStatus(clocks) != driverlib::AUX_WUC_CLOCK_READY {}
 
-        if !interrupts_disabled {
+        if !interrupts_were_disabled {
             driverlib::IntMasterEnable();
         }
     }
