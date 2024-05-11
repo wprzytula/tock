@@ -1018,6 +1018,8 @@ mod lite {
             self.tx_client.set(client)
         }
 
+        // NOTICE: the current implementation is blocking; i.e. it wait until there is enough
+        // space in the cyclic buffer, so that the whole message is sent.
         fn transmit_buffer(
             &self,
             tx_buffer: &'static mut [u8],
@@ -1062,13 +1064,7 @@ mod lite {
         }
 
         fn transmit_abort(&self) -> Result<(), ErrorCode> {
-            if let Some(Transaction { buffer, length, .. }) = self.tx.take() {
-                self.tx_client
-                    .map(|client| client.transmitted_buffer(buffer, length, Err(ErrorCode::FAIL)));
-                Err(ErrorCode::FAIL)
-            } else {
-                Ok(())
-            }
+            unimplemented!()
         }
     }
 }
