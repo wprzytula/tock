@@ -18,7 +18,7 @@ pub(crate) struct Scif {
 
     /// Driver internal data (located in MCU domain RAM, not shared with the Sensor Controller)
     scif_data: MapCell<SCIFData>,
-    last_aux_ram_image: OptionalCell<*const u16>,
+    last_aux_ram_image: OptionalCell<&'static [u16]>,
 }
 
 static SCIF_READY: AtomicBool = AtomicBool::new(false);
@@ -116,9 +116,9 @@ impl Scif {
         // Upload the AUX RAM image
         if self.last_aux_ram_image.get() != Some(scif_data.aux_ram_image) {
             core::ptr::copy_nonoverlapping(
-                scif_data.aux_ram_image as *const u8,
+                scif_data.aux_ram_image.as_ptr() as *const u8,
                 driverlib::AUX_RAM_BASE as *mut u8,
-                scif_data.aux_ram_image_size as usize,
+                scif_data.aux_ram_image.len() * core::mem::size_of::<u16>(),
             );
             self.last_aux_ram_image.set(scif_data.aux_ram_image);
         }
@@ -507,7 +507,7 @@ impl Scif {
 
                     // Reset the data structure
                     core::ptr::copy_nonoverlapping(
-                        (self.scif_data().aux_ram_image as *const u8).add(addr as usize),
+                        (self.scif_data().aux_ram_image.as_ptr() as *const u8).add(addr as usize),
                         (driverlib::AUX_RAM_BASE as *mut u8).add(addr as usize),
                         length as usize,
                     );
@@ -1113,10 +1113,8 @@ pub(crate) struct SCIFData {
     /// Bit-vector indicating tasks with potentially modified input/output/state data structures
     pub(crate) bv_dirty_tasks: u16,
 
-    /// AUX RAM image size (in bytes)
-    pub(crate) aux_ram_image_size: u16,
     /// AUX RAM image word array
-    pub(crate) aux_ram_image: *const u16,
+    pub(crate) aux_ram_image: &'static [u16],
 
     /// Look-up table that converts from AUX I/O index to MCU IOCFG offset
     pub(crate) task_data_struct_info_lut: &'static [u32],
