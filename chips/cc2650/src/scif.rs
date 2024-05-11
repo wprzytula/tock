@@ -1,12 +1,13 @@
 // ####### scif_framework.h
 
-use core::cell::Cell;
+use core::sync::atomic::{AtomicBool, Ordering};
 
-use tock_cells::optional_cell::OptionalCell;
+use tock_cells::{map_cell::MapCell, optional_cell::OptionalCell, volatile_cell::VolatileCell};
 
 use crate::driverlib;
 
 pub(crate) struct Scif {
+    pub(crate) aon_rtc: cc2650::AON_RTC,
     pub(crate) aon_wuc: cc2650::AON_WUC,
     pub(crate) aux_aiodio0: cc2650::AUX_AIODIO0,
     pub(crate) aux_aiodio1: cc2650::AUX_AIODIO1,
@@ -16,21 +17,30 @@ pub(crate) struct Scif {
     pub(crate) aux_wuc: cc2650::AUX_WUC,
 
     /// Driver internal data (located in MCU domain RAM, not shared with the Sensor Controller)
-    scif_data: Cell<Option<SCIFData>>,
+    scif_data: MapCell<SCIFData>,
     last_aux_ram_image: OptionalCell<*const u16>,
-    scif_ready: bool,
 }
 
+static SCIF_READY: AtomicBool = AtomicBool::new(false);
+
+// This is a hack. Rust does not allow creating references to packed structs,
+// BUT I know that all my packed structs contain only u16s and are aligned,
+// so references to any of their fields are aligned as well.
+macro_rules! safe_packed_ref {
+    ($place:expr) => {
+        core::ptr::addr_of!($place).as_ref().unwrap_unchecked()
+    };
+}
+pub(crate) use safe_packed_ref;
+
 impl Scif {
+    #[track_caller]
     fn scif_data(&self) -> SCIFData {
         self.scif_data.get().unwrap()
     }
 
-    fn scif_data_mut(&mut self) -> &mut SCIFData {
-        self.scif_data.get_mut().as_mut().unwrap()
-    }
-
     pub(crate) fn new(
+        aon_rtc: cc2650::AON_RTC,
         aon_wuc: cc2650::AON_WUC,
         aux_aiodio0: cc2650::AUX_AIODIO0,
         aux_aiodio1: cc2650::AUX_AIODIO1,
@@ -40,10 +50,10 @@ impl Scif {
         aux_wuc: cc2650::AUX_WUC,
     ) -> Self {
         let last_aux_ram_image = OptionalCell::empty();
-        let scif_ready = false;
-        let scif_data = Cell::new(None);
+        let scif_data = MapCell::empty();
 
         Self {
+            aon_rtc,
             aon_wuc,
             aux_aiodio0,
             aux_aiodio1,
@@ -53,7 +63,6 @@ impl Scif {
             aux_wuc,
             scif_data,
             last_aux_ram_image,
-            scif_ready,
         }
     }
 
@@ -83,7 +92,7 @@ impl Scif {
         }
 
         // Copy the driver setup
-        self.scif_data.set(Some(scif_driver_setup));
+        self.scif_data.put(scif_driver_setup);
 
         // Enable clock for required AUX modules
         driverlib::AUXWUCClockEnable(
@@ -102,14 +111,16 @@ impl Scif {
         // FIXME: static inline fn
         driverlib::AUXWUCFreezeDisable();
 
+        let scif_data = self.scif_data();
+
         // Upload the AUX RAM image
-        if self.last_aux_ram_image.get() != Some(self.scif_data().aux_ram_image) {
+        if self.last_aux_ram_image.get() != Some(scif_data.aux_ram_image) {
             core::ptr::copy_nonoverlapping(
-                self.scif_data().aux_ram_image as *const u8,
+                scif_data.aux_ram_image as *const u8,
                 driverlib::AUX_RAM_BASE as *mut u8,
-                self.scif_data().aux_ram_image_size as usize,
+                scif_data.aux_ram_image_size as usize,
             );
-            self.last_aux_ram_image.set(self.scif_data().aux_ram_image);
+            self.last_aux_ram_image.set(scif_data.aux_ram_image);
         }
 
         // Perform task resource initialization
@@ -152,11 +163,11 @@ impl Scif {
         // will be triggered immediately. We need to clear the interrupts because they might have been used
         // previously
         //osalRegisterCtrlReadyInt();
-        // osalClearCtrlReadyInt();
-        // osalEnableCtrlReadyInt();
+        Self::osal_clear_ctrl_ready_int();
+        Self::osal_enable_ctrl_ready_int();
         //osalRegisterTaskAlertInt();
-        // osalClearTaskAlertInt();
-        // osalEnableTaskAlertInt();
+        Self::osal_clear_task_alert_int();
+        Self::osal_enable_task_alert_int();
 
         SCIFResult::Success
     } // scifInit
@@ -184,8 +195,8 @@ impl Scif {
         self.aux_sce.ctl.write(|w| w.bits(0));
 
         // Disable interrupts
-        // osalDisableCtrlReadyInt();
-        // osalDisableTaskAlertInt();
+        Self::osal_disable_ctrl_ready_int();
+        Self::osal_disable_task_alert_int();
 
         // Perform task resource uninitialization
         (self.scif_data().fptr_task_resource_uninit)(self);
@@ -339,6 +350,18 @@ impl Scif {
             .write_volatile(iocfg);
     } // scifUninitIo
 
+    unsafe fn scif_clear_ready_int_source(aux_evctl: &cc2650::AUX_EVCTL) {
+        // Clear the source
+        // HWREG(AUX_EVCTL_BASE + AUX_EVCTL_O_EVTOAONFLAGSCLR) = AUX_EVCTL_EVTOAONFLAGS_SWEV0_M;
+        aux_evctl.evtoaonflagsclr.write(|w| w.swev0().set_bit());
+
+        // Ensure that the source clearing has taken effect
+        // while (HWREG(AUX_EVCTL_BASE + AUX_EVCTL_O_EVTOAONFLAGS) & AUX_EVCTL_EVTOAONFLAGS_SWEV0_M);
+        while aux_evctl.evtoaonflags.read().swev0().bit_is_set() {}
+
+        SCIF_READY.store(true, Ordering::Relaxed);
+    } // scifClearAlertIntSource
+
     /** \brief Returns a bit-vector indicating the ALERT events associcated with the last ALERT interrupt
      *
      * This function shall be called by the application after it has received an ALERT interrupt, to find
@@ -354,7 +377,7 @@ impl Scif {
      *     - [7:0] Task input/output data exchange pending, one bit per task ID
      */
     unsafe fn scif_get_alert_events(&self) -> u32 {
-        (*self.scif_data().task_ctrl).bv_task_io_alert as u32
+        safe_packed_ref!(self.scif_data().task_ctrl.bv_task_io_alert).get() as u32
     } // scifGetAlertEvents
 
     /** \brief Clears the ALERT interrupt source
@@ -362,14 +385,12 @@ impl Scif {
      * The application must call this function once and only once after reception of an ALERT interrupt,
      * before calling \ref scifAckAlertEvents().
      */
-    fn scif_clear_alert_int_source(&self) {
+    fn scif_clear_alert_int_source(aux_evctl: &cc2650::AUX_EVCTL) {
         // Clear the source
-        self.aux_evctl
-            .evtoaonflagsclr
-            .write(|w| w.swev1().set_bit());
+        aux_evctl.evtoaonflagsclr.write(|w| w.swev1().set_bit());
 
         // Ensure that the source clearing has taken effect
-        while self.aux_evctl.evtoaonflags.read().swev1().bit_is_set() {}
+        while aux_evctl.evtoaonflags.read().swev1().bit_is_set() {}
     } // scifClearAlertIntSource
 
     /** \brief Acknowledges the ALERT events associcated with the last ALERT interrupt
@@ -385,13 +406,14 @@ impl Scif {
     unsafe fn scif_ack_alert_events(&self) {
         // Clear the events that have been handled now. This is needed for subsequent ALERT interrupts
         // generated by fwGenQuickAlertInterrupt(), since that procedure does not update bvTaskIoAlert.
-        (*self.scif_data().task_ctrl).bv_task_io_alert = 0x0000;
+        self.scif_data.map(|scif_data| {
+            safe_packed_ref!(scif_data.task_ctrl.bv_task_io_alert).set(0x0000);
+        });
 
         // Make sure that the CPU interrupt has been cleared before reenabling it
-        // FIXME: do critical section
-        // osalClearTaskAlertInt();
-        // let key: u32 = scifOsalEnterCriticalSection();
-        // osalEnableTaskAlertInt();
+        Self::osal_clear_task_alert_int();
+        let key = Self::scif_osal_enter_critical_section();
+        Self::osal_enable_task_alert_int();
 
         // Set the ACK event to the Sensor Controller
         // FIXME: why + 1? why >> 8 ???
@@ -404,7 +426,7 @@ impl Scif {
             .veccfg1
             .write(|w| w.vec3_ev().aon_sw().vec3_en().en());
 
-        // scifOsalLeaveCriticalSection(key);
+        Self::scif_osal_leave_critical_section(key);
     } // scifAckAlertEvents
 
     /** \brief Sets the initial task startup delay, in ticks
@@ -425,7 +447,10 @@ impl Scif {
      *     Number of timer ticks until the first execution
      */
     unsafe fn scif_set_task_startup_delay(&self, task_id: u32, ticks: u16) {
-        *self.scif_data().task_execute_schedule.add(task_id as usize) = ticks;
+        self.scif_data()
+            .task_execute_schedule
+            .add(task_id as usize)
+            .write_volatile(ticks);
     } // scifSetTaskStartupDelay
 
     /** \brief Resets the task data structures for the specified tasks
@@ -446,7 +471,8 @@ impl Scif {
         mut bv_task_structs: u32,
     ) {
         // Indicate that the data structure has been cleared
-        self.scif_data().bv_dirty_tasks &= !bv_task_ids as u16;
+        self.scif_data
+            .map(|scif_data| scif_data.bv_dirty_tasks &= !bv_task_ids as u16);
 
         // Always clean the state data structure
         bv_task_structs |= 1 << SCIFTaskStructType::SCIFStructState as u32;
@@ -454,7 +480,6 @@ impl Scif {
         // As long as there are more tasks to reset ...
         while bv_task_ids != 0 {
             let task_id: u32 = bv_task_ids.trailing_zeros();
-            // panic!("task_id: {}", task_id);
 
             bv_task_ids &= !(1 << task_id);
 
@@ -548,7 +573,9 @@ impl Scif {
         // consumes data too fast for the System CPU application. If this happens, return 0 so that the
         // application can detect the error by calling scifGetAlertEvents() in the next ALERT interrupt
         // before starting to process potentially corrupted or out-of-sync buffers.
-        if (*self.scif_data().int_data).bv_task_io_alert & (0x0100 << task_id) != 0 {
+        if safe_packed_ref!(self.scif_data().int_data.bv_task_io_alert).get() & (0x0100 << task_id)
+            != 0
+        {
             return 0;
         }
 
@@ -668,57 +695,63 @@ impl Scif {
      */
     unsafe fn scif_ctrl_tasks_nbl(&self, bv_task_ids: u32, bv_task_req: u32) -> SCIFResult {
         // Prevent interruptions by concurrent scifCtrlTasksNbl() calls
-        // FIXME:
-        // if !osalLockCtrlTaskNbl() {
-        //     return SCIF_NOT_READY;
-        // }
+        if !Self::osal_lock_ctrl_task_nbl() {
+            return SCIFResult::NotReady;
+        }
 
         // Perform sanity checks: Starting already active or dirty tasks is illegal
-        // FIXME:
-        // if bvTaskReq & 0x01 {
-        //     if (self.scif_data().pTaskCtrl->bvActiveTasks | self.scif_data().bvDirtyTasks) & bvTaskIds {
-        //         osalUnlockCtrlTaskNbl();
-        //         return SCIF_ILLEGAL_OPERATION;
-        //     }
-        // }
+        if bv_task_req & 0x01 != 0 {
+            let task_ctrl = self.scif_data().task_ctrl;
+            if (safe_packed_ref!(task_ctrl.bv_active_tasks).get() | self.scif_data().bv_dirty_tasks)
+                & (bv_task_ids as u16)
+                != 0
+            {
+                Self::osal_unlock_ctrl_task_nbl();
+                return SCIFResult::IllegalOperation;
+            }
+        }
 
         // Verify that the control interface is ready
-        // FIXME:
-        // if SCIF_READY {
-        //     SCIF_READY = false;
-        // } else {
-        //     osalUnlockCtrlTaskNbl();
-        //     return SCIF_NOT_READY;
-        // }
-
-        // Initialize tasks?
-        if bv_task_req & 0x01 != 0 {
-            (*self.scif_data().task_ctrl).bv_task_initialize_req = bv_task_ids as u16;
-            self.scif_data().bv_dirty_tasks |= bv_task_ids as u16;
-        } else {
-            (*self.scif_data().task_ctrl).bv_task_initialize_req = 0x0000;
+        if !SCIF_READY.swap(false, Ordering::Relaxed) {
+            Self::osal_unlock_ctrl_task_nbl();
+            return SCIFResult::NotReady;
         }
 
-        // Execute tasks?
-        if bv_task_req & 0x02 != 0 {
-            (*self.scif_data().task_ctrl).bv_task_execute_req = bv_task_ids as u16;
-        } else {
-            (*self.scif_data().task_ctrl).bv_task_execute_req = 0x0000;
-        }
+        self.scif_data.map(|scif_data| {
+            let task_ctl_data = scif_data.task_ctrl;
 
-        // Terminate tasks? Terminating already inactive tasks is allowed, because tasks may stop
-        // spontaneously, and there's no way to know this for sure (it may for instance happen at any moment
-        // while calling this function)
-        if (bv_task_req & 0x04) != 0 {
-            (*self.scif_data().task_ctrl).bv_task_terminate_req = bv_task_ids as u16;
-        } else {
-            (*self.scif_data().task_ctrl).bv_task_terminate_req = 0x0000;
-        }
+            // Initialize tasks?
+            safe_packed_ref!(task_ctl_data.bv_task_initialize_req).set(
+                if bv_task_req & 0x01 != 0 {
+                    scif_data.bv_dirty_tasks |= bv_task_ids as u16;
+                    bv_task_ids as u16
+                } else {
+                    0x0000
+                },
+            );
+
+            // Execute tasks?
+            safe_packed_ref!(task_ctl_data.bv_task_execute_req).set(if bv_task_req & 0x02 != 0 {
+                bv_task_ids as u16
+            } else {
+                0x0000
+            });
+
+            // Terminate tasks? Terminating already inactive tasks is allowed, because tasks may stop
+            // spontaneously, and there's no way to know this for sure (it may for instance happen at any moment
+            // while calling this function)
+            safe_packed_ref!(task_ctl_data.bv_task_terminate_req).set(
+                if (bv_task_req & 0x04) != 0 {
+                    bv_task_ids as u16
+                } else {
+                    0x0000
+                },
+            );
+        });
 
         // Make sure that the CPU interrupt has been cleared before reenabling it
-        // FIXME:
-        // osalClearCtrlReadyInt();
-        // osalEnableCtrlReadyInt();
+        Self::osal_clear_ctrl_ready_int();
+        Self::osal_enable_ctrl_ready_int();
 
         // Set the REQ event to hand over the request to the Sensor Controller
 
@@ -728,7 +761,7 @@ impl Scif {
         self.aux_evctl
             .veccfg0
             .modify(|_r, w| w.vec0_pol().clear_bit());
-        // osalUnlockCtrlTaskNbl(); FIXME:
+        Self::osal_unlock_ctrl_task_nbl();
 
         SCIFResult::Success
     } // scifCtrlTasksNbl
@@ -820,10 +853,11 @@ impl Scif {
      * \return
      *     \ref SCIF_SUCCESS if the last call has completed, otherwise \ref SCIF_NOT_READY.
      */
-    fn scif_wait_on_nbl(&self, timeout_us: u32) -> SCIFResult {
-        // FIXME: osal
+    unsafe fn scif_wait_on_nbl(&self, timeout_us: u32) -> SCIFResult {
         // if (HWREG(driverlib::AUX_EVCTL_BASE + AUX_EVCTL_O_EVTOAONFLAGS) & AUX_EVCTL_EVTOAONFLAGS_SWEV0_M) || osalWaitOnCtrlReady(timeout_us) {
-        if self.aux_evctl.evtoaonflags.read().swev0().bit_is_set() {
+        if self.aux_evctl.evtoaonflags.read().swev0().bit_is_set()
+            || self.osal_wait_on_ctrl_ready(timeout_us)
+        {
             SCIFResult::Success
         } else {
             SCIFResult::NotReady
@@ -840,7 +874,7 @@ impl Scif {
      *     A bit-vector indicating which tasks are active (bit N corresponds to task N)
      */
     unsafe fn scif_get_active_task_ids(&self) -> u16 {
-        (*self.scif_data().task_ctrl).bv_active_tasks
+        safe_packed_ref!(self.scif_data().task_ctrl.bv_active_tasks).get()
     } // scifGetActiveTaskIds
 }
 
@@ -1005,6 +1039,7 @@ impl Scif {
  */
 
 /// Sensor Controller Interface function call result
+#[derive(Debug)]
 pub(crate) enum SCIFResult {
     /// Call succeeded
     Success = 0,
@@ -1012,6 +1047,16 @@ pub(crate) enum SCIFResult {
     NotReady = 1,
     /// Illegal operation
     IllegalOperation = 2,
+}
+
+impl SCIFResult {
+    #[track_caller]
+    pub(crate) fn unwrap(self) {
+        match self {
+            SCIFResult::Success => (),
+            SCIFResult::NotReady | SCIFResult::IllegalOperation => panic!("Unwrapped {:?}", self),
+        }
+    }
 }
 
 /// Task data structure types
@@ -1034,35 +1079,35 @@ type SCIFVfptr = unsafe fn(&Scif);
 #[repr(packed)]
 pub(crate) struct SCIFIntData {
     /// ID of currently executed Sensor Controller task
-    task_id: u16,
+    task_id: VolatileCell<u16>,
     /// Pending input/output data alert (LSB = normal exchange, MSB = overflow or underflow)
-    bv_task_io_alert: u16,
+    bv_task_io_alert: VolatileCell<u16>,
     /// ALERT interrupt generation mask
-    alert_gen_mask: u16,
+    alert_gen_mask: VolatileCell<u16>,
 }
 
 /// Sensor Controller generic task control (located in AUX RAM)
 #[repr(packed)]
 pub(crate) struct SCIFTaskCtrl {
     /// Indicates which tasks are currently active (only valid while ready)
-    bv_active_tasks: u16,
+    bv_active_tasks: VolatileCell<u16>,
     /// Input/output data alert (LSB = normal exchange, MSB = overflow or underflow)
-    bv_task_io_alert: u16,
+    bv_task_io_alert: VolatileCell<u16>,
     /// Requests tasks to start
-    bv_task_initialize_req: u16,
+    bv_task_initialize_req: VolatileCell<u16>,
     /// Requests tasks to execute once immediately
-    bv_task_execute_req: u16,
+    bv_task_execute_req: VolatileCell<u16>,
     /// Requests tasks to stop
-    bv_task_terminate_req: u16,
+    bv_task_terminate_req: VolatileCell<u16>,
 }
 
 /// Driver internal data (located in main RAM, not shared with the Sensor Controller)
 #[derive(Clone, Copy)]
 pub(crate) struct SCIFData {
     /// Sensor Controller internal data (located in AUX RAM)
-    pub(crate) int_data: *mut SCIFIntData,
+    pub(crate) int_data: &'static SCIFIntData,
     /// Sensor Controller task generic control (located in AUX RAM)
-    pub(crate) task_ctrl: *mut SCIFTaskCtrl,
+    pub(crate) task_ctrl: &'static SCIFTaskCtrl,
     /// Pointer to the task execution scheduling table
     pub(crate) task_execute_schedule: *mut u16,
     /// Bit-vector indicating tasks with potentially modified input/output/state data structures
@@ -1102,11 +1147,6 @@ pub(crate) const AUXIOMODE_OPEN_SOURCE_WITH_INPUT: u32 = 0x00010003;
 pub(crate) const AUXIOMODE_ANALOG: u32 = 0x00000001;
 
 /*
-// Prototypes for internal functions
- scifInitIo(u32 auxIoIndex, u32 ioMode, int pullLevel, u32 outputValue);
- scifReinitIo(u32 auxIoIndex, int pullLevel);
- scifUninitIo(u32 auxIoIndex, int pullLevel);
-
 
 // Driver main control
 SCIF_RESULT_T scifInit(const self.scif_data_T* pScifDriverSetup);
@@ -1162,3 +1202,239 @@ const SCIF_TASK_STRUCT_CTRL_SCE_ADDR_BACK_OFFSET: u32 = 3 * core::mem::size_of::
 const SCIF_TASK_STRUCT_CTRL_MCU_ADDR_BACK_OFFSET: u32 = 2 * core::mem::size_of::<u16>() as u32;
 
 // ###### END scif_framework.c
+
+// ###### BEGIN scif_osal.c
+
+/// MCU wakeup source to be used with the Sensor Controller task ALERT event, must not conflict with OS
+const OSAL_MCUWUSEL_WU_EV_S: u32 = driverlib::AON_EVENT_MCUWUSEL_WU3_EV_S;
+
+/// The READY interrupt is implemented using INT_AON_AUX_SWEV0
+const INT_SCIF_CTRL_READY: u32 = driverlib::INT_AON_AUX_SWEV0;
+/// The ALERT interrupt is implemented using INT_AON_AUX_SWEV1
+const INT_SCIF_TASK_ALERT: u32 = driverlib::INT_AON_AUX_SWEV1;
+
+/// Calculates the NVIC register offset for the specified interrupt
+fn NVIC_OFFSET(i: u32) -> u32 {
+    (i - 16) / 32
+}
+/// Calculates the bit-vector to be written or compared against for the specified interrupt
+fn NVIC_BV(i: u32) -> u32 {
+    1 << ((i - 16) % 32)
+}
+
+impl Scif {
+    /** \brief Enters a critical section by disabling hardware interrupts
+     *
+     * \return
+     *     Whether interrupts were enabled at the time this function was called
+     */
+    unsafe fn scif_osal_enter_critical_section() -> bool {
+        return driverlib::CPUcpsid() == 0;
+    } // scifOsalEnterCriticalSection
+
+    /** \brief Leaves a critical section by reenabling hardware interrupts if previously enabled
+     *
+     * \param[in]      key
+     *     The value returned by the previous corresponding call to \ref scifOsalEnterCriticalSection()
+     */
+    unsafe fn scif_osal_leave_critical_section(key: bool) {
+        if key {
+            driverlib::CPUcpsie();
+        }
+    } // scifOsalLeaveCriticalSection
+
+    /// Stores whether task control non-blocking functions have been locked
+    //static volatile bool osalCtrlTaskNblLocked = false;
+
+    /** \brief Locks use of task control non-blocking functions
+     *
+     * This function is used by the non-blocking task control to allow safe operation from multiple threads.
+     *
+     * The function shall attempt to set the \ref osalCtrlTaskNblLocked flag in a critical section.
+     * Implementing a timeout is optional (the task control's non-blocking behavior is not associated with
+     * this critical section, but rather with completion of the task control request).
+     *
+     * \return
+     *     Whether the critical section could be entered (true if entered, false otherwise)
+     */
+    fn osal_lock_ctrl_task_nbl() -> bool {
+        /*uint32_t key = !CPUcpsid();
+        if (osalCtrlTaskNblLocked) {
+            if (key) CPUcpsie();
+            return false;
+        } else {
+            osalCtrlTaskNblLocked = true;
+            if (key) CPUcpsie();
+            return true;
+        }*/
+        return true;
+    } // osalLockCtrlTaskNbl
+
+    /** \brief Unlocks use of task control non-blocking functions
+     *
+     * This function will be called once after a successful \ref osalLockCtrlTaskNbl().
+     */
+    fn osal_unlock_ctrl_task_nbl() {
+        //osalCtrlTaskNblLocked = false;
+    } // osalUnlockCtrlTaskNbl
+
+    pub(crate) unsafe extern "C" fn ready_handler() {
+        let aux_evctl = cc2650::Peripherals::steal().AUX_EVCTL;
+        Self::scif_clear_ready_int_source(&aux_evctl);
+        // HWREG(driverlib::NVIC_DIS0 + NVIC_OFFSET(INT_SCIF_CTRL_READY)) = NVIC_BV(INT_SCIF_CTRL_READY);
+        let n = cortexm3::nvic::Nvic::new(INT_SCIF_CTRL_READY);
+        n.disable();
+    }
+
+    pub(crate) unsafe extern "C" fn alert_handler() {
+        let aux_evctl = cc2650::Peripherals::steal().AUX_EVCTL;
+        Self::scif_clear_alert_int_source(&aux_evctl);
+        // HWREG(driverlib::NVIC_DIS0 + NVIC_OFFSET(INT_SCIF_TASK_ALERT)) = NVIC_BV(INT_SCIF_TASK_ALERT);
+        let n = cortexm3::nvic::Nvic::new(INT_SCIF_TASK_ALERT);
+        n.disable();
+    }
+
+    /** \brief Enables the control READY interrupt
+     *
+     * This function is called when sending a control REQ event to the Sensor Controller to enable the READY
+     * interrupt. This is done after clearing the event source and then the READY interrupt, using
+     * \ref osalClearCtrlReadyInt().
+     */
+    unsafe fn osal_enable_ctrl_ready_int() {
+        // FIXME: interrupt.c brings GBs to the bin file...
+        // driverlib::IntRegister(driverlib::INT_AUX_SWEV0, Some(Self::ready_handler));
+        // HWREG(NVIC_EN0 + NVIC_OFFSET(INT_SCIF_CTRL_READY)) = NVIC_BV(INT_SCIF_CTRL_READY);
+        let n = cortexm3::nvic::Nvic::new(INT_SCIF_CTRL_READY);
+        n.enable();
+    } // osalEnableCtrlReadyInt
+
+    unsafe fn osal_disable_ctrl_ready_int() {
+        let n = cortexm3::nvic::Nvic::new(INT_SCIF_CTRL_READY);
+        n.disable();
+        // FIXME: interrupt.c brings GBs to the bin file...
+        // driverlib::IntUnregister(driverlib::INT_AUX_SWEV0);
+    }
+
+    /** \brief Clears the task control READY interrupt
+     *
+     * This is done when sending a control request, after clearing the READY source event.
+     */
+    unsafe fn osal_clear_ctrl_ready_int() {
+        // HWREG(NVIC_UNPEND0 + NVIC_OFFSET(INT_SCIF_CTRL_READY)) = NVIC_BV(INT_SCIF_CTRL_READY);
+        let n = cortexm3::nvic::Nvic::new(INT_SCIF_CTRL_READY);
+        n.clear_pending();
+    } // osalClearCtrlReadyInt
+
+    /** \brief Enables the task ALERT interrupt
+     *
+     * The interrupt is enabled at startup. It is disabled upon reception of a task ALERT interrupt and re-
+     * enabled when the task ALERT is acknowledged.
+     */
+    unsafe fn scif_osal_enable_task_alert_int() {
+        // HWREG(NVIC_EN0 + NVIC_OFFSET(INT_SCIF_TASK_ALERT)) = NVIC_BV(INT_SCIF_TASK_ALERT);
+        let n = cortexm3::nvic::Nvic::new(INT_SCIF_TASK_ALERT);
+        n.enable();
+        // FIXME: interrupt.c brings GBs to the bin file...
+        // driverlib::IntRegister(driverlib::INT_AUX_SWEV1, Some(Self::alert_handler));
+    } // scifOsalEnableTaskAlertInt
+
+    /** \brief Clears the task ALERT interrupt
+     *
+     * This is done when acknowledging the alert, after clearing the ALERT source event.
+     */
+    unsafe fn osal_clear_task_alert_int() {
+        // HWREG(NVIC_UNPEND0 + NVIC_OFFSET(INT_SCIF_TASK_ALERT)) = NVIC_BV(INT_SCIF_TASK_ALERT);
+        let n = cortexm3::nvic::Nvic::new(INT_SCIF_TASK_ALERT);
+        n.clear_pending();
+    } // osalClearTaskAlertInt
+
+    unsafe fn osal_enable_task_alert_int() {
+        // HWREG(NVIC_EN0 + NVIC_OFFSET(INT_SCIF_TASK_ALERT)) = NVIC_BV(INT_SCIF_TASK_ALERT);
+        let n = cortexm3::nvic::Nvic::new(INT_SCIF_TASK_ALERT);
+        n.enable();
+        // FIXME: interrupt.c brings GBs to the bin file...
+        // driverlib::IntRegister(driverlib::INT_AUX_SWEV1, Some(Self::alert_handler));
+    } // scifOsalEnableTaskAlertInt
+
+    unsafe fn osal_disable_task_alert_int() {
+        let n = cortexm3::nvic::Nvic::new(INT_SCIF_TASK_ALERT);
+        n.disable();
+        // FIXME: interrupt.c brings GBs to the bin file...
+        // driverlib::IntUnregister(driverlib::INT_AUX_SWEV1);
+    }
+
+    /** \brief Waits until the task control interface is ready/idle
+     *
+     * This indicates that the task control interface is ready for the first request or that the last
+     * request has been completed. If a timeout mechanisms is not available, the implementation may be
+     * simplified.
+     *
+     * \note For the OSAL "None" implementation, a non-zero timeout corresponds to infinite timeout.
+     *
+     * \param[in]      timeoutUs
+     *     Minimum timeout, in microseconds
+     *
+     * \return
+     *     Whether the task control interface is now idle/ready
+     */
+    unsafe fn osal_wait_on_ctrl_ready(&self, timeout_us: u32) -> bool {
+        if timeout_us > 0 {
+            // while (!(HWREG(AUX_EVCTL_BASE + AUX_EVCTL_O_EVTOAONFLAGS) & AUX_EVCTL_EVTOAONFLAGS_SWEV0_M));
+            while self.aux_evctl.evtoaonflags.read().swev0().bit_is_clear() {}
+
+            true
+        } else {
+            // return (HWREG(AUX_EVCTL_BASE + AUX_EVCTL_O_EVTOAONFLAGS) & AUX_EVCTL_EVTOAONFLAGS_SWEV0_M);
+            self.aux_evctl.evtoaonflags.read().swev0().bit_is_set()
+        }
+    } // osalWaitOnCtrlReady
+
+    /** \brief OSAL "None": Enables the AUX domain and Sensor Controller for access from the MCU domain
+     *
+     * This function must be called before accessing/using any of the following:
+     * - Oscillator control registers
+     * - AUX ADI registers
+     * - AUX module registers and AUX RAM
+     * - SCIF API functions, except \ref scifOsalEnableAuxDomainAccess()
+     * - SCIF data structures
+     *
+     * The application is responsible for:
+     * - Registering the last set access control state
+     * - Ensuring that this control is thread-safe
+     */
+    unsafe fn scif_osal_enable_aux_domain_access(&self) {
+        // Force on AUX domain clock and bus connection
+        // HWREG(driverlib::AON_WUC_BASE + driverlib::AON_WUC_O_AUXCTL) |= driverlib::AON_WUC_AUXCTL_AUX_FORCE_ON_M;
+        self.aon_wuc
+            .auxctl
+            .modify(|_r, w| w.aux_force_on().set_bit());
+
+        // HWREG(driverlib::AON_RTC_BASE + driverlib::AON_RTC_O_SYNC);
+        self.aon_rtc.sync.read();
+
+        // Wait for it to take effect
+        // while (!(HWREG(driverlib::AON_WUC_BASE + driverlib::AON_WUC_O_PWRSTAT) & driverlib::AON_WUC_PWRSTAT_AUX_PD_ON_M));
+        while self.aon_wuc.pwrstat.read().aux_pd_on().bit_is_clear() {}
+    } // scifOsalEnableAuxDomainAccess
+
+    /** \brief OSAL "None": Disables the AUX domain and Sensor Controller for access from the MCU domain
+     *
+     * The application is responsible for:
+     * - Registering the last set access control state
+     * - Ensuring that this control is thread-safe
+     */
+    unsafe fn scif_osal_disable_aux_domain_access(&self) {
+        // Force on AUX domain bus connection
+        // HWREG(AON_WUC_BASE + AON_WUC_O_AUXCTL) &= ~AON_WUC_AUXCTL_AUX_FORCE_ON_M;
+        self.aon_wuc
+            .auxctl
+            .modify(|_r, w| w.aux_force_on().clear_bit());
+
+        // HWREG(AON_RTC_BASE + AON_RTC_O_SYNC);
+        self.aon_rtc.sync.read();
+
+        // Wait for it to take effect
+        // while (HWREG(AON_WUC_BASE + AON_WUC_O_PWRSTAT) & AON_WUC_PWRSTAT_AUX_PD_ON_M);
+        while self.aon_wuc.pwrstat.read().aux_pd_on().bit_is_set() {}
+    } // scifOsalDisableAuxDomainAccess
+}

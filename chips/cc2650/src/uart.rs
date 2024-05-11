@@ -564,13 +564,13 @@ mod lite {
         hil::{self, uart::Transmit},
         ErrorCode,
     };
-    use tock_cells::optional_cell::OptionalCell;
+    use tock_cells::{optional_cell::OptionalCell, volatile_cell::VolatileCell};
 
     use crate::{
         driverlib,
         scif::{
-            SCIFData, SCIFIntData, SCIFTaskCtrl, SCIFTaskStructType, Scif, AUXIOMODE_INPUT,
-            AUXIOMODE_OUTPUT,
+            safe_packed_ref, SCIFData, SCIFIntData, SCIFTaskCtrl, SCIFTaskStructType, Scif,
+            AUXIOMODE_INPUT, AUXIOMODE_OUTPUT,
         },
     };
 
@@ -593,7 +593,7 @@ mod lite {
 
     // All shared data structures in AUX RAM need to be packed
 
-    type TxBuffer = [u16; SCIF_UART_TX_BUFFER_LEN];
+    type TxBuffer = [VolatileCell<u16>; SCIF_UART_TX_BUFFER_LEN];
 
     /// UART Emulator: Task input data structure
     #[repr(packed)]
@@ -606,9 +606,9 @@ mod lite {
     #[repr(packed)]
     struct SCIFUartEmulatorState {
         /// TX FIFO head index (updated by the application)
-        tx_head: u16,
+        tx_head: VolatileCell<u16>,
         /// TX FIFO tail index (updated by the Sensor Controller)
-        tx_tail: u16,
+        tx_tail: VolatileCell<u16>,
     }
 
     /// Sensor Controller task data (configuration, input buffer(s), output buffer(s) and internal state)
@@ -624,7 +624,13 @@ mod lite {
     }
 
     /// Sensor Controller task generic control (located in AUX RAM)
-    const SCIF_TASK_DATA: *mut SCIFTaskData = 0x400E00E6 as *mut SCIFTaskData;
+    #[allow(non_snake_case)] // because this is effectively a constant
+    const fn SCIF_TASK_DATA() -> &'static SCIFTaskData {
+        unsafe { core::mem::transmute(0x400E00E6 as *mut SCIFTaskData) }
+    }
+
+    // const SCIF_TASK_DATA: &'static SCIFTaskData =
+    //     unsafe { core::mem::transmute(0x400E00E6 as *mut SCIFTaskData) };
 
     // Initialized internal driver data, to be used in the call to \ref scifInit()
     // extern const SCIF_DATA_T scifDriverSetup;
@@ -751,31 +757,41 @@ mod lite {
             // Start baud rate generation?
             if baud_rate > 0 {
                 // Calculate the AUX timer 0 period
+                // t0Period = 24000000 / baudRate;
                 let mut t0_period = 24000000 / baud_rate;
 
                 // The period must be 256 clock cycles or less, so up the prescaler until it is
+                // t0PrescalerExp = 0;
                 let mut t0_prescaler_exp = 0;
+                // while (t0Period > 256) {
                 while t0_period > 256 {
+                    // t0PrescalerExp += 1;
                     t0_prescaler_exp += 1;
+                    // t0Period >>= 1;
                     t0_period >>= 1;
                 }
 
                 // Stop baud rate generation while reconfiguring
+                // HWREG(AUX_TIMER_BASE + AUX_TIMER_O_T0CTL) = 0;
                 self.aux_timer.t0ctl.write(|w| w.en().clear_bit());
 
                 // Set period and prescaler, and select reload mode
+                // HWREG(AUX_TIMER_BASE + AUX_TIMER_O_T0CFG) = (t0PrescalerExp << AUX_TIMER_T0CFG_PRE_S) | AUX_TIMER_T0CFG_RELOAD_M;
                 self.aux_timer
                     .t0cfg
                     .write(|w| unsafe { w.pre().bits(t0_prescaler_exp).reload().set_bit() });
+                // HWREG(AUX_TIMER_BASE + AUX_TIMER_O_T0TARGET) = t0Period - 1;
                 self.aux_timer
                     .t0target
                     .write(|w| unsafe { w.value().bits(t0_period as u16 - 1) });
 
                 // Start baud rate generation
+                // HWREG(AUX_TIMER_BASE + AUX_TIMER_O_T0CTL) = 1;
                 self.aux_timer.t0ctl.write(|w| w.en().set_bit());
 
             // Baud rate 0 -> stop baud rate generation
             } else {
+                // HWREG(AUX_TIMER_BASE + AUX_TIMER_O_T0CTL) = 0;
                 self.aux_timer.t0ctl.write(|w| w.en().clear_bit());
             }
         }
@@ -808,6 +824,7 @@ mod lite {
 
     impl<'a> UartLite<'a> {
         pub(crate) fn new(
+            aon_rtc: cc2650::AON_RTC,
             aon_wuc: cc2650::AON_WUC,
             aux_aiodio0: cc2650::AUX_AIODIO0,
             aux_aiodio1: cc2650::AUX_AIODIO1,
@@ -817,6 +834,7 @@ mod lite {
             aux_wuc: cc2650::AUX_WUC,
         ) -> Self {
             let scif = Scif::new(
+                aon_rtc,
                 aon_wuc,
                 aux_aiodio0,
                 aux_aiodio1,
@@ -836,8 +854,8 @@ mod lite {
         /// Driver setup data, to be used in the call to \ref scifInit()
         fn scif_driver_data() -> SCIFData {
             SCIFData {
-                int_data: 0x400E00D6 as *mut SCIFIntData,
-                task_ctrl: 0x400E00DC as *mut SCIFTaskCtrl,
+                int_data: unsafe { core::mem::transmute(0x400E00D6 as *mut SCIFIntData) },
+                task_ctrl: unsafe { core::mem::transmute(0x400E00DC as *mut SCIFTaskCtrl) },
                 task_execute_schedule: 0x400E00CE as *mut u16,
                 bv_dirty_tasks: 0x0000,
                 aux_ram_image_size: core::mem::size_of_val(&AUX_RAM_IMAGE) as u16,
@@ -857,7 +875,7 @@ mod lite {
                 driverlib::AONWUCMcuPowerDownConfig(driverlib::AONWUC_CLOCK_SRC_LF);
                 driverlib::AONWUCAuxPowerDownConfig(driverlib::AONWUC_CLOCK_SRC_LF);
 
-                self.scif.scif_init(Self::scif_driver_data());
+                self.scif.scif_init(Self::scif_driver_data()).unwrap();
                 self.scif.scif_reset_task_structs(
                     1 << SCIF_UART_EMULATOR_TASK_ID,
                     (1 << SCIFTaskStructType::SCIFStructCfg as u32)
@@ -865,7 +883,8 @@ mod lite {
                         | (1 << SCIFTaskStructType::SCIFStructOutput as u32),
                 );
                 self.scif
-                    .scif_execute_tasks_once_nbl(1 << SCIF_UART_EMULATOR_TASK_ID);
+                    .scif_execute_tasks_once_nbl(1 << SCIF_UART_EMULATOR_TASK_ID)
+                    .unwrap();
 
                 self.scif.uart_set_baud_rate(SCIF_UART_BAUD_RATE);
             }
@@ -898,14 +917,16 @@ mod lite {
      *     The number of cells used in the TX FIFO, waiting to be transmitted
      */
     unsafe fn scif_uart_get_tx_fifo_count() -> u16 {
-        let SCIFUartEmulatorState {
-            tx_tail,
-            mut tx_head,
-        } = (*SCIF_TASK_DATA).uart_emulator.state;
-        if tx_head < tx_tail {
-            tx_head += (core::mem::size_of::<TxBuffer>() / core::mem::size_of::<u16>()) as u16;
+        let state = safe_packed_ref!(SCIF_TASK_DATA().uart_emulator.state);
+        let tx_head = safe_packed_ref!(state.tx_head);
+        let tx_tail = safe_packed_ref!(state.tx_tail);
+        if tx_head.get() < tx_tail.get() {
+            tx_head.set(
+                tx_head.get()
+                    - (core::mem::size_of::<TxBuffer>() / core::mem::size_of::<u16>()) as u16,
+            );
         }
-        tx_head - tx_tail
+        tx_head.get() - tx_tail.get()
     } // scifUartGetTxFifoCount
 
     unsafe fn scif_uart_get_tx_fifo_free_slots() -> u16 {
@@ -927,16 +948,17 @@ mod lite {
      */
     unsafe fn scif_uart_tx_put_two_chars(c1: u8, c2: u8) {
         // Put the character
-        let mut tx_head = (*SCIF_TASK_DATA).uart_emulator.state.tx_head;
+        let mut tx_head = safe_packed_ref!(SCIF_TASK_DATA().uart_emulator.state.tx_head).get();
         let entry = (c2 as u16) << 8 | c1 as u16;
-        (*SCIF_TASK_DATA).uart_emulator.input.tx_buffer[tx_head as usize] = entry;
+        safe_packed_ref!(SCIF_TASK_DATA().uart_emulator.input.tx_buffer)[tx_head as usize]
+            .set(entry);
 
         // Update the TX FIFO head index
         tx_head += 1;
         if tx_head == (core::mem::size_of::<TxBuffer>() / core::mem::size_of::<u16>()) as u16 {
             tx_head = 0;
         }
-        (*SCIF_TASK_DATA).uart_emulator.state.tx_head = tx_head as u16;
+        safe_packed_ref!(SCIF_TASK_DATA().uart_emulator.state.tx_head).set(tx_head);
     } // scifUartTxPutTwoChars
 
     /** \brief Transmits one character
@@ -973,8 +995,7 @@ mod lite {
 
         // For each character ...
         let mut tx_head: u32 =
-            core::ptr::addr_of_mut!((*SCIF_TASK_DATA).uart_emulator.state.tx_head).read_volatile()
-                as u32;
+            safe_packed_ref!(SCIF_TASK_DATA().uart_emulator.state.tx_head).get() as u32;
         for n in (0..count as usize).step_by(2) {
             // Get it
             if n + 1 == count as usize {
@@ -985,7 +1006,8 @@ mod lite {
                 entry |= buff[n] as u16;
             }
 
-            (*SCIF_TASK_DATA).uart_emulator.input.tx_buffer[tx_head as usize] = entry;
+            safe_packed_ref!(SCIF_TASK_DATA().uart_emulator.input.tx_buffer)[tx_head as usize]
+                .set(entry);
 
             // Update the TX FIFO head index
             tx_head += 1;
@@ -993,8 +1015,7 @@ mod lite {
                 tx_head = 0;
             }
         }
-        core::ptr::addr_of_mut!((*SCIF_TASK_DATA).uart_emulator.state.tx_head)
-            .write_volatile(tx_head as u16);
+        safe_packed_ref!(SCIF_TASK_DATA().uart_emulator.state.tx_head).set(tx_head as u16);
     } // scifUartTxPutChars
 
     impl<'a> Transmit<'a> for UartLite<'a> {
