@@ -1036,6 +1036,8 @@ mod lite {
                 }
             }
 
+            self.tx_client
+                .map(|client| client.transmitted_buffer(tx_buffer, tx_len, Ok(())));
             Ok(())
         }
 
