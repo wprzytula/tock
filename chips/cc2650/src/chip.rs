@@ -4,6 +4,7 @@ use cortexm3::{nvic, CortexM3, CortexMVariant as _};
 use kernel::platform::chip::InterruptService as _;
 
 use crate::{
+    fcfg::Fcfg,
     gpt::Gpt,
     peripheral_interrupts as irq,
     prcm::{self, Prcm},
@@ -17,6 +18,7 @@ pub struct Cc2650<'a> {
     pub uart_full: UartFull<'a>,
     pub uart_lite: UartLite<'a>,
     pub prcm: Prcm,
+    pub fcfg: Fcfg,
 }
 const MASK_AON_PROG: (u128, u128) = cortexm3::interrupt_mask!(irq::AON_PROG);
 
@@ -52,12 +54,15 @@ impl<'a> Cc2650<'a> {
         uart_full.initialize();
         uart_full.enable();
 
+        let fcfg = Fcfg::new(peripherals.FCFG1);
+
         Self {
             userspace_kernel_boundary: cortexm3::syscall::SysCall::new(),
             gpt,
             uart_full,
             uart_lite,
             prcm,
+            fcfg,
         }
     }
 }

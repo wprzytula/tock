@@ -5,6 +5,7 @@
 pub mod chip;
 mod crt1;
 mod driverlib;
+pub mod fcfg;
 pub mod gpio;
 pub mod gpt;
 mod peripheral_interrupts;
