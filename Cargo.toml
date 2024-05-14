@@ -59,6 +59,7 @@ members = [
     "capsules/aes_gcm",
     "capsules/core",
     "capsules/extra",
+    "capsules/system",
     "chips/apollo3",
     "chips/arty_e21_chip",
     "chips/cc2650/",
