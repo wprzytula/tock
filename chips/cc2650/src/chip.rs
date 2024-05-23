@@ -28,10 +28,10 @@ impl<'a> Cc2650<'a> {
 
         let prcm = Prcm::new(peripherals.PRCM);
         // Power on peripherals (eg. GPIO) and Serial
-        prcm.enable_domains(prcm::PowerDomains::empty().peripherals().serial());
+        prcm.enable_domains(prcm::PowerDomains::empty().peripherals().serial().rfc());
 
         // Enable the GPIO, UART and GPT clocks
-        prcm.enable_clocks(prcm::Clocks::empty().gpio().uart().gpt().dma());
+        prcm.enable_clocks(prcm::Clocks::empty().gpio().uart().gpt().dma().rfc());
 
         let udma = Udma::new(peripherals.UDMA0);
         udma.enable();
