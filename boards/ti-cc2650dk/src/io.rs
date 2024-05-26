@@ -1,5 +1,7 @@
 use core::fmt;
 
+pub(crate) const LED_PANIC_PIN: u32 = 25;
+
 mod internals {
     use core::ops::Deref;
 
@@ -97,7 +99,7 @@ pub unsafe fn panic_fmt(pi: &PanicInfo) -> ! {
     use cc2650_chip::gpio::PORT;
     use kernel::debug;
 
-    let led_kernel_pin = &PORT[25];
+    let led_kernel_pin = &PORT[LED_PANIC_PIN];
     let led = &mut kernel::hil::led::LedLow::new(led_kernel_pin);
     let writer = &mut PanicWriter;
 

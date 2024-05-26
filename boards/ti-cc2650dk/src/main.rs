@@ -134,7 +134,7 @@ unsafe fn start() -> (&'static kernel::Kernel, Platform, &'static Cc2650<'static
     // LEDs
     let led = components::led::LedsComponent::new().finalize(components::led_component_static!(
         kernel::hil::led::LedHigh<'static, cc2650_chip::gpio::GPIOPin>,
-        kernel::hil::led::LedHigh::new(&cc2650_chip::gpio::PORT[25]),
+        kernel::hil::led::LedHigh::new(&cc2650_chip::gpio::PORT[io::LED_PANIC_PIN]),
     ));
 
     // Alarm
