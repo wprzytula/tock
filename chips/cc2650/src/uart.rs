@@ -1025,8 +1025,10 @@ mod lite {
             self.tx_client.set(client)
         }
 
-        // NOTICE: the current implementation is blocking; i.e. it wait until there is enough
-        // space in the cyclic buffer, so that the whole message is sent.
+        // NOTICE: the current implementation is nonblocking; i.e. if there is not enough
+        // space in the cyclic buffer, then the message is truncated. Eventually,
+        // when there is again some space, an additional message about number of bytes lost
+        // is transmitted.
         fn transmit_buffer(
             &self,
             s: &'static mut [u8],
