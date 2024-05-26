@@ -82,28 +82,6 @@ pub fn _print(args: fmt::Arguments) {
     PanicWriter.write_fmt(args).unwrap();
 }
 
-impl kernel::hil::led::Led for PanicWriter {
-    fn init(&self) {
-        ()
-    }
-
-    fn on(&self) {
-        ()
-    }
-
-    fn off(&self) {
-        ()
-    }
-
-    fn toggle(&self) {
-        ()
-    }
-
-    fn read(&self) -> bool {
-        true
-    }
-}
-
 #[cfg(not(test))]
 use core::panic::PanicInfo;
 
