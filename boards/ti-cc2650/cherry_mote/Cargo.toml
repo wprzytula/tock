@@ -9,5 +9,5 @@ build = "../../build.rs"
 cortexm3 = { path = "../../../arch/cortex-m3" }
 cc2650 = "0.1.1"
 cc2650_chip = { package = "cc2650", path = "../../../chips/cc2650" }
-ti-cc2650-common = { path = "../common"}
+ti-cc2650-common = { path = "../common", features = ["ccfg"] }
 kernel = { path = "../../../kernel" }

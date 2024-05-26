@@ -6,7 +6,8 @@ edition.workspace = true
 links = "driverlib"
 
 [features]
-default = ["ccfg"]
+# By default disabled. Cherry Mote crate enables it explicitly, for the serial bootloader to support it.
+# SmartRF06 is assumed to be programmed with openocd, so no need for CCFG there.
 ccfg = []
 
 [dependencies]

@@ -5,6 +5,9 @@ authors.workspace = true
 edition.workspace = true
 build = "../../build.rs"
 
+[features]
+ccfg = ["ti-cc2650-common/ccfg"]
+
 [dependencies]
 cortexm3 = { path = "../../../arch/cortex-m3" }
 cc2650 = "0.1.1"
