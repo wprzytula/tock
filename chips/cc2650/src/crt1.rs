@@ -36,7 +36,7 @@ unsafe extern "C" fn aon_programmable_handler() {
 // used Ensures that the symbol is kept until the final binary
 // #[cfg_attr(all(target_arch = "arm", target_os = "none"), used)]
 #[used]
-pub static BASE_VECTORS: [unsafe extern "C" fn(); 16] = [
+static BASE_VECTORS: [unsafe extern "C" fn(); 16] = [
     _estack,
     initialize_ram_jump_to_main,
     unhandled_interrupt,       // NMI
@@ -62,7 +62,7 @@ pub static BASE_VECTORS: [unsafe extern "C" fn(); 16] = [
 // used Ensures that the symbol is kept until the final binary
 // #[cfg_attr(all(target_arch = "arm", target_os = "none"), used)]
 #[used]
-pub static IRQS: [unsafe extern "C" fn(); 34] = [
+static IRQS: [unsafe extern "C" fn(); 34] = [
     CortexM3::GENERIC_ISR,            // GPIO Int handler
     CortexM3::GENERIC_ISR,            // I2C
     CortexM3::GENERIC_ISR,            // RF Core Command & Packet Engine 1

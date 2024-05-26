@@ -158,13 +158,13 @@ impl Udma {
 }
 
 mod channel_control_entry_kind {
-    pub trait Sealed {}
-    pub trait ChannelControlEntryKind: Sealed {}
+    pub(super) trait Sealed {}
+    pub(super) trait ChannelControlEntryKind: Sealed {}
 
-    pub struct Primary;
+    pub(super) struct Primary;
     impl Sealed for Primary {}
     impl ChannelControlEntryKind for Primary {}
-    pub struct Alternate;
+    pub(super) struct Alternate;
     impl Sealed for Alternate {}
     impl ChannelControlEntryKind for Alternate {}
 }

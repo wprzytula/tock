@@ -1,6 +1,7 @@
 #![crate_name = "cc2650"]
 #![crate_type = "rlib"]
 #![no_std]
+#![warn(unreachable_pub)]
 
 #[cfg(feature = "ccfg")]
 mod ccfg;
