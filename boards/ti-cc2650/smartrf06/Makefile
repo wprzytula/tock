@@ -5,7 +5,7 @@ TARGET=thumbv7m-none-eabi
 PLATFORM=ti-cc2650-smartrf06
 OPENOCD ?= openocd
 
-include ../Makefile.common
+include ../../Makefile.common
 
 .PHONY: flash
 flash: $(TOCK_ROOT_DIRECTORY)target/$(TARGET)/release/$(TOCK_BOARD).bin
