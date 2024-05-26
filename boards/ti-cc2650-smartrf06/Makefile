@@ -1,8 +1,8 @@
-# Makefile for building the tock kernel for the CC2650DK
+# Makefile for building the tock kernel for the CC2650-SmartRF06
 
-TOCK_BOARD=ti-cc2650dk
+TOCK_BOARD=ti-cc2650-smartrf06
 TARGET=thumbv7m-none-eabi
-PLATFORM=ti-cc2650dk
+PLATFORM=ti-cc2650-smartrf06
 OPENOCD ?= openocd
 
 include ../Makefile.common
