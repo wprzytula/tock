@@ -566,7 +566,10 @@ pub mod lite {
     };
 
     use kernel::{
-        hil::{self, uart::Transmit},
+        hil::{
+            self,
+            uart::{Configure, Receive, Transmit},
+        },
         ErrorCode,
     };
     use tock_cells::{optional_cell::OptionalCell, volatile_cell::VolatileCell};
@@ -1185,6 +1188,45 @@ pub mod lite {
 
         fn transmit_abort(&self) -> Result<(), ErrorCode> {
             Ok(())
+        }
+    }
+
+    // Minimal implementation, for UartLite to implement hil::uart::Uart.
+    impl<'a> Configure for UartLite<'a> {
+        fn configure(&self, params: hil::uart::Parameters) -> Result<(), ErrorCode> {
+            match params {
+                hil::uart::Parameters {
+                    baud_rate: SCIF_UART_BAUD_RATE,
+                    width: hil::uart::Width::Eight,
+                    parity: hil::uart::Parity::None,
+                    hw_flow_control: false,
+                    stop_bits: hil::uart::StopBits::One,
+                } => Ok(()),
+                _ => Err(ErrorCode::INVAL),
+            }
+        }
+    }
+
+    // Mock implementation, for UartLite to implement hil::uart::Uart.
+    impl<'a> Receive<'a> for UartLite<'a> {
+        fn set_receive_client(&self, _client: &'a dyn hil::uart::ReceiveClient) {
+            // noop
+        }
+
+        fn receive_buffer(
+            &self,
+            rx_buffer: &'static mut [u8],
+            _rx_len: usize,
+        ) -> Result<(), (ErrorCode, &'static mut [u8])> {
+            Err((ErrorCode::NOSUPPORT, rx_buffer))
+        }
+
+        fn receive_word(&self) -> Result<(), ErrorCode> {
+            Err(ErrorCode::NOSUPPORT)
+        }
+
+        fn receive_abort(&self) -> Result<(), ErrorCode> {
+            Err(ErrorCode::NOSUPPORT)
         }
     }
 }
