@@ -556,8 +556,72 @@ mod full {
             }
         }
     }
+
+    mod panic_writer {
+        use core::{fmt, ops::Deref};
+        use kernel::debug::IoWrite;
+
+        struct UartFull(*const cc2650::uart0::RegisterBlock);
+        unsafe impl Send for UartFull {}
+        unsafe impl Sync for UartFull {}
+
+        // taken straight from cc2650 crate
+        const UART_REGISTER_BLOCK_ADDR: usize = 0x40001000;
+        const UART: UartFull = UartFull(UART_REGISTER_BLOCK_ADDR as *const _);
+
+        impl Deref for UartFull {
+            type Target = cc2650::uart0::RegisterBlock;
+
+            fn deref(&self) -> &Self::Target {
+                unsafe { &*self.0 }
+            }
+        }
+
+        pub struct PanicWriter;
+
+        impl PanicWriter {
+            // Best-effort turn off other users of UART to prevent colisions
+            // when printing panic message.
+            pub fn capture_uart(&mut self) {
+                UART.dmactl.write(|w| {
+                    w.rxdmae()
+                        .clear_bit()
+                        .txdmae()
+                        .clear_bit()
+                        .dmaonerr()
+                        .clear_bit()
+                })
+            }
+
+            // SAFETY: make sure that other users of UART were turned off
+            // and prevented further interaction.
+            pub unsafe fn write_byte(&mut self, byte: u8) {
+                while UART.fr.read().txff().bit_is_set() {
+                    // Wait until send queue is nonfull
+                }
+                UART.dr.write(|w| unsafe { w.data().bits(byte) })
+            }
+        }
+
+        impl fmt::Write for PanicWriter {
+            fn write_str(&mut self, s: &str) -> fmt::Result {
+                self.write(s.as_bytes());
+                Ok(())
+            }
+        }
+
+        impl IoWrite for PanicWriter {
+            fn write(&mut self, buf: &[u8]) -> usize {
+                for byte in buf.iter().copied() {
+                    unsafe { self.write_byte(byte) };
+                }
+                buf.len()
+            }
+        }
+    }
+    pub use panic_writer::PanicWriter;
 }
-pub use full::{UartFull, BAUD_RATE};
+pub use full::{PanicWriter as PanicWriterFull, UartFull, BAUD_RATE};
 
 pub mod lite {
     use core::{
@@ -1025,7 +1089,7 @@ pub mod lite {
     /// Intended use: panic writer in CherryMote.
     // NOTICE: the current implementation is blocking; i.e. it wait until there is enough
     // space in the cyclic buffer, so that the whole message is sent.
-    pub unsafe fn transmit_blocking(message: &[u8]) {
+    unsafe fn transmit_blocking(message: &[u8]) {
         let tx_len = message.len();
         let mut idx = 0;
         while idx < tx_len {
@@ -1229,5 +1293,27 @@ pub mod lite {
             Err(ErrorCode::NOSUPPORT)
         }
     }
+    mod panic_writer {
+        use core::fmt;
+
+        use kernel::debug::IoWrite;
+
+        pub struct PanicWriter;
+
+        impl IoWrite for PanicWriter {
+            fn write(&mut self, buf: &[u8]) -> usize {
+                unsafe { super::transmit_blocking(buf) };
+                buf.len()
+            }
+        }
+
+        impl fmt::Write for PanicWriter {
+            fn write_str(&mut self, s: &str) -> fmt::Result {
+                self.write(s.as_bytes());
+                Ok(())
+            }
+        }
+    }
+    pub use panic_writer::PanicWriter;
 }
-pub use lite::UartLite;
+pub use lite::{PanicWriter as PanicWriterLite, UartLite};

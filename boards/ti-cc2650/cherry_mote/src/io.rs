@@ -1,26 +1,11 @@
-use core::fmt;
+use core::fmt::{self, Write as _};
 #[cfg(not(test))]
 use core::panic::PanicInfo;
 
+use cc2650_chip::uart::{PanicWriterFull, PanicWriterLite};
 use kernel::debug::IoWrite;
 
-pub(crate) const LED_PANIC_PIN: u32 = 25; // FOXME
-
-struct PanicWriter;
-
-impl IoWrite for PanicWriter {
-    fn write(&mut self, buf: &[u8]) -> usize {
-        unsafe { cc2650_chip::uart::lite::transmit_blocking(buf) };
-        buf.len()
-    }
-}
-
-impl fmt::Write for PanicWriter {
-    fn write_str(&mut self, s: &str) -> fmt::Result {
-        self.write(s.as_bytes());
-        Ok(())
-    }
-}
+pub(crate) const LED_PANIC_PIN: u32 = 25; // FIXME
 
 #[macro_export]
 macro_rules! print {
@@ -35,8 +20,23 @@ macro_rules! println {
 
 #[doc(hidden)]
 pub fn _print(args: fmt::Arguments) {
-    use core::fmt::Write;
-    PanicWriter.write_fmt(args).unwrap();
+    PanicWriterLite.write_fmt(args).unwrap();
+}
+
+struct PanicWriterLiteAndFull;
+impl IoWrite for PanicWriterLiteAndFull {
+    fn write(&mut self, buf: &[u8]) -> usize {
+        PanicWriterFull.write(buf);
+        PanicWriterLite.write(buf);
+        buf.len()
+    }
+}
+
+impl fmt::Write for PanicWriterLiteAndFull {
+    fn write_str(&mut self, s: &str) -> fmt::Result {
+        self.write(s.as_bytes());
+        Ok(())
+    }
 }
 
 #[cfg(not(test))]
@@ -53,7 +53,7 @@ pub unsafe fn panic_fmt(pi: &PanicInfo) -> ! {
 
     let led_kernel_pin = &PORT[LED_PANIC_PIN];
     let led = &mut kernel::hil::led::LedHigh::new(led_kernel_pin);
-    let writer = &mut PanicWriter;
+    let writer = &mut PanicWriterLiteAndFull;
 
     debug::panic(
         &mut [led],
