@@ -5,8 +5,9 @@ authors.workspace = true
 edition.workspace = true
 links = "driverlib"
 
-# [features]
-# driverlib = []
+[features]
+default = ["ccfg"]
+ccfg = []
 
 [dependencies]
 cortexm3 = { path = "../../arch/cortex-m3" }

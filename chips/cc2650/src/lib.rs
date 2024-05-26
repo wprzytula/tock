@@ -2,6 +2,8 @@
 #![crate_type = "rlib"]
 #![no_std]
 
+#[cfg(feature = "ccfg")]
+mod ccfg;
 pub mod chip;
 mod crt1;
 mod driverlib;
