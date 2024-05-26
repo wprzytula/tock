@@ -813,6 +813,7 @@ mod lite {
          * \param[in]      bvTaskIds
          *     Bit-vector of task IDs for the task I/Os to be re-initialized
          */
+        #[allow(unused)]
         unsafe fn scif_reinit_task_io(&self, bv_task_ids: u32) {
             if bv_task_ids & (1 << SCIF_UART_EMULATOR_TASK_ID) != 0 {
                 self.scif_reinit_io(2, 1);

@@ -1,4 +1,4 @@
-// ####### scif_framework.h
+#![allow(unused)]
 
 use core::sync::atomic::{AtomicBool, Ordering};
 
@@ -356,7 +356,7 @@ impl Scif {
                 -1 => driverlib::IOC_IOCFG0_PULL_CTL_DIS,
                 0 => driverlib::IOC_IOCFG0_PULL_CTL_DWN,
                 1 => driverlib::IOC_IOCFG0_PULL_CTL_UP,
-                _ => unreachable!(), // FIXME: use enum instead of int
+                _ => unreachable!(), // TODO: use enum instead of int
             };
         ((driverlib::IOC_BASE + driverlib::IOC_O_IOCFG0 + mcu_iocfg_offset) as *mut u32)
             .write_volatile(iocfg);
@@ -387,7 +387,7 @@ impl Scif {
                 -1 => driverlib::IOC_IOCFG0_PULL_CTL_DIS,
                 0 => driverlib::IOC_IOCFG0_PULL_CTL_DWN,
                 1 => driverlib::IOC_IOCFG0_PULL_CTL_UP,
-                _ => unreachable!(), // FIXME: use enum instead of int
+                _ => unreachable!(), // TODO: use enum instead of int
             };
         ((driverlib::IOC_BASE + driverlib::IOC_O_IOCFG0 + mcu_iocfg_offset) as *mut u32)
             .write_volatile(iocfg);
@@ -459,7 +459,6 @@ impl Scif {
         Self::osal_enable_task_alert_int();
 
         // Set the ACK event to the Sensor Controller
-        // FIXME: why + 1? why >> 8 ???
         // HWREGB(AUX_EVCTL_BASE + AUX_EVCTL_O_VECCFG1 + 1) = (AUX_EVCTL_VECCFG1_VEC3_EV_AON_SW | AUX_EVCTL_VECCFG1_VEC3_EN_M | AUX_EVCTL_VECCFG1_VEC3_POL_M) >> 8;
         // HWREGB(AUX_EVCTL_BASE + AUX_EVCTL_O_VECCFG1 + 1) = (AUX_EVCTL_VECCFG1_VEC3_EV_AON_SW | AUX_EVCTL_VECCFG1_VEC3_EN_M) >> 8;
         self.aux_evctl
@@ -1192,64 +1191,12 @@ pub(crate) const AUXIOMODE_OPEN_SOURCE_WITH_INPUT: u32 = 0x00010003;
 /// I/O pin mode: Analog
 pub(crate) const AUXIOMODE_ANALOG: u32 = 0x00000001;
 
-/*
-
-// Driver main control
-SCIF_RESULT_T scifInit(const self.scif_data_T* pScifDriverSetup);
- scifUninit();
-
- scifClearReadyIntSource();
-
-// Driver ALERT interrupt handling
-u32 scifGetAlertEvents();
- scifClearAlertIntSource();
- scifAckAlertEvents();
-
-// Task generic configuration functions
- scifSetTaskStartupDelay(u32 taskId, u16 ticks);
-
-// Task data structure access functions
- scifResetTaskStructs(u32 bvTaskIds, u32 bvTaskStructs);
-u32 scifGetTaskIoStructAvailCount(u32 taskId, SCIF_TASK_STRUCT_TYPE_T taskStructType);
-* scifGetTaskStruct(u32 taskId, SCIF_TASK_STRUCT_TYPE_T taskStructType);
- scifHandoffTaskStruct(u32 taskId, SCIF_TASK_STRUCT_TYPE_T taskStructType);
-
-// Task control functions (non-blocking)
-SCIF_RESULT_T scifExecuteTasksOnceNbl(u16 bvTaskIds);
-SCIF_RESULT_T scifStartTasksNbl(u16 bvTaskIds);
-SCIF_RESULT_T scifStopTasksNbl(u16 bvTaskIds);
-SCIF_RESULT_T scifWaitOnNbl(u32 timeoutUs);
-
-// Task status functions
-u16 scifGetActiveTaskIds();
-*/
-
-// ####### END scif_framework.h
-
-// ####### scif_framework.c
-
-/*
-* whip6: Warsaw High-performance IPv6.
-*
-* Copyright (c) 2012-2017 Szymon Acedanski
-* All rights reserved.
-*
-* This file is distributed under the terms in the attached LICENSE
-* files.
-*/
-
-/// \addtogroup module_scif_generic_interface
-
 /// Task data structure buffer control: Size (in bytes)
 const SCIF_TASK_STRUCT_CTRL_SIZE: u32 = 3 * core::mem::size_of::<u16>() as u32;
 /// Task data structure buffer control: Sensor Controller Engine's pointer negative offset (ref. struct start)
 const SCIF_TASK_STRUCT_CTRL_SCE_ADDR_BACK_OFFSET: u32 = 3 * core::mem::size_of::<u16>() as u32;
 /// Task data structure buffer control: Driver/MCU's pointer negative offset (ref. struct start)
 const SCIF_TASK_STRUCT_CTRL_MCU_ADDR_BACK_OFFSET: u32 = 2 * core::mem::size_of::<u16>() as u32;
-
-// ###### END scif_framework.c
-
-// ###### BEGIN scif_osal.c
 
 /// MCU wakeup source to be used with the Sensor Controller task ALERT event, must not conflict with OS
 const OSAL_MCUWUSEL_WU_EV_S: u32 = driverlib::AON_EVENT_MCUWUSEL_WU3_EV_S;
@@ -1260,10 +1207,12 @@ const INT_SCIF_CTRL_READY: u32 = driverlib::INT_AON_AUX_SWEV0;
 const INT_SCIF_TASK_ALERT: u32 = driverlib::INT_AON_AUX_SWEV1;
 
 /// Calculates the NVIC register offset for the specified interrupt
+#[allow(non_snake_case)]
 fn NVIC_OFFSET(i: u32) -> u32 {
     (i - 16) / 32
 }
 /// Calculates the bit-vector to be written or compared against for the specified interrupt
+#[allow(non_snake_case)]
 fn NVIC_BV(i: u32) -> u32 {
     1 << ((i - 16) % 32)
 }
