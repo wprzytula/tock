@@ -683,7 +683,7 @@ pub mod lite {
 
     const SCIF_UART_EMULATOR_TASK_ID: u32 = 0;
 
-    const SCIF_UART_BAUD_RATE: u32 = 230400;
+    pub const SCIF_UART_BAUD_RATE: u32 = 230400;
     const LOST_BUFFER_SIZE: usize = 16;
     const SC_UART_FREE_THRESHOLD: usize = (2 * SCIF_UART_TX_FIFO_MAX_COUNT / 4) as usize;
 

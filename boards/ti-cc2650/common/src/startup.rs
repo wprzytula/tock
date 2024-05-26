@@ -14,6 +14,8 @@ use kernel::{
     static_init,
 };
 
+use crate::console_lite;
+
 // High frequency oscillator speed
 pub const HFREQ: u32 = 48 * 1_000_000;
 
@@ -48,6 +50,7 @@ pub struct Platform<const NUM_LEDS: usize> {
         >,
     >,
     console: &'static capsules_core::console::Console<'static>,
+    console_lite: &'static capsules_core::console::Console<'static>,
 }
 
 impl<const NUM_LEDS: usize> SyscallDriverLookup for Platform<NUM_LEDS> {
@@ -59,6 +62,9 @@ impl<const NUM_LEDS: usize> SyscallDriverLookup for Platform<NUM_LEDS> {
             capsules_core::led::DRIVER_NUM => f(Some(&self.leds)),
             capsules_core::alarm::DRIVER_NUM => f(Some(self.alarm)),
             capsules_core::console::DRIVER_NUM => f(Some(self.console)),
+            // As a fallback, when UART-lite is not configured on the board, user write requests
+            // are routed to the default, UART-full backend.
+            console_lite::DRIVER_NUM => f(Some(self.console_lite)),
             _ => f(None),
         }
     }
@@ -162,9 +168,31 @@ pub unsafe fn start<const NUM_LEDS: usize>(
         console::DRIVER_NUM,
         &uart_full_mux,
     )
-    .finalize(components::console_component_static!(32, 32)); // (64, 64) is the default
+    .finalize(components::console_component_static!(64, 64)); // (64, 64) is the default
 
-    let debug_writer_uart = uart_full_mux;
+    #[cfg(feature = "uart_lite")]
+    let uart_lite_mux = components::console::UartMuxComponent::new(
+        &chip.uart_lite,
+        uart::lite::SCIF_UART_BAUD_RATE,
+    )
+    .finalize(components::uart_mux_component_static!(0)); // 64 is the default
+
+    #[cfg(not(feature = "uart_lite"))]
+    // As a fallback, when UART-lite is not configured on the board, user write requests
+    // are routed to the default, UART-full backend.
+    let uart_lite_mux = uart_full_mux;
+
+    let console_lite = {
+        components::console::ConsoleComponent::new(
+            board_kernel,
+            console_lite::DRIVER_NUM,
+            &uart_lite_mux,
+        )
+        .finalize(components::console_component_static!(0, 0))
+        // (64, 64) is the default; we need no buffers because 1) no reading occurs 2) writing is instantaneous.
+    };
+
+    let debug_writer_uart = uart_lite_mux;
     components::debug_writer::DebugWriterComponent::new(debug_writer_uart).finalize({
         let uart = kernel::static_buf!(capsules_core::virtualizers::virtual_uart::UartDevice);
         let ring = kernel::static_buf!(kernel::collections::ring_buffer::RingBuffer<'static, u8>);
@@ -194,6 +222,7 @@ pub unsafe fn start<const NUM_LEDS: usize>(
         leds,
         alarm,
         console,
+        console_lite,
     };
     /* END PLATFORM CONFIGURATION */
 
