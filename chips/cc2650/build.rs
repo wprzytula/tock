@@ -133,6 +133,10 @@ impl DriverlibBuilder {
             .generate_comments(false)
             // Don't create layout tests - trust bindgen.
             .layout_tests(false)
+            // So that bitfields are more convenient to handle.
+            .derive_default(true)
+            // So that RFC CMDs are not forgot to be actually run.
+            .must_use_type(".*rfc_CMD.*")
             // Tell cargo to invalidate the built crate whenever any of the included header files changed.
             .parse_callbacks(Box::new(bindgen::CargoCallbacks::new()))
             // Finish the builder and generate the bindings.

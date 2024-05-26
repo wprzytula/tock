@@ -2,6 +2,7 @@
 #![crate_type = "rlib"]
 #![no_std]
 
+pub mod aes;
 #[cfg(feature = "ccfg")]
 mod ccfg;
 pub mod chip;
@@ -10,6 +11,7 @@ mod driverlib;
 pub mod fcfg;
 pub mod gpio;
 pub mod gpt;
+pub mod ieee802154_radio;
 mod peripheral_interrupts;
 pub mod prcm;
 mod scif;

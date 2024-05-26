@@ -71,6 +71,7 @@ RUSTC_FLAGS ?= \
   -C link-arg=-nmagic \
   -C link-arg=-icf=all \
   -C symbol-mangling-version=v0 \
+  -C target-cpu=cortex-m3 \
 
 # RISC-V-specific flags.
 ifneq ($(findstring riscv32i, $(TARGET)),)

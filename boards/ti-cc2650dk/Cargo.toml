@@ -16,7 +16,10 @@ build = "../build.rs"
 [dependencies]
 components = { path = "../components" }
 cortexm3 = { path = "../../arch/cortex-m3" }
-kernel = { path = "../../kernel" }
+kernel = { path = "../../kernel", features = [
+    "debug_load_processes",
+    # "trace_syscalls",
+] }
 cc2650 = "0.1.1"
 cc2650_chip = { package = "cc2650", path = "../../chips/cc2650" }
 

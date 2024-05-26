@@ -95,7 +95,7 @@ pub struct IpVisibilityCapability {
 }
 
 impl UdpVisibilityCapability {
-    pub fn new(
+    pub const fn new(
         _create_net_cap: &dyn NetworkCapabilityCreationCapability,
     ) -> UdpVisibilityCapability {
         UdpVisibilityCapability { _priv: () }
@@ -121,7 +121,7 @@ pub struct NetworkCapability {
 }
 
 impl NetworkCapability {
-    pub fn new(
+    pub const fn new(
         remote_addrs: AddrRange,
         remote_ports: PortRange,
         local_ports: PortRange,
