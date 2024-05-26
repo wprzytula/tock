@@ -22,3 +22,4 @@ cc2650_chip = { package = "cc2650", path = "../../chips/cc2650" }
 
 capsules-core = { path = "../../capsules/core" }
 capsules-extra = { path = "../../capsules/extra" }
+capsules-system = { path = "../../capsules/system" }
