@@ -1157,7 +1157,7 @@ mod lite {
         }
 
         fn transmit_abort(&self) -> Result<(), ErrorCode> {
-            unimplemented!()
+            Ok(())
         }
     }
 }
