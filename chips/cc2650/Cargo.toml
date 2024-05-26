@@ -15,6 +15,13 @@ ccfg = []
 # There is no point atm in enabling this feature.
 full_udma_table = []
 
+# UART-lite involves emulating UART TX over pin 28 using Sensor Controller.
+# As interpreting UART-lite outputs require a UART equipment connected to the pin,
+# which SmartRF06 has not connected by default, support for UART-lite is made a feature.
+# Cherry Mote has UART-lite hard-wired in a way it works, so it enables the feature
+# unconditionally.
+uart_lite = []
+
 [dependencies]
 cortexm3 = { path = "../../arch/cortex-m3" }
 kernel = { path = "../../kernel" }

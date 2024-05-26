@@ -5,9 +5,17 @@ authors.workspace = true
 edition.workspace = true
 build = "../../build.rs"
 
+[features]
+default = ["ccfg", "uart_lite"]
+# By default enabled, because CherryMote is assumed to be programmed with serial bootloader,
+# which currently erases the whole flash, requiring CCFG to be reflashed.
+ccfg = ["ti-cc2650-common/ccfg"]
+# By default enabled, because Cherry Mote has UART-lite hard-wired in a way it works.
+uart_lite = ["ti-cc2650-common/uart_lite"]
+
 [dependencies]
 cortexm3 = { path = "../../../arch/cortex-m3" }
 cc2650 = "0.1.1"
 cc2650_chip = { package = "cc2650", path = "../../../chips/cc2650" }
-ti-cc2650-common = { path = "../common", features = ["ccfg"] }
+ti-cc2650-common = { path = "../common"}
 kernel = { path = "../../../kernel" }

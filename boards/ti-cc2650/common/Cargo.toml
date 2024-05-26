@@ -9,6 +9,10 @@ edition.workspace = true
 # so no need for CCFG there.
 ccfg = ["cc2650_chip/ccfg"]
 
+# By default disabled, as interpreting UART-lite outputs require a UART equipment connected to the pin,
+# which SmartRF06 has not connected by default.
+uart_lite = ["cc2650_chip/uart_lite"]
+
 [dependencies]
 components = { path = "../../components" }
 cortexm3 = { path = "../../../arch/cortex-m3" }
