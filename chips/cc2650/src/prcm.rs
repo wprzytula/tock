@@ -58,7 +58,7 @@ impl PowerDomains {
         Self(self.0 | PowerDomain::Mcu as u32)
     }
 
-    pub const fn all(self) -> Self {
+    pub const fn all() -> Self {
         Self::empty()
             .rfc()
             .serial()
