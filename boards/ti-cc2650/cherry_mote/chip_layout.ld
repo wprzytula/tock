@@ -1,0 +1,1 @@
+../common/chip_layout.ld
