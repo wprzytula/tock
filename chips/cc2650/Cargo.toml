@@ -10,6 +10,11 @@ links = "driverlib"
 # SmartRF06 is assumed to be programmed with openocd, so no need for CCFG there.
 ccfg = []
 
+# The current impl makes no use of overwhelming majority of the uDMA control table,
+# so in order to save memory, only its prefix is used by default.
+# There is no point atm in enabling this feature.
+full_udma_table = []
+
 [dependencies]
 cortexm3 = { path = "../../arch/cortex-m3" }
 kernel = { path = "../../kernel" }
