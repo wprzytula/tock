@@ -579,15 +579,15 @@ mod lite {
         },
     };
 
-    use super::Transaction;
-
     /// Maximum number of characters that can be stored in the UART TX FIFO
     const SCIF_UART_TX_BUFFER_LEN: usize = 768;
     const SCIF_UART_TX_FIFO_MAX_COUNT: u32 = (SCIF_UART_TX_BUFFER_LEN - 1) as u32;
 
     /// UART Emulator I/O mapping: UART RX
+    #[allow(unused)]
     const SCIF_UART_EMULATOR_DIO_UART_RX: u32 = 29;
     /// UART Emulator I/O mapping: UART TX
+    #[allow(unused)]
     const SCIF_UART_EMULATOR_DIO_UART_TX: u32 = 28;
 
     const SCIF_UART_EMULATOR_TASK_ID: u32 = 0;
@@ -824,7 +824,6 @@ mod lite {
     pub struct UartLite<'a> {
         scif: Scif,
         tx_client: OptionalCell<&'a dyn hil::uart::TransmitClient>,
-        tx: OptionalCell<Transaction>,
     }
 
     impl<'a> UartLite<'a> {
@@ -852,7 +851,6 @@ mod lite {
             Self {
                 scif,
                 tx_client: OptionalCell::empty(),
-                tx: OptionalCell::empty(),
             }
         }
 
@@ -1039,7 +1037,7 @@ mod lite {
             }
 
             static BYTES_LOST: AtomicUsize = AtomicUsize::new(0);
-            let mut lost_buffer = [0_u8; 16];
+            let mut lost_buffer = [0_u8; LOST_BUFFER_SIZE];
 
             // Based on: https://stackoverflow.com/a/39491059
             struct LostBytesWriter<'a> {
