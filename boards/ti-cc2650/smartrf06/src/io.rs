@@ -1,4 +1,6 @@
 use core::fmt;
+#[cfg(not(test))]
+use core::panic::PanicInfo;
 
 pub(crate) const LED_PANIC_PIN: u32 = 25;
 
@@ -22,6 +24,7 @@ mod internals {
     }
 }
 use internals::UART;
+use kernel::debug::IoWrite;
 
 struct PanicWriter;
 
@@ -51,14 +54,12 @@ impl PanicWriter {
 
 impl fmt::Write for PanicWriter {
     fn write_str(&mut self, s: &str) -> fmt::Result {
-        for byte in s.bytes() {
-            unsafe { self.write_byte(byte) };
-        }
+        self.write(s.as_bytes());
         Ok(())
     }
 }
 
-impl kernel::debug::IoWrite for PanicWriter {
+impl IoWrite for PanicWriter {
     fn write(&mut self, buf: &[u8]) -> usize {
         for byte in buf.iter().copied() {
             unsafe { self.write_byte(byte) };
@@ -83,9 +84,6 @@ pub fn _print(args: fmt::Arguments) {
     use core::fmt::Write;
     PanicWriter.write_fmt(args).unwrap();
 }
-
-#[cfg(not(test))]
-use core::panic::PanicInfo;
 
 #[cfg(not(test))]
 #[no_mangle]
