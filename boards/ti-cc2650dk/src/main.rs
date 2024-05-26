@@ -4,7 +4,7 @@
 use core::ptr::{addr_of, addr_of_mut};
 
 use capsules_core::console;
-use capsules_system::process_policies::PanicFaultPolicy;
+use capsules_system::{process_policies::PanicFaultPolicy, process_printer::ProcessPrinterText};
 use cc2650_chip::{chip::Cc2650, uart};
 
 use kernel::{
@@ -34,8 +34,7 @@ const NUM_PROCS: usize = 2;
 static mut PROCESSES: [Option<&'static dyn kernel::process::Process>; NUM_PROCS] = [None, None];
 
 static mut CHIP: Option<&'static Cc2650> = None;
-static mut PROCESS_PRINTER: Option<&'static capsules_system::process_printer::ProcessPrinterText> =
-    None;
+static mut PROCESS_PRINTER: Option<&'static ProcessPrinterText> = None;
 
 struct Platform {
     scheduler: &'static RoundRobinSched<'static>,
