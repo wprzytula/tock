@@ -168,7 +168,7 @@ impl Clock {
         }
     }
 
-    pub fn enable_clocks(prcm: &cc2650::PRCM, clocks: Clocks) {
+    fn enable_clocks(prcm: &cc2650::PRCM, clocks: Clocks) {
         if clocks.gpio {
             prcm.gpioclkgr.write(|w| w.clk_en().set_bit());
             prcm.gpioclkgs.write(|w| w.clk_en().set_bit());
