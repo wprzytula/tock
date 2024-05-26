@@ -19201,7 +19201,7 @@ extern "C" {
     pub fn MemBusWrkAroundHapiEraseSector(ui32Address: u32) -> u32;
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct HARD_API_T {
     pub Crc32: FPTR_CRC32_T,
     pub FlashGetSize: FPTR_GETFLSIZE_T,
@@ -19965,7 +19965,7 @@ extern "C" {
     pub fn I2CIntUnregister(ui32Base: u32);
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct I2SControlTable {
     pub ui16DMABufSize: u16,
     pub ui16ChBufSize: u16,
@@ -20311,7 +20311,7 @@ extern "C" {
 }
 pub type wchar_t = cty::c_uint;
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct max_align_t {
     pub __clang_max_align_nonce1: cty::c_longlong,
     pub __clang_max_align_nonce2: f64,
@@ -20348,6 +20348,24 @@ pub struct _mbstate_t {
 pub union _mbstate_t__bindgen_ty_1 {
     pub __wch: wint_t,
     pub __wchb: [cty::c_uchar; 4usize],
+}
+impl Default for _mbstate_t__bindgen_ty_1 {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
+impl Default for _mbstate_t {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
 }
 pub type _iconv_t = *mut cty::c_void;
 pub type __clock_t = cty::c_ulong;
@@ -20415,8 +20433,17 @@ pub struct _Bigint {
     pub _wds: cty::c_int,
     pub _x: [__ULong; 1usize],
 }
+impl Default for _Bigint {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct __tm {
     pub __tm_sec: cty::c_int,
     pub __tm_min: cty::c_int,
@@ -20436,6 +20463,15 @@ pub struct _on_exit_args {
     pub _fntypes: __ULong,
     pub _is_cxa: __ULong,
 }
+impl Default for _on_exit_args {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct _atexit {
@@ -20444,11 +20480,29 @@ pub struct _atexit {
     pub _fns: [::core::option::Option<unsafe extern "C" fn()>; 32usize],
     pub _on_exit_args: _on_exit_args,
 }
+impl Default for _atexit {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct __sbuf {
     pub _base: *mut cty::c_uchar,
     pub _size: cty::c_int,
+}
+impl Default for __sbuf {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -20501,6 +20555,15 @@ pub struct __sFILE {
     pub _mbstate: _mbstate_t,
     pub _flags2: cty::c_int,
 }
+impl Default for __sFILE {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 pub type __FILE = __sFILE;
 extern "C" {
     pub static mut __sf: [__FILE; 3usize];
@@ -20512,11 +20575,20 @@ pub struct _glue {
     pub _niobs: cty::c_int,
     pub _iobs: *mut __FILE,
 }
+impl Default for _glue {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 extern "C" {
     pub static mut __sglue: _glue;
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct _rand48 {
     pub _seed: [cty::c_ushort; 3usize],
     pub _mult: [cty::c_ushort; 3usize],
@@ -20568,6 +20640,33 @@ pub struct _reent__bindgen_ty_1__bindgen_ty_1 {
     pub _wcrtomb_state: _mbstate_t,
     pub _wcsrtombs_state: _mbstate_t,
     pub _h_errno: cty::c_int,
+}
+impl Default for _reent__bindgen_ty_1__bindgen_ty_1 {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
+impl Default for _reent__bindgen_ty_1 {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
+impl Default for _reent {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
 }
 extern "C" {
     pub static mut _impure_ptr: *mut _reent;
@@ -20885,6 +20984,15 @@ pub struct dataQueue_t {
     pub pCurrEntry: *mut u8,
     pub pLastEntry: *mut u8,
 }
+impl Default for dataQueue_t {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 pub type rfc_command_t = rfc_command_s;
 pub type rfc_radioOp_t = rfc_radioOp_s;
 pub type rfc_CMD_NOP_t = rfc_CMD_NOP_s;
@@ -20926,7 +21034,7 @@ pub type rfc_CMD_UPDATE_FS_t = rfc_CMD_UPDATE_FS_s;
 pub type rfc_CMD_BUS_REQUEST_t = rfc_CMD_BUS_REQUEST_s;
 #[repr(C)]
 #[repr(align(4))]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct rfc_command_s {
     pub commandNo: u16,
 }
@@ -20941,7 +21049,7 @@ pub struct rfc_radioOp_s {
     pub condition: rfc_radioOp_s__bindgen_ty_2,
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct rfc_radioOp_s__bindgen_ty_1 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -21019,7 +21127,7 @@ impl rfc_radioOp_s__bindgen_ty_1 {
     }
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct rfc_radioOp_s__bindgen_ty_2 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -21061,8 +21169,18 @@ impl rfc_radioOp_s__bindgen_ty_2 {
         __bindgen_bitfield_unit
     }
 }
+impl Default for rfc_radioOp_s {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_NOP_s {
     pub commandNo: u16,
     pub status: u16,
@@ -21072,7 +21190,8 @@ pub struct rfc_CMD_NOP_s {
     pub condition: rfc_CMD_NOP_s__bindgen_ty_2,
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_NOP_s__bindgen_ty_1 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -21150,7 +21269,8 @@ impl rfc_CMD_NOP_s__bindgen_ty_1 {
     }
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_NOP_s__bindgen_ty_2 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -21192,8 +21312,18 @@ impl rfc_CMD_NOP_s__bindgen_ty_2 {
         __bindgen_bitfield_unit
     }
 }
+impl Default for rfc_CMD_NOP_s {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_RADIO_SETUP_s {
     pub commandNo: u16,
     pub status: u16,
@@ -21208,7 +21338,8 @@ pub struct rfc_CMD_RADIO_SETUP_s {
     pub pRegOverride: *mut u32,
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_RADIO_SETUP_s__bindgen_ty_1 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -21286,7 +21417,8 @@ impl rfc_CMD_RADIO_SETUP_s__bindgen_ty_1 {
     }
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_RADIO_SETUP_s__bindgen_ty_2 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -21330,7 +21462,8 @@ impl rfc_CMD_RADIO_SETUP_s__bindgen_ty_2 {
 }
 #[repr(C)]
 #[repr(align(2))]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_RADIO_SETUP_s__bindgen_ty_3 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 2usize]>,
@@ -21407,8 +21540,18 @@ impl rfc_CMD_RADIO_SETUP_s__bindgen_ty_3 {
         __bindgen_bitfield_unit
     }
 }
+impl Default for rfc_CMD_RADIO_SETUP_s {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_FS_s {
     pub commandNo: u16,
     pub status: u16,
@@ -21425,7 +21568,8 @@ pub struct rfc_CMD_FS_s {
     pub __dummy3: u16,
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_FS_s__bindgen_ty_1 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -21503,7 +21647,8 @@ impl rfc_CMD_FS_s__bindgen_ty_1 {
     }
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_FS_s__bindgen_ty_2 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -21546,7 +21691,8 @@ impl rfc_CMD_FS_s__bindgen_ty_2 {
     }
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_FS_s__bindgen_ty_3 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -21588,8 +21734,18 @@ impl rfc_CMD_FS_s__bindgen_ty_3 {
         __bindgen_bitfield_unit
     }
 }
+impl Default for rfc_CMD_FS_s {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_FS_OFF_s {
     pub commandNo: u16,
     pub status: u16,
@@ -21599,7 +21755,8 @@ pub struct rfc_CMD_FS_OFF_s {
     pub condition: rfc_CMD_FS_OFF_s__bindgen_ty_2,
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_FS_OFF_s__bindgen_ty_1 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -21677,7 +21834,8 @@ impl rfc_CMD_FS_OFF_s__bindgen_ty_1 {
     }
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_FS_OFF_s__bindgen_ty_2 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -21719,8 +21877,18 @@ impl rfc_CMD_FS_OFF_s__bindgen_ty_2 {
         __bindgen_bitfield_unit
     }
 }
+impl Default for rfc_CMD_FS_OFF_s {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_RX_TEST_s {
     pub commandNo: u16,
     pub status: u16,
@@ -21734,7 +21902,8 @@ pub struct rfc_CMD_RX_TEST_s {
     pub endTime: ratmr_t,
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_RX_TEST_s__bindgen_ty_1 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -21812,7 +21981,8 @@ impl rfc_CMD_RX_TEST_s__bindgen_ty_1 {
     }
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_RX_TEST_s__bindgen_ty_2 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -21855,7 +22025,8 @@ impl rfc_CMD_RX_TEST_s__bindgen_ty_2 {
     }
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_RX_TEST_s__bindgen_ty_3 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -21917,7 +22088,8 @@ impl rfc_CMD_RX_TEST_s__bindgen_ty_3 {
     }
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_RX_TEST_s__bindgen_ty_4 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -21994,8 +22166,18 @@ impl rfc_CMD_RX_TEST_s__bindgen_ty_4 {
         __bindgen_bitfield_unit
     }
 }
+impl Default for rfc_CMD_RX_TEST_s {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_TX_TEST_s {
     pub commandNo: u16,
     pub status: u16,
@@ -22012,7 +22194,8 @@ pub struct rfc_CMD_TX_TEST_s {
     pub endTime: ratmr_t,
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_TX_TEST_s__bindgen_ty_1 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -22090,7 +22273,8 @@ impl rfc_CMD_TX_TEST_s__bindgen_ty_1 {
     }
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_TX_TEST_s__bindgen_ty_2 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -22133,7 +22317,8 @@ impl rfc_CMD_TX_TEST_s__bindgen_ty_2 {
     }
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_TX_TEST_s__bindgen_ty_3 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -22195,7 +22380,8 @@ impl rfc_CMD_TX_TEST_s__bindgen_ty_3 {
     }
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_TX_TEST_s__bindgen_ty_4 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -22272,8 +22458,18 @@ impl rfc_CMD_TX_TEST_s__bindgen_ty_4 {
         __bindgen_bitfield_unit
     }
 }
+impl Default for rfc_CMD_TX_TEST_s {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_SYNC_STOP_RAT_s {
     pub commandNo: u16,
     pub status: u16,
@@ -22285,7 +22481,8 @@ pub struct rfc_CMD_SYNC_STOP_RAT_s {
     pub rat0: ratmr_t,
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_SYNC_STOP_RAT_s__bindgen_ty_1 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -22363,7 +22560,8 @@ impl rfc_CMD_SYNC_STOP_RAT_s__bindgen_ty_1 {
     }
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_SYNC_STOP_RAT_s__bindgen_ty_2 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -22405,8 +22603,18 @@ impl rfc_CMD_SYNC_STOP_RAT_s__bindgen_ty_2 {
         __bindgen_bitfield_unit
     }
 }
+impl Default for rfc_CMD_SYNC_STOP_RAT_s {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_SYNC_START_RAT_s {
     pub commandNo: u16,
     pub status: u16,
@@ -22418,7 +22626,8 @@ pub struct rfc_CMD_SYNC_START_RAT_s {
     pub rat0: ratmr_t,
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_SYNC_START_RAT_s__bindgen_ty_1 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -22496,7 +22705,8 @@ impl rfc_CMD_SYNC_START_RAT_s__bindgen_ty_1 {
     }
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_SYNC_START_RAT_s__bindgen_ty_2 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -22538,8 +22748,18 @@ impl rfc_CMD_SYNC_START_RAT_s__bindgen_ty_2 {
         __bindgen_bitfield_unit
     }
 }
+impl Default for rfc_CMD_SYNC_START_RAT_s {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_COUNT_s {
     pub commandNo: u16,
     pub status: u16,
@@ -22550,7 +22770,8 @@ pub struct rfc_CMD_COUNT_s {
     pub counter: u16,
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_COUNT_s__bindgen_ty_1 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -22628,7 +22849,8 @@ impl rfc_CMD_COUNT_s__bindgen_ty_1 {
     }
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_COUNT_s__bindgen_ty_2 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -22670,8 +22892,18 @@ impl rfc_CMD_COUNT_s__bindgen_ty_2 {
         __bindgen_bitfield_unit
     }
 }
+impl Default for rfc_CMD_COUNT_s {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_FS_POWERUP_s {
     pub commandNo: u16,
     pub status: u16,
@@ -22683,7 +22915,8 @@ pub struct rfc_CMD_FS_POWERUP_s {
     pub pRegOverride: *mut u32,
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_FS_POWERUP_s__bindgen_ty_1 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -22761,7 +22994,8 @@ impl rfc_CMD_FS_POWERUP_s__bindgen_ty_1 {
     }
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_FS_POWERUP_s__bindgen_ty_2 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -22803,8 +23037,18 @@ impl rfc_CMD_FS_POWERUP_s__bindgen_ty_2 {
         __bindgen_bitfield_unit
     }
 }
+impl Default for rfc_CMD_FS_POWERUP_s {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_FS_POWERDOWN_s {
     pub commandNo: u16,
     pub status: u16,
@@ -22814,7 +23058,8 @@ pub struct rfc_CMD_FS_POWERDOWN_s {
     pub condition: rfc_CMD_FS_POWERDOWN_s__bindgen_ty_2,
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_FS_POWERDOWN_s__bindgen_ty_1 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -22892,7 +23137,8 @@ impl rfc_CMD_FS_POWERDOWN_s__bindgen_ty_1 {
     }
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_FS_POWERDOWN_s__bindgen_ty_2 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -22934,8 +23180,18 @@ impl rfc_CMD_FS_POWERDOWN_s__bindgen_ty_2 {
         __bindgen_bitfield_unit
     }
 }
+impl Default for rfc_CMD_FS_POWERDOWN_s {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_SCH_IMM_s {
     pub commandNo: u16,
     pub status: u16,
@@ -22948,7 +23204,8 @@ pub struct rfc_CMD_SCH_IMM_s {
     pub cmdstaVal: u32,
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_SCH_IMM_s__bindgen_ty_1 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -23026,7 +23283,8 @@ impl rfc_CMD_SCH_IMM_s__bindgen_ty_1 {
     }
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_SCH_IMM_s__bindgen_ty_2 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -23068,8 +23326,18 @@ impl rfc_CMD_SCH_IMM_s__bindgen_ty_2 {
         __bindgen_bitfield_unit
     }
 }
+impl Default for rfc_CMD_SCH_IMM_s {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_COUNT_BRANCH_s {
     pub commandNo: u16,
     pub status: u16,
@@ -23081,7 +23349,8 @@ pub struct rfc_CMD_COUNT_BRANCH_s {
     pub pNextOpIfOk: *mut rfc_radioOp_t,
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_COUNT_BRANCH_s__bindgen_ty_1 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -23159,7 +23428,8 @@ impl rfc_CMD_COUNT_BRANCH_s__bindgen_ty_1 {
     }
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_COUNT_BRANCH_s__bindgen_ty_2 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -23201,8 +23471,18 @@ impl rfc_CMD_COUNT_BRANCH_s__bindgen_ty_2 {
         __bindgen_bitfield_unit
     }
 }
+impl Default for rfc_CMD_COUNT_BRANCH_s {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_PATTERN_CHECK_s {
     pub commandNo: u16,
     pub status: u16,
@@ -23217,7 +23497,8 @@ pub struct rfc_CMD_PATTERN_CHECK_s {
     pub compareVal: u32,
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_PATTERN_CHECK_s__bindgen_ty_1 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -23295,7 +23576,8 @@ impl rfc_CMD_PATTERN_CHECK_s__bindgen_ty_1 {
     }
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_PATTERN_CHECK_s__bindgen_ty_2 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -23339,7 +23621,8 @@ impl rfc_CMD_PATTERN_CHECK_s__bindgen_ty_2 {
 }
 #[repr(C)]
 #[repr(align(2))]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_PATTERN_CHECK_s__bindgen_ty_3 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 2usize]>,
@@ -23432,41 +23715,65 @@ impl rfc_CMD_PATTERN_CHECK_s__bindgen_ty_3 {
         __bindgen_bitfield_unit
     }
 }
+impl Default for rfc_CMD_PATTERN_CHECK_s {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C)]
 #[repr(align(4))]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_ABORT_s {
     pub commandNo: u16,
 }
 #[repr(C)]
 #[repr(align(4))]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_STOP_s {
     pub commandNo: u16,
 }
 #[repr(C)]
 #[repr(align(4))]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_GET_RSSI_s {
     pub commandNo: u16,
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_UPDATE_RADIO_SETUP_s {
     pub commandNo: u16,
     pub __dummy0: u16,
     pub pRegOverride: *mut u32,
 }
+impl Default for rfc_CMD_UPDATE_RADIO_SETUP_s {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C)]
 #[repr(align(4))]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_TRIGGER_s {
     pub commandNo: u16,
     pub triggerNo: u8,
 }
 #[repr(C)]
 #[repr(align(4))]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_GET_FW_INFO_s {
     pub commandNo: u16,
     pub versionNo: u16,
@@ -23476,18 +23783,21 @@ pub struct rfc_CMD_GET_FW_INFO_s {
 }
 #[repr(C)]
 #[repr(align(4))]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_START_RAT_s {
     pub commandNo: u16,
 }
 #[repr(C)]
 #[repr(align(4))]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_PING_s {
     pub commandNo: u16,
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_READ_RFREG_s {
     pub commandNo: u16,
     pub address: u16,
@@ -23495,45 +23805,96 @@ pub struct rfc_CMD_READ_RFREG_s {
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_ADD_DATA_ENTRY_s {
     pub commandNo: u16,
     pub __dummy0: u16,
     pub pQueue: *mut dataQueue_t,
     pub pEntry: *mut u8,
 }
+impl Default for rfc_CMD_ADD_DATA_ENTRY_s {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_REMOVE_DATA_ENTRY_s {
     pub commandNo: u16,
     pub __dummy0: u16,
     pub pQueue: *mut dataQueue_t,
     pub pEntry: *mut u8,
 }
+impl Default for rfc_CMD_REMOVE_DATA_ENTRY_s {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_FLUSH_QUEUE_s {
     pub commandNo: u16,
     pub __dummy0: u16,
     pub pQueue: *mut dataQueue_t,
     pub pFirstEntry: *mut u8,
 }
+impl Default for rfc_CMD_FLUSH_QUEUE_s {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_CLEAR_RX_s {
     pub commandNo: u16,
     pub __dummy0: u16,
     pub pQueue: *mut dataQueue_t,
 }
+impl Default for rfc_CMD_CLEAR_RX_s {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_REMOVE_PENDING_ENTRIES_s {
     pub commandNo: u16,
     pub __dummy0: u16,
     pub pQueue: *mut dataQueue_t,
     pub pFirstEntry: *mut u8,
 }
+impl Default for rfc_CMD_REMOVE_PENDING_ENTRIES_s {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_SET_RAT_CMP_s {
     pub commandNo: u16,
     pub ratCh: u8,
@@ -23542,14 +23903,16 @@ pub struct rfc_CMD_SET_RAT_CMP_s {
 }
 #[repr(C)]
 #[repr(align(4))]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_SET_RAT_CPT_s {
     pub commandNo: u16,
     pub config: rfc_CMD_SET_RAT_CPT_s__bindgen_ty_1,
 }
 #[repr(C)]
 #[repr(align(2))]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_SET_RAT_CPT_s__bindgen_ty_1 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 2usize]>,
@@ -23628,21 +23991,24 @@ impl rfc_CMD_SET_RAT_CPT_s__bindgen_ty_1 {
 }
 #[repr(C)]
 #[repr(align(4))]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_DISABLE_RAT_CH_s {
     pub commandNo: u16,
     pub ratCh: u8,
 }
 #[repr(C)]
 #[repr(align(4))]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_SET_RAT_OUTPUT_s {
     pub commandNo: u16,
     pub config: rfc_CMD_SET_RAT_OUTPUT_s__bindgen_ty_1,
 }
 #[repr(C)]
 #[repr(align(2))]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_SET_RAT_OUTPUT_s__bindgen_ty_1 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 2usize]>,
@@ -23705,27 +24071,31 @@ impl rfc_CMD_SET_RAT_OUTPUT_s__bindgen_ty_1 {
 }
 #[repr(C)]
 #[repr(align(4))]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_ARM_RAT_CH_s {
     pub commandNo: u16,
     pub ratCh: u8,
 }
 #[repr(C)]
 #[repr(align(4))]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_DISARM_RAT_CH_s {
     pub commandNo: u16,
     pub ratCh: u8,
 }
 #[repr(C)]
 #[repr(align(4))]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_SET_TX_POWER_s {
     pub commandNo: u16,
     pub txPower: u16,
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_UPDATE_FS_s {
     pub commandNo: u16,
     pub __dummy0: u16,
@@ -23737,7 +24107,8 @@ pub struct rfc_CMD_UPDATE_FS_s {
 }
 #[repr(C)]
 #[repr(align(4))]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_BUS_REQUEST_s {
     pub commandNo: u16,
     pub bSysBusNeeded: u8,
@@ -23786,7 +24157,7 @@ pub struct rfc_bleRadioOp_s {
     pub pOutput: *mut u8,
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct rfc_bleRadioOp_s__bindgen_ty_1 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -23864,7 +24235,7 @@ impl rfc_bleRadioOp_s__bindgen_ty_1 {
     }
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct rfc_bleRadioOp_s__bindgen_ty_2 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -23907,7 +24278,7 @@ impl rfc_bleRadioOp_s__bindgen_ty_2 {
     }
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct rfc_bleRadioOp_s__bindgen_ty_3 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -23949,8 +24320,18 @@ impl rfc_bleRadioOp_s__bindgen_ty_3 {
         __bindgen_bitfield_unit
     }
 }
+impl Default for rfc_bleRadioOp_s {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_BLE_SLAVE_s {
     pub commandNo: u16,
     pub status: u16,
@@ -23964,7 +24345,8 @@ pub struct rfc_CMD_BLE_SLAVE_s {
     pub pOutput: *mut rfc_bleMasterSlaveOutput_t,
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_BLE_SLAVE_s__bindgen_ty_1 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -24042,7 +24424,8 @@ impl rfc_CMD_BLE_SLAVE_s__bindgen_ty_1 {
     }
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_BLE_SLAVE_s__bindgen_ty_2 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -24085,7 +24468,8 @@ impl rfc_CMD_BLE_SLAVE_s__bindgen_ty_2 {
     }
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_BLE_SLAVE_s__bindgen_ty_3 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -24127,8 +24511,18 @@ impl rfc_CMD_BLE_SLAVE_s__bindgen_ty_3 {
         __bindgen_bitfield_unit
     }
 }
+impl Default for rfc_CMD_BLE_SLAVE_s {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_BLE_MASTER_s {
     pub commandNo: u16,
     pub status: u16,
@@ -24142,7 +24536,8 @@ pub struct rfc_CMD_BLE_MASTER_s {
     pub pOutput: *mut rfc_bleMasterSlaveOutput_t,
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_BLE_MASTER_s__bindgen_ty_1 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -24220,7 +24615,8 @@ impl rfc_CMD_BLE_MASTER_s__bindgen_ty_1 {
     }
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_BLE_MASTER_s__bindgen_ty_2 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -24263,7 +24659,8 @@ impl rfc_CMD_BLE_MASTER_s__bindgen_ty_2 {
     }
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_BLE_MASTER_s__bindgen_ty_3 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -24305,8 +24702,18 @@ impl rfc_CMD_BLE_MASTER_s__bindgen_ty_3 {
         __bindgen_bitfield_unit
     }
 }
+impl Default for rfc_CMD_BLE_MASTER_s {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_BLE_ADV_s {
     pub commandNo: u16,
     pub status: u16,
@@ -24320,7 +24727,8 @@ pub struct rfc_CMD_BLE_ADV_s {
     pub pOutput: *mut rfc_bleAdvOutput_t,
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_BLE_ADV_s__bindgen_ty_1 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -24398,7 +24806,8 @@ impl rfc_CMD_BLE_ADV_s__bindgen_ty_1 {
     }
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_BLE_ADV_s__bindgen_ty_2 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -24441,7 +24850,8 @@ impl rfc_CMD_BLE_ADV_s__bindgen_ty_2 {
     }
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_BLE_ADV_s__bindgen_ty_3 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -24483,8 +24893,18 @@ impl rfc_CMD_BLE_ADV_s__bindgen_ty_3 {
         __bindgen_bitfield_unit
     }
 }
+impl Default for rfc_CMD_BLE_ADV_s {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_BLE_ADV_DIR_s {
     pub commandNo: u16,
     pub status: u16,
@@ -24498,7 +24918,8 @@ pub struct rfc_CMD_BLE_ADV_DIR_s {
     pub pOutput: *mut rfc_bleAdvOutput_t,
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_BLE_ADV_DIR_s__bindgen_ty_1 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -24576,7 +24997,8 @@ impl rfc_CMD_BLE_ADV_DIR_s__bindgen_ty_1 {
     }
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_BLE_ADV_DIR_s__bindgen_ty_2 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -24619,7 +25041,8 @@ impl rfc_CMD_BLE_ADV_DIR_s__bindgen_ty_2 {
     }
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_BLE_ADV_DIR_s__bindgen_ty_3 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -24661,8 +25084,18 @@ impl rfc_CMD_BLE_ADV_DIR_s__bindgen_ty_3 {
         __bindgen_bitfield_unit
     }
 }
+impl Default for rfc_CMD_BLE_ADV_DIR_s {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_BLE_ADV_NC_s {
     pub commandNo: u16,
     pub status: u16,
@@ -24676,7 +25109,8 @@ pub struct rfc_CMD_BLE_ADV_NC_s {
     pub pOutput: *mut rfc_bleAdvOutput_t,
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_BLE_ADV_NC_s__bindgen_ty_1 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -24754,7 +25188,8 @@ impl rfc_CMD_BLE_ADV_NC_s__bindgen_ty_1 {
     }
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_BLE_ADV_NC_s__bindgen_ty_2 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -24797,7 +25232,8 @@ impl rfc_CMD_BLE_ADV_NC_s__bindgen_ty_2 {
     }
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_BLE_ADV_NC_s__bindgen_ty_3 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -24839,8 +25275,18 @@ impl rfc_CMD_BLE_ADV_NC_s__bindgen_ty_3 {
         __bindgen_bitfield_unit
     }
 }
+impl Default for rfc_CMD_BLE_ADV_NC_s {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_BLE_ADV_SCAN_s {
     pub commandNo: u16,
     pub status: u16,
@@ -24854,7 +25300,8 @@ pub struct rfc_CMD_BLE_ADV_SCAN_s {
     pub pOutput: *mut rfc_bleAdvOutput_t,
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_BLE_ADV_SCAN_s__bindgen_ty_1 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -24932,7 +25379,8 @@ impl rfc_CMD_BLE_ADV_SCAN_s__bindgen_ty_1 {
     }
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_BLE_ADV_SCAN_s__bindgen_ty_2 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -24975,7 +25423,8 @@ impl rfc_CMD_BLE_ADV_SCAN_s__bindgen_ty_2 {
     }
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_BLE_ADV_SCAN_s__bindgen_ty_3 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -25017,8 +25466,18 @@ impl rfc_CMD_BLE_ADV_SCAN_s__bindgen_ty_3 {
         __bindgen_bitfield_unit
     }
 }
+impl Default for rfc_CMD_BLE_ADV_SCAN_s {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_BLE_SCANNER_s {
     pub commandNo: u16,
     pub status: u16,
@@ -25032,7 +25491,8 @@ pub struct rfc_CMD_BLE_SCANNER_s {
     pub pOutput: *mut rfc_bleScannerOutput_t,
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_BLE_SCANNER_s__bindgen_ty_1 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -25110,7 +25570,8 @@ impl rfc_CMD_BLE_SCANNER_s__bindgen_ty_1 {
     }
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_BLE_SCANNER_s__bindgen_ty_2 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -25153,7 +25614,8 @@ impl rfc_CMD_BLE_SCANNER_s__bindgen_ty_2 {
     }
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_BLE_SCANNER_s__bindgen_ty_3 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -25195,8 +25657,18 @@ impl rfc_CMD_BLE_SCANNER_s__bindgen_ty_3 {
         __bindgen_bitfield_unit
     }
 }
+impl Default for rfc_CMD_BLE_SCANNER_s {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_BLE_INITIATOR_s {
     pub commandNo: u16,
     pub status: u16,
@@ -25210,7 +25682,8 @@ pub struct rfc_CMD_BLE_INITIATOR_s {
     pub pOutput: *mut rfc_bleInitiatorOutput_t,
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_BLE_INITIATOR_s__bindgen_ty_1 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -25288,7 +25761,8 @@ impl rfc_CMD_BLE_INITIATOR_s__bindgen_ty_1 {
     }
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_BLE_INITIATOR_s__bindgen_ty_2 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -25331,7 +25805,8 @@ impl rfc_CMD_BLE_INITIATOR_s__bindgen_ty_2 {
     }
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_BLE_INITIATOR_s__bindgen_ty_3 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -25373,8 +25848,18 @@ impl rfc_CMD_BLE_INITIATOR_s__bindgen_ty_3 {
         __bindgen_bitfield_unit
     }
 }
+impl Default for rfc_CMD_BLE_INITIATOR_s {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_BLE_GENERIC_RX_s {
     pub commandNo: u16,
     pub status: u16,
@@ -25388,7 +25873,8 @@ pub struct rfc_CMD_BLE_GENERIC_RX_s {
     pub pOutput: *mut rfc_bleGenericRxOutput_t,
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_BLE_GENERIC_RX_s__bindgen_ty_1 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -25466,7 +25952,8 @@ impl rfc_CMD_BLE_GENERIC_RX_s__bindgen_ty_1 {
     }
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_BLE_GENERIC_RX_s__bindgen_ty_2 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -25509,7 +25996,8 @@ impl rfc_CMD_BLE_GENERIC_RX_s__bindgen_ty_2 {
     }
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_BLE_GENERIC_RX_s__bindgen_ty_3 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -25551,8 +26039,18 @@ impl rfc_CMD_BLE_GENERIC_RX_s__bindgen_ty_3 {
         __bindgen_bitfield_unit
     }
 }
+impl Default for rfc_CMD_BLE_GENERIC_RX_s {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_BLE_TX_TEST_s {
     pub commandNo: u16,
     pub status: u16,
@@ -25566,7 +26064,8 @@ pub struct rfc_CMD_BLE_TX_TEST_s {
     pub pOutput: *mut rfc_bleTxTestOutput_t,
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_BLE_TX_TEST_s__bindgen_ty_1 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -25644,7 +26143,8 @@ impl rfc_CMD_BLE_TX_TEST_s__bindgen_ty_1 {
     }
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_BLE_TX_TEST_s__bindgen_ty_2 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -25687,7 +26187,8 @@ impl rfc_CMD_BLE_TX_TEST_s__bindgen_ty_2 {
     }
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_BLE_TX_TEST_s__bindgen_ty_3 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -25729,8 +26230,18 @@ impl rfc_CMD_BLE_TX_TEST_s__bindgen_ty_3 {
         __bindgen_bitfield_unit
     }
 }
+impl Default for rfc_CMD_BLE_TX_TEST_s {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_BLE_ADV_PAYLOAD_s {
     pub commandNo: u16,
     pub payloadType: u8,
@@ -25738,9 +26249,19 @@ pub struct rfc_CMD_BLE_ADV_PAYLOAD_s {
     pub pNewData: *mut u8,
     pub pParams: *mut rfc_bleAdvPar_t,
 }
+impl Default for rfc_CMD_BLE_ADV_PAYLOAD_s {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C)]
 #[repr(align(4))]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_BLE5_RADIO_SETUP_s {
     pub dummy0: u8,
 }
@@ -25759,7 +26280,7 @@ pub struct rfc_bleMasterSlavePar_s {
     pub crcInit2: u8,
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct rfc_bleMasterSlavePar_s__bindgen_ty_1 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -25901,7 +26422,7 @@ impl rfc_bleMasterSlavePar_s__bindgen_ty_1 {
     }
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct rfc_bleMasterSlavePar_s__bindgen_ty_2 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -26042,6 +26563,15 @@ impl rfc_bleMasterSlavePar_s__bindgen_ty_2 {
         __bindgen_bitfield_unit
     }
 }
+impl Default for rfc_bleMasterSlavePar_s {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct rfc_bleMasterPar_s {
@@ -26059,7 +26589,7 @@ pub struct rfc_bleMasterPar_s {
     pub endTime: ratmr_t,
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct rfc_bleMasterPar_s__bindgen_ty_1 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -26201,7 +26731,7 @@ impl rfc_bleMasterPar_s__bindgen_ty_1 {
     }
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct rfc_bleMasterPar_s__bindgen_ty_2 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -26343,7 +26873,7 @@ impl rfc_bleMasterPar_s__bindgen_ty_2 {
     }
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct rfc_bleMasterPar_s__bindgen_ty_3 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -26420,6 +26950,15 @@ impl rfc_bleMasterPar_s__bindgen_ty_3 {
         __bindgen_bitfield_unit
     }
 }
+impl Default for rfc_bleMasterPar_s {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct rfc_bleSlavePar_s {
@@ -26441,7 +26980,7 @@ pub struct rfc_bleSlavePar_s {
     pub endTime: ratmr_t,
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct rfc_bleSlavePar_s__bindgen_ty_1 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -26583,7 +27122,7 @@ impl rfc_bleSlavePar_s__bindgen_ty_1 {
     }
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct rfc_bleSlavePar_s__bindgen_ty_2 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -26725,7 +27264,7 @@ impl rfc_bleSlavePar_s__bindgen_ty_2 {
     }
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct rfc_bleSlavePar_s__bindgen_ty_3 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -26803,7 +27342,7 @@ impl rfc_bleSlavePar_s__bindgen_ty_3 {
     }
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct rfc_bleSlavePar_s__bindgen_ty_4 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -26880,6 +27419,15 @@ impl rfc_bleSlavePar_s__bindgen_ty_4 {
         __bindgen_bitfield_unit
     }
 }
+impl Default for rfc_bleSlavePar_s {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct rfc_bleAdvPar_s {
@@ -26898,7 +27446,7 @@ pub struct rfc_bleAdvPar_s {
     pub endTime: ratmr_t,
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct rfc_bleAdvPar_s__bindgen_ty_1 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -27040,7 +27588,7 @@ impl rfc_bleAdvPar_s__bindgen_ty_1 {
     }
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct rfc_bleAdvPar_s__bindgen_ty_2 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -27134,7 +27682,7 @@ impl rfc_bleAdvPar_s__bindgen_ty_2 {
     }
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct rfc_bleAdvPar_s__bindgen_ty_3 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -27211,6 +27759,15 @@ impl rfc_bleAdvPar_s__bindgen_ty_3 {
         __bindgen_bitfield_unit
     }
 }
+impl Default for rfc_bleAdvPar_s {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct rfc_bleScannerPar_s {
@@ -27231,7 +27788,7 @@ pub struct rfc_bleScannerPar_s {
     pub endTime: ratmr_t,
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct rfc_bleScannerPar_s__bindgen_ty_1 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -27373,7 +27930,7 @@ impl rfc_bleScannerPar_s__bindgen_ty_1 {
     }
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct rfc_bleScannerPar_s__bindgen_ty_2 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -27499,7 +28056,7 @@ impl rfc_bleScannerPar_s__bindgen_ty_2 {
     }
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct rfc_bleScannerPar_s__bindgen_ty_3 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -27561,7 +28118,7 @@ impl rfc_bleScannerPar_s__bindgen_ty_3 {
     }
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct rfc_bleScannerPar_s__bindgen_ty_4 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -27639,7 +28196,7 @@ impl rfc_bleScannerPar_s__bindgen_ty_4 {
     }
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct rfc_bleScannerPar_s__bindgen_ty_5 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -27716,6 +28273,15 @@ impl rfc_bleScannerPar_s__bindgen_ty_5 {
         __bindgen_bitfield_unit
     }
 }
+impl Default for rfc_bleScannerPar_s {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct rfc_bleInitiatorPar_s {
@@ -27735,7 +28301,7 @@ pub struct rfc_bleInitiatorPar_s {
     pub endTime: ratmr_t,
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct rfc_bleInitiatorPar_s__bindgen_ty_1 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -27877,7 +28443,7 @@ impl rfc_bleInitiatorPar_s__bindgen_ty_1 {
     }
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct rfc_bleInitiatorPar_s__bindgen_ty_2 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -27971,7 +28537,7 @@ impl rfc_bleInitiatorPar_s__bindgen_ty_2 {
     }
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct rfc_bleInitiatorPar_s__bindgen_ty_3 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -28049,7 +28615,7 @@ impl rfc_bleInitiatorPar_s__bindgen_ty_3 {
     }
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct rfc_bleInitiatorPar_s__bindgen_ty_4 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -28126,6 +28692,15 @@ impl rfc_bleInitiatorPar_s__bindgen_ty_4 {
         __bindgen_bitfield_unit
     }
 }
+impl Default for rfc_bleInitiatorPar_s {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct rfc_bleGenericRxPar_s {
@@ -28141,7 +28716,7 @@ pub struct rfc_bleGenericRxPar_s {
     pub endTime: ratmr_t,
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct rfc_bleGenericRxPar_s__bindgen_ty_1 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -28283,7 +28858,7 @@ impl rfc_bleGenericRxPar_s__bindgen_ty_1 {
     }
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct rfc_bleGenericRxPar_s__bindgen_ty_2 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -28360,8 +28935,17 @@ impl rfc_bleGenericRxPar_s__bindgen_ty_2 {
         __bindgen_bitfield_unit
     }
 }
+impl Default for rfc_bleGenericRxPar_s {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct rfc_bleTxTestPar_s {
     pub numPackets: u16,
     pub payloadLength: u8,
@@ -28374,7 +28958,7 @@ pub struct rfc_bleTxTestPar_s {
     pub endTime: ratmr_t,
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct rfc_bleTxTestPar_s__bindgen_ty_1 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -28436,7 +29020,7 @@ impl rfc_bleTxTestPar_s__bindgen_ty_1 {
     }
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct rfc_bleTxTestPar_s__bindgen_ty_2 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -28514,7 +29098,7 @@ impl rfc_bleTxTestPar_s__bindgen_ty_2 {
     }
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct rfc_bleMasterSlaveOutput_s {
     pub nTx: u8,
     pub nTxAck: u8,
@@ -28535,7 +29119,7 @@ pub struct rfc_bleMasterSlaveOutput_s {
     pub timeStamp: ratmr_t,
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct rfc_bleMasterSlaveOutput_s__bindgen_ty_1 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -28661,7 +29245,7 @@ impl rfc_bleMasterSlaveOutput_s__bindgen_ty_1 {
     }
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct rfc_bleAdvOutput_s {
     pub nTxAdvInd: u16,
     pub nTxScanRsp: u8,
@@ -28675,7 +29259,7 @@ pub struct rfc_bleAdvOutput_s {
     pub timeStamp: ratmr_t,
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct rfc_bleScannerOutput_s {
     pub nTxScanReq: u16,
     pub nBackedOffScanReq: u16,
@@ -28692,7 +29276,7 @@ pub struct rfc_bleScannerOutput_s {
     pub timeStamp: ratmr_t,
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct rfc_bleInitiatorOutput_s {
     pub nTxConnectReq: u8,
     pub nRxAdvOk: u8,
@@ -28703,7 +29287,7 @@ pub struct rfc_bleInitiatorOutput_s {
     pub timeStamp: ratmr_t,
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct rfc_bleGenericRxOutput_s {
     pub nRxOk: u16,
     pub nRxNok: u16,
@@ -28714,12 +29298,12 @@ pub struct rfc_bleGenericRxOutput_s {
 }
 #[repr(C)]
 #[repr(align(4))]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct rfc_bleTxTestOutput_s {
     pub nTx: u16,
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct rfc_bleWhiteListEntry_s {
     pub size: u8,
     pub conf: rfc_bleWhiteListEntry_s__bindgen_ty_1,
@@ -28727,7 +29311,7 @@ pub struct rfc_bleWhiteListEntry_s {
     pub addressHi: u32,
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct rfc_bleWhiteListEntry_s__bindgen_ty_1 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -28806,12 +29390,12 @@ impl rfc_bleWhiteListEntry_s__bindgen_ty_1 {
 }
 #[repr(C)]
 #[repr(align(4))]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct rfc_bleRxStatus_s {
     pub status: rfc_bleRxStatus_s__bindgen_ty_1,
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct rfc_bleRxStatus_s__bindgen_ty_1 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -28884,6 +29468,7 @@ pub type rfc_propRxOutput_t = rfc_propRxOutput_s;
 pub type rfc_propRxStatus_t = rfc_propRxStatus_s;
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_PROP_TX_s {
     pub commandNo: u16,
     pub status: u16,
@@ -28897,7 +29482,8 @@ pub struct rfc_CMD_PROP_TX_s {
     pub pPkt: *mut u8,
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_PROP_TX_s__bindgen_ty_1 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -28975,7 +29561,8 @@ impl rfc_CMD_PROP_TX_s__bindgen_ty_1 {
     }
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_PROP_TX_s__bindgen_ty_2 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -29018,7 +29605,8 @@ impl rfc_CMD_PROP_TX_s__bindgen_ty_2 {
     }
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_PROP_TX_s__bindgen_ty_3 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -29079,8 +29667,18 @@ impl rfc_CMD_PROP_TX_s__bindgen_ty_3 {
         __bindgen_bitfield_unit
     }
 }
+impl Default for rfc_CMD_PROP_TX_s {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_PROP_RX_s {
     pub commandNo: u16,
     pub status: u16,
@@ -29100,7 +29698,8 @@ pub struct rfc_CMD_PROP_RX_s {
     pub pOutput: *mut u8,
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_PROP_RX_s__bindgen_ty_1 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -29178,7 +29777,8 @@ impl rfc_CMD_PROP_RX_s__bindgen_ty_1 {
     }
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_PROP_RX_s__bindgen_ty_2 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -29221,7 +29821,8 @@ impl rfc_CMD_PROP_RX_s__bindgen_ty_2 {
     }
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_PROP_RX_s__bindgen_ty_3 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -29363,7 +29964,8 @@ impl rfc_CMD_PROP_RX_s__bindgen_ty_3 {
     }
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_PROP_RX_s__bindgen_ty_4 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -29489,7 +30091,8 @@ impl rfc_CMD_PROP_RX_s__bindgen_ty_4 {
     }
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_PROP_RX_s__bindgen_ty_5 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -29566,8 +30169,18 @@ impl rfc_CMD_PROP_RX_s__bindgen_ty_5 {
         __bindgen_bitfield_unit
     }
 }
+impl Default for rfc_CMD_PROP_RX_s {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_PROP_TX_ADV_s {
     pub commandNo: u16,
     pub status: u16,
@@ -29585,7 +30198,8 @@ pub struct rfc_CMD_PROP_TX_ADV_s {
     pub pPkt: *mut u8,
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_PROP_TX_ADV_s__bindgen_ty_1 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -29663,7 +30277,8 @@ impl rfc_CMD_PROP_TX_ADV_s__bindgen_ty_1 {
     }
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_PROP_TX_ADV_s__bindgen_ty_2 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -29706,7 +30321,8 @@ impl rfc_CMD_PROP_TX_ADV_s__bindgen_ty_2 {
     }
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_PROP_TX_ADV_s__bindgen_ty_3 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -29784,7 +30400,8 @@ impl rfc_CMD_PROP_TX_ADV_s__bindgen_ty_3 {
     }
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_PROP_TX_ADV_s__bindgen_ty_4 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -29846,7 +30463,8 @@ impl rfc_CMD_PROP_TX_ADV_s__bindgen_ty_4 {
     }
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_PROP_TX_ADV_s__bindgen_ty_5 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -29923,8 +30541,18 @@ impl rfc_CMD_PROP_TX_ADV_s__bindgen_ty_5 {
         __bindgen_bitfield_unit
     }
 }
+impl Default for rfc_CMD_PROP_TX_ADV_s {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_PROP_RX_ADV_s {
     pub commandNo: u16,
     pub status: u16,
@@ -29947,7 +30575,8 @@ pub struct rfc_CMD_PROP_RX_ADV_s {
     pub pOutput: *mut u8,
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_PROP_RX_ADV_s__bindgen_ty_1 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -30025,7 +30654,8 @@ impl rfc_CMD_PROP_RX_ADV_s__bindgen_ty_1 {
     }
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_PROP_RX_ADV_s__bindgen_ty_2 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -30068,7 +30698,8 @@ impl rfc_CMD_PROP_RX_ADV_s__bindgen_ty_2 {
     }
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_PROP_RX_ADV_s__bindgen_ty_3 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -30210,7 +30841,8 @@ impl rfc_CMD_PROP_RX_ADV_s__bindgen_ty_3 {
     }
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_PROP_RX_ADV_s__bindgen_ty_4 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -30337,7 +30969,8 @@ impl rfc_CMD_PROP_RX_ADV_s__bindgen_ty_4 {
 }
 #[repr(C)]
 #[repr(align(2))]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_PROP_RX_ADV_s__bindgen_ty_5 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 2usize]>,
@@ -30400,7 +31033,8 @@ impl rfc_CMD_PROP_RX_ADV_s__bindgen_ty_5 {
 }
 #[repr(C)]
 #[repr(align(2))]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_PROP_RX_ADV_s__bindgen_ty_6 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 2usize]>,
@@ -30478,7 +31112,8 @@ impl rfc_CMD_PROP_RX_ADV_s__bindgen_ty_6 {
     }
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_PROP_RX_ADV_s__bindgen_ty_7 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -30555,8 +31190,18 @@ impl rfc_CMD_PROP_RX_ADV_s__bindgen_ty_7 {
         __bindgen_bitfield_unit
     }
 }
+impl Default for rfc_CMD_PROP_RX_ADV_s {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_PROP_RADIO_SETUP_s {
     pub commandNo: u16,
     pub status: u16,
@@ -30574,7 +31219,8 @@ pub struct rfc_CMD_PROP_RADIO_SETUP_s {
     pub pRegOverride: *mut u32,
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_PROP_RADIO_SETUP_s__bindgen_ty_1 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -30652,7 +31298,8 @@ impl rfc_CMD_PROP_RADIO_SETUP_s__bindgen_ty_1 {
     }
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_PROP_RADIO_SETUP_s__bindgen_ty_2 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -30695,7 +31342,8 @@ impl rfc_CMD_PROP_RADIO_SETUP_s__bindgen_ty_2 {
     }
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_PROP_RADIO_SETUP_s__bindgen_ty_3 {
     pub _bitfield_align_1: [u16; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 2usize]>,
@@ -30738,7 +31386,8 @@ impl rfc_CMD_PROP_RADIO_SETUP_s__bindgen_ty_3 {
     }
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_PROP_RADIO_SETUP_s__bindgen_ty_4 {
     pub _bitfield_align_1: [u32; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 4usize]>,
@@ -30781,7 +31430,8 @@ impl rfc_CMD_PROP_RADIO_SETUP_s__bindgen_ty_4 {
     }
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_PROP_RADIO_SETUP_s__bindgen_ty_5 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -30825,7 +31475,8 @@ impl rfc_CMD_PROP_RADIO_SETUP_s__bindgen_ty_5 {
 }
 #[repr(C)]
 #[repr(align(2))]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_PROP_RADIO_SETUP_s__bindgen_ty_6 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 2usize]>,
@@ -30952,7 +31603,8 @@ impl rfc_CMD_PROP_RADIO_SETUP_s__bindgen_ty_6 {
 }
 #[repr(C)]
 #[repr(align(2))]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_PROP_RADIO_SETUP_s__bindgen_ty_7 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 2usize]>,
@@ -31029,27 +31681,39 @@ impl rfc_CMD_PROP_RADIO_SETUP_s__bindgen_ty_7 {
         __bindgen_bitfield_unit
     }
 }
+impl Default for rfc_CMD_PROP_RADIO_SETUP_s {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C)]
 #[repr(align(4))]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_PROP_RADIO_DIV_SETUP_s {
     pub dummy0: u8,
 }
 #[repr(C)]
 #[repr(align(4))]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_PROP_SET_LEN_s {
     pub commandNo: u16,
     pub rxLen: u16,
 }
 #[repr(C)]
 #[repr(align(4))]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_PROP_RESTART_RX_s {
     pub commandNo: u16,
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct rfc_propRxOutput_s {
     pub nRxOk: u16,
     pub nRxNok: u16,
@@ -31061,12 +31725,12 @@ pub struct rfc_propRxOutput_s {
 }
 #[repr(C)]
 #[repr(align(4))]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct rfc_propRxStatus_s {
     pub status: rfc_propRxStatus_s__bindgen_ty_1,
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct rfc_propRxStatus_s__bindgen_ty_1 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -31128,7 +31792,7 @@ impl rfc_propRxStatus_s__bindgen_ty_1 {
     }
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct rfTrim_t {
     pub configIfAdc: u32,
     pub configRfFrontend: u32,
@@ -31231,7 +31895,7 @@ pub struct rfc_dataEntry_s {
     pub length: u16,
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct rfc_dataEntry_s__bindgen_ty_1 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -31292,6 +31956,15 @@ impl rfc_dataEntry_s__bindgen_ty_1 {
         __bindgen_bitfield_unit
     }
 }
+impl Default for rfc_dataEntry_s {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct rfc_dataEntryGeneral_s {
@@ -31302,7 +31975,7 @@ pub struct rfc_dataEntryGeneral_s {
     pub data: u8,
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct rfc_dataEntryGeneral_s__bindgen_ty_1 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -31363,6 +32036,15 @@ impl rfc_dataEntryGeneral_s__bindgen_ty_1 {
         __bindgen_bitfield_unit
     }
 }
+impl Default for rfc_dataEntryGeneral_s {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct rfc_dataEntryMulti_s {
@@ -31375,7 +32057,7 @@ pub struct rfc_dataEntryMulti_s {
     pub rxData: u8,
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct rfc_dataEntryMulti_s__bindgen_ty_1 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -31436,6 +32118,15 @@ impl rfc_dataEntryMulti_s__bindgen_ty_1 {
         __bindgen_bitfield_unit
     }
 }
+impl Default for rfc_dataEntryMulti_s {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct rfc_dataEntryPointer_s {
@@ -31446,7 +32137,7 @@ pub struct rfc_dataEntryPointer_s {
     pub pData: *mut u8,
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct rfc_dataEntryPointer_s__bindgen_ty_1 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -31507,6 +32198,15 @@ impl rfc_dataEntryPointer_s__bindgen_ty_1 {
         __bindgen_bitfield_unit
     }
 }
+impl Default for rfc_dataEntryPointer_s {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct rfc_dataEntryPartial_s {
@@ -31519,7 +32219,7 @@ pub struct rfc_dataEntryPartial_s {
     pub rxData: u8,
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct rfc_dataEntryPartial_s__bindgen_ty_1 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -31581,7 +32281,7 @@ impl rfc_dataEntryPartial_s__bindgen_ty_1 {
     }
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct rfc_dataEntryPartial_s__bindgen_ty_2 {
     pub _bitfield_align_1: [u16; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 2usize]>,
@@ -31658,6 +32358,15 @@ impl rfc_dataEntryPartial_s__bindgen_ty_2 {
         __bindgen_bitfield_unit
     }
 }
+impl Default for rfc_dataEntryPartial_s {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 pub type rfc_CMD_IEEE_RX_t = rfc_CMD_IEEE_RX_s;
 pub type rfc_CMD_IEEE_ED_SCAN_t = rfc_CMD_IEEE_ED_SCAN_s;
 pub type rfc_CMD_IEEE_TX_t = rfc_CMD_IEEE_TX_s;
@@ -31675,6 +32384,7 @@ pub type rfc_shortAddrEntry_t = rfc_shortAddrEntry_s;
 pub type rfc_ieeeRxCorrCrc_t = rfc_ieeeRxCorrCrc_s;
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_IEEE_RX_s {
     pub commandNo: u16,
     pub status: u16,
@@ -31704,7 +32414,8 @@ pub struct rfc_CMD_IEEE_RX_s {
     pub endTime: ratmr_t,
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_IEEE_RX_s__bindgen_ty_1 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -31782,7 +32493,8 @@ impl rfc_CMD_IEEE_RX_s__bindgen_ty_1 {
     }
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_IEEE_RX_s__bindgen_ty_2 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -31825,7 +32537,8 @@ impl rfc_CMD_IEEE_RX_s__bindgen_ty_2 {
     }
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_IEEE_RX_s__bindgen_ty_3 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -31968,7 +32681,8 @@ impl rfc_CMD_IEEE_RX_s__bindgen_ty_3 {
 }
 #[repr(C)]
 #[repr(align(2))]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_IEEE_RX_s__bindgen_ty_4 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 2usize]>,
@@ -32174,7 +32888,8 @@ impl rfc_CMD_IEEE_RX_s__bindgen_ty_4 {
     }
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_IEEE_RX_s__bindgen_ty_5 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -32316,7 +33031,8 @@ impl rfc_CMD_IEEE_RX_s__bindgen_ty_5 {
     }
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_IEEE_RX_s__bindgen_ty_6 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -32426,7 +33142,8 @@ impl rfc_CMD_IEEE_RX_s__bindgen_ty_6 {
     }
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_IEEE_RX_s__bindgen_ty_7 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -32503,8 +33220,18 @@ impl rfc_CMD_IEEE_RX_s__bindgen_ty_7 {
         __bindgen_bitfield_unit
     }
 }
+impl Default for rfc_CMD_IEEE_RX_s {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_IEEE_ED_SCAN_s {
     pub commandNo: u16,
     pub status: u16,
@@ -32521,7 +33248,8 @@ pub struct rfc_CMD_IEEE_ED_SCAN_s {
     pub endTime: ratmr_t,
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_IEEE_ED_SCAN_s__bindgen_ty_1 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -32599,7 +33327,8 @@ impl rfc_CMD_IEEE_ED_SCAN_s__bindgen_ty_1 {
     }
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_IEEE_ED_SCAN_s__bindgen_ty_2 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -32642,7 +33371,8 @@ impl rfc_CMD_IEEE_ED_SCAN_s__bindgen_ty_2 {
     }
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_IEEE_ED_SCAN_s__bindgen_ty_3 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -32752,7 +33482,8 @@ impl rfc_CMD_IEEE_ED_SCAN_s__bindgen_ty_3 {
     }
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_IEEE_ED_SCAN_s__bindgen_ty_4 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -32829,8 +33560,18 @@ impl rfc_CMD_IEEE_ED_SCAN_s__bindgen_ty_4 {
         __bindgen_bitfield_unit
     }
 }
+impl Default for rfc_CMD_IEEE_ED_SCAN_s {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_IEEE_TX_s {
     pub commandNo: u16,
     pub status: u16,
@@ -32844,7 +33585,8 @@ pub struct rfc_CMD_IEEE_TX_s {
     pub timeStamp: ratmr_t,
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_IEEE_TX_s__bindgen_ty_1 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -32922,7 +33664,8 @@ impl rfc_CMD_IEEE_TX_s__bindgen_ty_1 {
     }
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_IEEE_TX_s__bindgen_ty_2 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -32965,7 +33708,8 @@ impl rfc_CMD_IEEE_TX_s__bindgen_ty_2 {
     }
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_IEEE_TX_s__bindgen_ty_3 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -33026,8 +33770,18 @@ impl rfc_CMD_IEEE_TX_s__bindgen_ty_3 {
         __bindgen_bitfield_unit
     }
 }
+impl Default for rfc_CMD_IEEE_TX_s {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_IEEE_CSMA_s {
     pub commandNo: u16,
     pub status: u16,
@@ -33048,7 +33802,8 @@ pub struct rfc_CMD_IEEE_CSMA_s {
     pub endTime: ratmr_t,
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_IEEE_CSMA_s__bindgen_ty_1 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -33126,7 +33881,8 @@ impl rfc_CMD_IEEE_CSMA_s__bindgen_ty_1 {
     }
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_IEEE_CSMA_s__bindgen_ty_2 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -33169,7 +33925,8 @@ impl rfc_CMD_IEEE_CSMA_s__bindgen_ty_2 {
     }
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_IEEE_CSMA_s__bindgen_ty_3 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -33231,7 +33988,8 @@ impl rfc_CMD_IEEE_CSMA_s__bindgen_ty_3 {
     }
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_IEEE_CSMA_s__bindgen_ty_4 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -33308,8 +34066,18 @@ impl rfc_CMD_IEEE_CSMA_s__bindgen_ty_4 {
         __bindgen_bitfield_unit
     }
 }
+impl Default for rfc_CMD_IEEE_CSMA_s {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_IEEE_RX_ACK_s {
     pub commandNo: u16,
     pub status: u16,
@@ -33322,7 +34090,8 @@ pub struct rfc_CMD_IEEE_RX_ACK_s {
     pub endTime: ratmr_t,
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_IEEE_RX_ACK_s__bindgen_ty_1 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -33400,7 +34169,8 @@ impl rfc_CMD_IEEE_RX_ACK_s__bindgen_ty_1 {
     }
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_IEEE_RX_ACK_s__bindgen_ty_2 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -33443,7 +34213,8 @@ impl rfc_CMD_IEEE_RX_ACK_s__bindgen_ty_2 {
     }
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_IEEE_RX_ACK_s__bindgen_ty_3 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -33520,8 +34291,18 @@ impl rfc_CMD_IEEE_RX_ACK_s__bindgen_ty_3 {
         __bindgen_bitfield_unit
     }
 }
+impl Default for rfc_CMD_IEEE_RX_ACK_s {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_IEEE_ABORT_BG_s {
     pub commandNo: u16,
     pub status: u16,
@@ -33531,7 +34312,8 @@ pub struct rfc_CMD_IEEE_ABORT_BG_s {
     pub condition: rfc_CMD_IEEE_ABORT_BG_s__bindgen_ty_2,
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_IEEE_ABORT_BG_s__bindgen_ty_1 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -33609,7 +34391,8 @@ impl rfc_CMD_IEEE_ABORT_BG_s__bindgen_ty_1 {
     }
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_IEEE_ABORT_BG_s__bindgen_ty_2 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -33651,16 +34434,27 @@ impl rfc_CMD_IEEE_ABORT_BG_s__bindgen_ty_2 {
         __bindgen_bitfield_unit
     }
 }
+impl Default for rfc_CMD_IEEE_ABORT_BG_s {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C)]
 #[repr(align(4))]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_IEEE_MOD_CCA_s {
     pub commandNo: u16,
     pub newCcaOpt: rfc_CMD_IEEE_MOD_CCA_s__bindgen_ty_1,
     pub newCcaRssiThr: i8,
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_IEEE_MOD_CCA_s__bindgen_ty_1 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -33771,7 +34565,8 @@ impl rfc_CMD_IEEE_MOD_CCA_s__bindgen_ty_1 {
 }
 #[repr(C)]
 #[repr(align(4))]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_IEEE_MOD_FILT_s {
     pub commandNo: u16,
     pub newFrameFiltOpt: rfc_CMD_IEEE_MOD_FILT_s__bindgen_ty_1,
@@ -33779,7 +34574,8 @@ pub struct rfc_CMD_IEEE_MOD_FILT_s {
 }
 #[repr(C)]
 #[repr(align(2))]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_IEEE_MOD_FILT_s__bindgen_ty_1 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 2usize]>,
@@ -33985,7 +34781,8 @@ impl rfc_CMD_IEEE_MOD_FILT_s__bindgen_ty_1 {
     }
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_IEEE_MOD_FILT_s__bindgen_ty_2 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -34128,14 +34925,16 @@ impl rfc_CMD_IEEE_MOD_FILT_s__bindgen_ty_2 {
 }
 #[repr(C)]
 #[repr(align(4))]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_IEEE_MOD_SRC_MATCH_s {
     pub commandNo: u16,
     pub options: rfc_CMD_IEEE_MOD_SRC_MATCH_s__bindgen_ty_1,
     pub entryNo: u8,
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_IEEE_MOD_SRC_MATCH_s__bindgen_ty_1 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -34198,19 +34997,22 @@ impl rfc_CMD_IEEE_MOD_SRC_MATCH_s__bindgen_ty_1 {
 }
 #[repr(C)]
 #[repr(align(4))]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_IEEE_ABORT_FG_s {
     pub commandNo: u16,
 }
 #[repr(C)]
 #[repr(align(4))]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_IEEE_STOP_FG_s {
     pub commandNo: u16,
 }
 #[repr(C)]
 #[repr(align(4))]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_IEEE_CCA_REQ_s {
     pub commandNo: u16,
     pub currentRssi: i8,
@@ -34218,7 +35020,8 @@ pub struct rfc_CMD_IEEE_CCA_REQ_s {
     pub ccaInfo: rfc_CMD_IEEE_CCA_REQ_s__bindgen_ty_1,
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
 pub struct rfc_CMD_IEEE_CCA_REQ_s__bindgen_ty_1 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -34296,7 +35099,7 @@ impl rfc_CMD_IEEE_CCA_REQ_s__bindgen_ty_1 {
     }
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct rfc_ieeeRxOutput_s {
     pub nTxAck: u8,
     pub nRxBeacon: u8,
@@ -34314,19 +35117,19 @@ pub struct rfc_ieeeRxOutput_s {
 }
 #[repr(C)]
 #[repr(align(4))]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct rfc_shortAddrEntry_s {
     pub shortAddr: u16,
     pub panId: u16,
 }
 #[repr(C)]
 #[repr(align(4))]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct rfc_ieeeRxCorrCrc_s {
     pub status: rfc_ieeeRxCorrCrc_s__bindgen_ty_1,
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct rfc_ieeeRxCorrCrc_s__bindgen_ty_1 {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
@@ -34478,7 +35281,7 @@ extern "C" {
     ) -> u8;
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct SHA256_memory_t {
     pub state: [u32; 8usize],
     pub textLen: [u32; 2usize],
@@ -34656,7 +35459,7 @@ pub type u32_ = cty::c_uint;
 pub type s64 = cty::c_longlong;
 pub type u64_ = cty::c_ulonglong;
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct ECRYPT_ctx {
     pub input: [u32_; 16usize],
 }
@@ -34712,6 +35515,15 @@ pub struct poly1305_context {
     pub aligner: usize,
     pub opaque: [cty::c_uchar; 136usize],
 }
+impl Default for poly1305_context {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 extern "C" {
     pub fn poly1305_init(ctx: *mut poly1305_context, key: *const cty::c_uchar);
 }
@@ -34736,7 +35548,7 @@ extern "C" {
     pub fn poly1305_power_on_self_test() -> cty::c_int;
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct poly1305_state_internal_t {
     pub r: [cty::c_ulong; 5usize],
     pub h: [cty::c_ulong; 5usize],
@@ -35132,6 +35944,15 @@ pub struct tDMAControlTable {
     pub pvDstEndAddr: *mut cty::c_void,
     pub ui32Control: u32,
     pub ui32Spare: u32,
+}
+impl Default for tDMAControlTable {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
 }
 extern "C" {
     #[link_name = "uDMAEnable__extern"]
