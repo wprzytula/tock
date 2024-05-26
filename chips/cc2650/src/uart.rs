@@ -623,6 +623,7 @@ mod full {
 }
 pub use full::{PanicWriter as PanicWriterFull, UartFull, BAUD_RATE};
 
+#[cfg(feature = "uart_lite")]
 pub mod lite {
     use core::{
         fmt::{self, Write as _},
@@ -1316,4 +1317,5 @@ pub mod lite {
     }
     pub use panic_writer::PanicWriter;
 }
+#[cfg(feature = "uart_lite")]
 pub use lite::{PanicWriter as PanicWriterLite, UartLite};

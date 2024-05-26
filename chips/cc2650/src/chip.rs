@@ -8,14 +8,18 @@ use crate::{
     gpt::Gpt,
     peripheral_interrupts as irq,
     prcm::{self, Prcm},
-    uart::{UartFull, UartLite},
+    uart::UartFull,
     udma::Udma,
 };
+
+#[cfg(feature = "uart_lite")]
+use crate::uart::UartLite;
 
 pub struct Cc2650<'a> {
     userspace_kernel_boundary: cortexm3::syscall::SysCall,
     pub gpt: Gpt<'a>,
     pub uart_full: UartFull<'a>,
+    #[cfg(feature = "uart_lite")]
     pub uart_lite: UartLite<'a>,
     pub prcm: Prcm,
     pub fcfg: Fcfg,
@@ -38,17 +42,21 @@ impl<'a> Cc2650<'a> {
 
         let gpt = Gpt::new(peripherals.GPT0);
 
-        let uart_lite = UartLite::new(
-            peripherals.AON_RTC,
-            peripherals.AON_WUC,
-            peripherals.AUX_AIODIO0,
-            peripherals.AUX_AIODIO1,
-            peripherals.AUX_EVCTL,
-            peripherals.AUX_SCE,
-            peripherals.AUX_TIMER,
-            peripherals.AUX_WUC,
-        );
-        uart_lite.initialize();
+        #[cfg(feature = "uart_lite")]
+        let uart_lite = {
+            let uart_lite = UartLite::new(
+                peripherals.AON_RTC,
+                peripherals.AON_WUC,
+                peripherals.AUX_AIODIO0,
+                peripherals.AUX_AIODIO1,
+                peripherals.AUX_EVCTL,
+                peripherals.AUX_SCE,
+                peripherals.AUX_TIMER,
+                peripherals.AUX_WUC,
+            );
+            uart_lite.initialize();
+            uart_lite
+        };
 
         let uart_full = UartFull::new(peripherals.UART0);
         uart_full.initialize();
@@ -60,6 +68,7 @@ impl<'a> Cc2650<'a> {
             userspace_kernel_boundary: cortexm3::syscall::SysCall::new(),
             gpt,
             uart_full,
+            #[cfg(feature = "uart_lite")]
             uart_lite,
             prcm,
             fcfg,
