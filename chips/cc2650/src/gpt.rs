@@ -19,7 +19,7 @@ type Frequency = Freq48MHz;
 type Ticks = Ticks32;
 
 pub struct Gpt<'a> {
-    /* TMP pub */ pub client: OptionalCell<&'a dyn AlarmClient>,
+    client: OptionalCell<&'a dyn AlarmClient>,
     gpt: cc2650::GPT0,
 }
 
