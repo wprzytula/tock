@@ -1,17 +1,9 @@
 [package]
-name = "ti-cc2650dk"
+name = "ti-cc2650-smartrf06"
 version.workspace = true
 authors.workspace = true
 edition.workspace = true
 build = "../build.rs"
-
-# [[bin]]
-# name = "ti-cc2650dk"
-# path = "src/main.rs"
-
-# [[bin]]
-# name = "ti-cc2650dk-ccfg"
-# path = "src/ccfg.rs"
 
 [dependencies]
 components = { path = "../components" }
