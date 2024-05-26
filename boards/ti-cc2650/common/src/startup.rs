@@ -1,9 +1,6 @@
-#![no_std]
-#![cfg_attr(not(doc), no_main)]
-
 use core::ptr::{addr_of, addr_of_mut};
 
-use capsules_core::console;
+use capsules_core::{console, led::LedDriver};
 use capsules_system::{process_policies::PanicFaultPolicy, process_printer::ProcessPrinterText};
 use cc2650_chip::{chip::Cc2650, uart};
 
@@ -15,8 +12,6 @@ use kernel::{
     scheduler::round_robin::RoundRobinSched,
     static_init,
 };
-
-mod io;
 
 // High frequency oscillator speed
 pub const HFREQ: u32 = 48 * 1_000_000;
@@ -30,19 +25,19 @@ const FAULT_RESPONSE: PanicFaultPolicy = PanicFaultPolicy {};
 pub static mut STACK_MEMORY: [u8; 0x1000] = [0; 0x1000];
 
 // Number of concurrent processes this platform supports.
-const NUM_PROCS: usize = 2;
-static mut PROCESSES: [Option<&'static dyn kernel::process::Process>; NUM_PROCS] = [None, None];
+pub const NUM_PROCS: usize = 2;
+pub static mut PROCESSES: [Option<&'static dyn kernel::process::Process>; NUM_PROCS] = [None, None];
 
-static mut CHIP: Option<&'static Cc2650> = None;
-static mut PROCESS_PRINTER: Option<&'static ProcessPrinterText> = None;
+pub static mut CHIP: Option<&'static Cc2650> = None;
+pub static mut PROCESS_PRINTER: Option<&'static ProcessPrinterText> = None;
 
-struct Platform {
+pub struct Platform<const NUM_LEDS: usize> {
     scheduler: &'static RoundRobinSched<'static>,
     systick: cortexm3::systick::SysTick,
-    led: &'static capsules_core::led::LedDriver<
+    leds: capsules_core::led::LedDriver<
         'static,
         kernel::hil::led::LedHigh<'static, cc2650_chip::gpio::GPIOPin>,
-        1,
+        NUM_LEDS,
     >,
     alarm: &'static capsules_core::alarm::AlarmDriver<
         'static,
@@ -54,13 +49,13 @@ struct Platform {
     console: &'static capsules_core::console::Console<'static>,
 }
 
-impl SyscallDriverLookup for Platform {
+impl<const NUM_LEDS: usize> SyscallDriverLookup for Platform<NUM_LEDS> {
     fn with_driver<F, R>(&self, driver_num: usize, f: F) -> R
     where
         F: FnOnce(Option<&dyn kernel::syscall::SyscallDriver>) -> R,
     {
         match driver_num {
-            capsules_core::led::DRIVER_NUM => f(Some(self.led)),
+            capsules_core::led::DRIVER_NUM => f(Some(&self.leds)),
             capsules_core::alarm::DRIVER_NUM => f(Some(self.alarm)),
             capsules_core::console::DRIVER_NUM => f(Some(self.console)),
             _ => f(None),
@@ -68,7 +63,7 @@ impl SyscallDriverLookup for Platform {
     }
 }
 
-impl<'a> KernelResources<Cc2650<'a>> for Platform {
+impl<'a, const NUM_LEDS: usize> KernelResources<Cc2650<'a>> for Platform<NUM_LEDS> {
     type SyscallDriverLookup = Self;
     type SyscallFilter = ();
     type ProcessFault = ();
@@ -104,7 +99,14 @@ impl<'a> KernelResources<Cc2650<'a>> for Platform {
 /// removed when this function returns. Otherwise, the stack space used for
 /// these static_inits is wasted.
 #[inline(never)]
-unsafe fn start() -> (&'static kernel::Kernel, Platform, &'static Cc2650<'static>) {
+pub unsafe fn start<const NUM_LEDS: usize>(
+    leds: &'static [&'static kernel::hil::led::LedHigh<'static, cc2650_chip::gpio::GPIOPin>;
+                 NUM_LEDS],
+) -> (
+    &'static kernel::Kernel,
+    Platform<NUM_LEDS>,
+    &'static Cc2650<'static>,
+) {
     cc2650_chip::init();
 
     // Create capabilities that the board needs to call certain protected kernel
@@ -132,10 +134,7 @@ unsafe fn start() -> (&'static kernel::Kernel, Platform, &'static Cc2650<'static
 
     /* CAPSULES CONFIGURATION */
     // LEDs
-    let led = components::led::LedsComponent::new().finalize(components::led_component_static!(
-        kernel::hil::led::LedHigh<'static, cc2650_chip::gpio::GPIOPin>,
-        kernel::hil::led::LedHigh::new(&cc2650_chip::gpio::PORT[io::LED_PANIC_PIN]),
-    ));
+    let leds = LedDriver::new(&leds);
 
     // Alarm
     let alarm_mux = components::alarm::AlarmMuxComponent::new(&chip.gpt).finalize(
@@ -165,10 +164,10 @@ unsafe fn start() -> (&'static kernel::Kernel, Platform, &'static Cc2650<'static
 
     let scheduler = components::sched::round_robin::RoundRobinComponent::new(&*addr_of!(PROCESSES))
         .finalize(components::round_robin_component_static!(NUM_PROCS));
-    let smartrf = Platform {
+    let platform = Platform {
         scheduler,
         systick: cortexm3::systick::SysTick::new_with_calibration(HFREQ),
-        led,
+        leds,
         alarm,
         console,
     };
@@ -187,9 +186,8 @@ unsafe fn start() -> (&'static kernel::Kernel, Platform, &'static Cc2650<'static
         static _eappmem: u8;
     }
 
-    println!("Hello world from initialised board!");
-    println!("Proceeding to loading processes...!");
-    debug!("Checking that kernel debug prints work...");
+    debug!("Hello world from initialised board!");
+    debug!("Proceeding to loading processes...!");
 
     kernel::process::load_processes(
         board_kernel,
@@ -212,19 +210,5 @@ unsafe fn start() -> (&'static kernel::Kernel, Platform, &'static Cc2650<'static
     });
     /* END LOAD PROCESSES */
 
-    (board_kernel, smartrf, chip)
-}
-
-/// Main function called after RAM initialized.
-#[no_mangle]
-pub unsafe fn main() {
-    let main_loop_capability = create_capability!(capabilities::MainLoopCapability);
-
-    let (board_kernel, smartrf, chip) = start();
-    board_kernel.kernel_loop(
-        &smartrf,
-        chip,
-        None::<&kernel::ipc::IPC<{ NUM_PROCS as u8 }>>,
-        &main_loop_capability,
-    );
+    (board_kernel, platform, chip)
 }

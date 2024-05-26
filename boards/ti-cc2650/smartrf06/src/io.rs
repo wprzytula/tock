@@ -95,9 +95,9 @@ use core::panic::PanicInfo;
 pub unsafe fn panic_fmt(pi: &PanicInfo) -> ! {
     use core::ptr::addr_of;
 
-    use crate::{CHIP, PROCESSES, PROCESS_PRINTER};
     use cc2650_chip::gpio::PORT;
     use kernel::debug;
+    use ti_cc2650_common::{CHIP, PROCESSES, PROCESS_PRINTER};
 
     let led_kernel_pin = &PORT[LED_PANIC_PIN];
     let led = &mut kernel::hil::led::LedHigh::new(led_kernel_pin);
