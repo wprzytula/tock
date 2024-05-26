@@ -559,7 +559,7 @@ mod full {
 }
 pub use full::{UartFull, BAUD_RATE};
 
-mod lite {
+pub mod lite {
     use core::{
         fmt::{self, Write as _},
         sync::atomic::{AtomicUsize, Ordering},
@@ -1018,6 +1018,34 @@ mod lite {
         }
         safe_packed_ref!(SCIF_TASK_DATA().uart_emulator.state.tx_head).set(tx_head as u16);
     } // scifUartTxPutChars
+
+    /// Intended use: panic writer in CherryMote.
+    // NOTICE: the current implementation is blocking; i.e. it wait until there is enough
+    // space in the cyclic buffer, so that the whole message is sent.
+    pub unsafe fn transmit_blocking(message: &[u8]) {
+        let tx_len = message.len();
+        let mut idx = 0;
+        while idx < tx_len {
+            let remaining = tx_len - idx;
+            let written;
+
+            if remaining > 2 && 2 * scif_uart_get_tx_fifo_free_slots() as usize >= remaining {
+                written = remaining;
+                scif_uart_tx_put_chars(&message[idx..idx + written], written as u32);
+            } else if remaining == 1 {
+                written = 1;
+                while 2 * scif_uart_get_tx_fifo_free_slots() < written as u16 {}
+                scif_uart_tx_put_char(message[idx]);
+            } else {
+                // remaining >= 2
+                written = 2;
+                while 2 * scif_uart_get_tx_fifo_free_slots() < written as u16 {}
+                scif_uart_tx_put_two_chars(message[idx], message[idx + 1])
+            }
+
+            idx += written;
+        }
+    }
 
     impl<'a> Transmit<'a> for UartLite<'a> {
         fn set_transmit_client(&self, client: &'a dyn kernel::hil::uart::TransmitClient) {
