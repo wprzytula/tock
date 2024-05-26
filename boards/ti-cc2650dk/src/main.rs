@@ -1,6 +1,8 @@
 #![no_std]
 #![cfg_attr(not(doc), no_main)]
 
+use core::ptr::{addr_of, addr_of_mut};
+
 use capsules_core::console;
 use capsules_system::{process_policies::PanicFaultPolicy, process_printer::ProcessPrinterText};
 use cc2650_chip::{chip::Cc2650, uart};
@@ -113,7 +115,7 @@ unsafe fn start() -> (&'static kernel::Kernel, Platform, &'static Cc2650<'static
     /* PERIPHERALS CONFIGURATION */
     let chip = static_init!(Cc2650, Cc2650::new());
 
-    let board_kernel = static_init!(kernel::Kernel, kernel::Kernel::new(&PROCESSES));
+    let board_kernel = static_init!(kernel::Kernel, kernel::Kernel::new(&*addr_of!(PROCESSES)));
 
     // let dynamic_deferred_call_clients =
     //     static_init!([DynamicDeferredCallClientState; 2], Default::default());
@@ -161,7 +163,7 @@ unsafe fn start() -> (&'static kernel::Kernel, Platform, &'static Cc2650<'static
         .finalize(components::process_printer_text_component_static!());
     PROCESS_PRINTER = Some(process_printer);
 
-    let scheduler = components::sched::round_robin::RoundRobinComponent::new(&PROCESSES)
+    let scheduler = components::sched::round_robin::RoundRobinComponent::new(&*addr_of!(PROCESSES))
         .finalize(components::round_robin_component_static!(NUM_PROCS));
     let smartrf = Platform {
         scheduler,
@@ -200,7 +202,7 @@ unsafe fn start() -> (&'static kernel::Kernel, Platform, &'static Cc2650<'static
             core::ptr::addr_of_mut!(_sappmem),
             core::ptr::addr_of!(_eappmem) as usize - core::ptr::addr_of!(_sappmem) as usize,
         ),
-        &mut PROCESSES,
+        &mut *addr_of_mut!(PROCESSES),
         &FAULT_RESPONSE,
         &process_management_capability,
     )

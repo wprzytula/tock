@@ -113,6 +113,8 @@ use core::panic::PanicInfo;
 #[panic_handler]
 /// Panic handler
 pub unsafe fn panic_fmt(pi: &PanicInfo) -> ! {
+    use core::ptr::addr_of;
+
     use crate::{CHIP, PROCESSES, PROCESS_PRINTER};
     use cc2650_chip::gpio::PORT;
     use kernel::debug;
@@ -127,8 +129,8 @@ pub unsafe fn panic_fmt(pi: &PanicInfo) -> ! {
         writer,
         pi,
         &cortexm3::support::nop,
-        &PROCESSES,
-        &CHIP,
-        &PROCESS_PRINTER, // &None::<&'static kernel::process::ProcessPrinterText>,
+        &*addr_of!(PROCESSES),
+        &*addr_of!(CHIP),
+        &*addr_of!(PROCESS_PRINTER), // &None::<&'static kernel::process::ProcessPrinterText>,
     )
 }
