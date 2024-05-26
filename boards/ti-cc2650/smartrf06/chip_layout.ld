@@ -1,10 +1,1 @@
-MEMORY
-{
-  rom (rx)  : ORIGIN = 0x00000000, LENGTH = 0x00010000
-  prog (rx) : ORIGIN = 0x00010000, LENGTH = 0x0000FFA8
-  ccfg (rx) : ORIGIN = 0x0001FFA8, LENGTH = 88
-  ram (rwx) : ORIGIN = 0x20000000, LENGTH = 0x00005000
-  gpram(RWX): ORIGIN = 0x11000000, LENGTH = 0x00002000
-}
-
-MPU_MIN_ALIGN = 4K;
+../common/chip_layout.ld
