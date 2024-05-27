@@ -55,6 +55,15 @@ static BASE_VECTORS: [unsafe extern "C" fn(); 16] = [
     CortexM3::SYSTICK_HANDLER, // Systick
 ];
 
+#[cfg(feature = "uart_lite")]
+const AUX_SWEV0_HANDLER: unsafe extern "C" fn() = crate::scif::Scif::ready_handler;
+#[cfg(not(feature = "uart_lite"))]
+const AUX_SWEV0_HANDLER: unsafe extern "C" fn() = CortexM3::GENERIC_ISR;
+#[cfg(feature = "full_scif")]
+const AUX_SWEV1_HANDLER: unsafe extern "C" fn() = crate::scif::Scif::alert_handler;
+#[cfg(not(feature = "full_scif"))]
+const AUX_SWEV1_HANDLER: unsafe extern "C" fn() = CortexM3::GENERIC_ISR;
+
 #[cfg_attr(
     all(target_arch = "arm", target_os = "none"),
     link_section = ".vectors"
@@ -63,37 +72,37 @@ static BASE_VECTORS: [unsafe extern "C" fn(); 16] = [
 // #[cfg_attr(all(target_arch = "arm", target_os = "none"), used)]
 #[used]
 static IRQS: [unsafe extern "C" fn(); 34] = [
-    CortexM3::GENERIC_ISR,            // GPIO Int handler
-    CortexM3::GENERIC_ISR,            // I2C
-    CortexM3::GENERIC_ISR,            // RF Core Command & Packet Engine 1
-    unhandled_interrupt,              // unassigned
-    CortexM3::GENERIC_ISR,            // AON RTC
-    CortexM3::GENERIC_ISR,            // UART0 Rx and Tx
-    crate::scif::Scif::ready_handler, // AUX Software Event 0
-    CortexM3::GENERIC_ISR,            // SSI0 Rx and Tx
-    CortexM3::GENERIC_ISR,            // SSI1 Rx and Tx
-    CortexM3::GENERIC_ISR,            // RF Core & Packet Engine 2
-    CortexM3::GENERIC_ISR,            // RF Core Hardware
-    CortexM3::GENERIC_ISR,            // RF Core Command Acknowledge
-    CortexM3::GENERIC_ISR,            // I2S
-    crate::scif::Scif::alert_handler, // AUX Software Event 1
-    CortexM3::GENERIC_ISR,            // Watchdog timer
-    CortexM3::GENERIC_ISR,            // Timer 0 subtimer A
-    CortexM3::GENERIC_ISR,            // Timer 0 subtimer B
-    CortexM3::GENERIC_ISR,            // Timer 1 subtimer A
-    CortexM3::GENERIC_ISR,            // Timer 1 subtimer B
-    CortexM3::GENERIC_ISR,            // Timer 2 subtimer A
-    CortexM3::GENERIC_ISR,            // Timer 2 subtimer B
-    CortexM3::GENERIC_ISR,            // Timer 3 subtimer A
-    CortexM3::GENERIC_ISR,            // Timer 3 subtimer B
-    CortexM3::GENERIC_ISR,            // Crypto Core Result available
-    CortexM3::GENERIC_ISR,            // uDMA Software
-    CortexM3::GENERIC_ISR,            // uDMA Error
-    CortexM3::GENERIC_ISR,            // Flash controller
-    CortexM3::GENERIC_ISR,            // Software Event 0
-    CortexM3::GENERIC_ISR,            // AUX combined event
-    aon_programmable_handler,         // AON programmable 0
-    CortexM3::GENERIC_ISR,            // Dynamic Programmable interrupt
+    CortexM3::GENERIC_ISR,    // GPIO Int handler
+    CortexM3::GENERIC_ISR,    // I2C
+    CortexM3::GENERIC_ISR,    // RF Core Command & Packet Engine 1
+    unhandled_interrupt,      // unassigned
+    CortexM3::GENERIC_ISR,    // AON RTC
+    CortexM3::GENERIC_ISR,    // UART0 Rx and Tx
+    AUX_SWEV0_HANDLER,        // AUX Software Event 0
+    CortexM3::GENERIC_ISR,    // SSI0 Rx and Tx
+    CortexM3::GENERIC_ISR,    // SSI1 Rx and Tx
+    CortexM3::GENERIC_ISR,    // RF Core & Packet Engine 2
+    CortexM3::GENERIC_ISR,    // RF Core Hardware
+    CortexM3::GENERIC_ISR,    // RF Core Command Acknowledge
+    CortexM3::GENERIC_ISR,    // I2S
+    AUX_SWEV1_HANDLER,        // AUX Software Event 1
+    CortexM3::GENERIC_ISR,    // Watchdog timer
+    CortexM3::GENERIC_ISR,    // Timer 0 subtimer A
+    CortexM3::GENERIC_ISR,    // Timer 0 subtimer B
+    CortexM3::GENERIC_ISR,    // Timer 1 subtimer A
+    CortexM3::GENERIC_ISR,    // Timer 1 subtimer B
+    CortexM3::GENERIC_ISR,    // Timer 2 subtimer A
+    CortexM3::GENERIC_ISR,    // Timer 2 subtimer B
+    CortexM3::GENERIC_ISR,    // Timer 3 subtimer A
+    CortexM3::GENERIC_ISR,    // Timer 3 subtimer B
+    CortexM3::GENERIC_ISR,    // Crypto Core Result available
+    CortexM3::GENERIC_ISR,    // uDMA Software
+    CortexM3::GENERIC_ISR,    // uDMA Error
+    CortexM3::GENERIC_ISR,    // Flash controller
+    CortexM3::GENERIC_ISR,    // Software Event 0
+    CortexM3::GENERIC_ISR,    // AUX combined event
+    aon_programmable_handler, // AON programmable 0
+    CortexM3::GENERIC_ISR,    // Dynamic Programmable interrupt
     // source (Default: PRCM)
     CortexM3::GENERIC_ISR, // AUX Comparator A
     CortexM3::GENERIC_ISR, // AUX ADC new sample or ADC DMA
