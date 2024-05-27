@@ -13,6 +13,7 @@ pub mod gpio;
 pub mod gpt;
 mod peripheral_interrupts;
 pub mod prcm;
+#[cfg(feature = "uart_lite")]
 mod scif;
 pub mod uart;
 pub mod udma;

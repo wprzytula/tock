@@ -386,7 +386,7 @@ mod full {
 
         // Pulls a byte out of the RX FIFO.
         #[inline]
-        fn read(&self) -> u8 {
+        unsafe fn read(&self) -> u8 {
             self.uart.dr.read().data().bits()
         }
 
@@ -812,6 +812,7 @@ pub mod lite {
      *
      * This function is called by the internal driver uninitialization function, \ref scifUninit().
      */
+    #[cfg(feature = "full_scif")]
     unsafe fn scif_task_resource_uninit(scif: &Scif) {
         scif.scif_uninit_io(2, 1);
         scif.scif_uninit_io(1, 1);
@@ -928,12 +929,14 @@ pub mod lite {
             SCIFData {
                 int_data: unsafe { core::mem::transmute(0x400E00D6 as *mut SCIFIntData) },
                 task_ctrl: unsafe { core::mem::transmute(0x400E00DC as *mut SCIFTaskCtrl) },
+                #[cfg(feature = "full_scif")]
                 task_execute_schedule: 0x400E00CE as *mut u16,
                 bv_dirty_tasks: 0x0000,
                 aux_ram_image: &AUX_RAM_IMAGE,
                 task_data_struct_info_lut: &SCIF_TASK_DATA_STRUCT_INFO_LUT,
                 aux_io_index_to_mcu_iocfg_offset_lut: &AUX_TO_INDEX_TO_MCU_IOCFG_OFFSET_LUT,
                 fptr_task_resource_init: scif_task_resource_init,
+                #[cfg(feature = "full_scif")]
                 fptr_task_resource_uninit: scif_task_resource_uninit,
             }
         }
