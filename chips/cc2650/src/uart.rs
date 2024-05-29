@@ -621,6 +621,8 @@ mod full {
     }
     pub use panic_writer::PanicWriter;
 }
+use core::fmt;
+
 pub use full::{PanicWriter as PanicWriterFull, UartFull, BAUD_RATE};
 
 #[cfg(feature = "uart_lite")]
@@ -1333,3 +1335,28 @@ pub mod lite {
 }
 #[cfg(feature = "uart_lite")]
 pub use lite::{PanicWriter as PanicWriterLite, UartLite};
+
+use kernel::debug::IoWrite as _;
+#[cfg(feature = "uart_lite")]
+
+pub struct PanicWriterLiteAndFull;
+impl PanicWriterLiteAndFull {
+    pub fn capture_uart(&mut self) {
+        PanicWriterFull.capture_uart();
+    }
+}
+
+impl kernel::debug::IoWrite for PanicWriterLiteAndFull {
+    fn write(&mut self, buf: &[u8]) -> usize {
+        PanicWriterLite.write(buf);
+        PanicWriterFull.write(buf);
+        buf.len()
+    }
+}
+
+impl fmt::Write for PanicWriterLiteAndFull {
+    fn write_str(&mut self, s: &str) -> fmt::Result {
+        self.write(s.as_bytes());
+        Ok(())
+    }
+}
