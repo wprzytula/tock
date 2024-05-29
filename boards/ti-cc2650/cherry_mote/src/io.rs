@@ -1,9 +1,6 @@
 use core::fmt::{self, Write as _};
-#[cfg(not(test))]
-use core::panic::PanicInfo;
 
-use cc2650_chip::uart::{PanicWriterFull, PanicWriterLite};
-use kernel::debug::IoWrite;
+use cc2650_chip::uart::PanicWriterLite;
 
 pub(crate) const LED_PANIC_PIN: u32 = 20;
 
@@ -23,38 +20,27 @@ pub fn _print(args: fmt::Arguments) {
     PanicWriterLite.write_fmt(args).unwrap();
 }
 
-struct PanicWriterLiteAndFull;
-impl IoWrite for PanicWriterLiteAndFull {
-    fn write(&mut self, buf: &[u8]) -> usize {
-        PanicWriterFull.write(buf);
-        PanicWriterLite.write(buf);
-        buf.len()
-    }
-}
-
-impl fmt::Write for PanicWriterLiteAndFull {
-    fn write_str(&mut self, s: &str) -> fmt::Result {
-        self.write(s.as_bytes());
-        Ok(())
-    }
-}
-
 #[cfg(not(test))]
 #[no_mangle]
 #[inline(never)]
 #[panic_handler]
 /// Panic handler
-pub unsafe fn panic_fmt(pi: &PanicInfo) -> ! {
+pub unsafe fn panic_fmt(pi: &core::panic::PanicInfo) -> ! {
     use core::ptr::addr_of;
 
-    use cc2650_chip::gpio::PORT;
+    use cc2650_chip::{gpio::PORT, uart};
     use kernel::debug;
     use ti_cc2650_common::{CHIP, PROCESSES, PROCESS_PRINTER};
 
     let led_kernel_pin = &PORT[LED_PANIC_PIN];
     let led = &mut kernel::hil::led::LedHigh::new(led_kernel_pin);
-    let writer = &mut PanicWriterLiteAndFull;
 
+    #[cfg(feature = "uart_lite")]
+    let writer = &mut uart::PanicWriterLiteAndFull;
+    #[cfg(not(feature = "uart_lite"))]
+    let writer = &mut uart::PanicWriterFull;
+
+    writer.capture_uart();
     debug::panic(
         &mut [led],
         writer,
