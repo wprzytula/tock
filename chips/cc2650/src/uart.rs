@@ -1379,3 +1379,77 @@ impl fmt::Write for PanicWriterLiteAndFull {
         Ok(())
     }
 }
+
+#[cfg(feature = "uart_lite")]
+pub struct BothUarts<'a> {
+    uart_full: &'a UartFull<'a>,
+    uart_lite: &'a UartLite<'a>,
+}
+
+impl<'a> BothUarts<'a> {
+    pub fn new(uart_full: &'a UartFull<'a>, uart_lite: &'a UartLite<'a>) -> Self {
+        Self {
+            uart_full,
+            uart_lite,
+        }
+    }
+}
+
+impl<'a> kernel::hil::uart::Transmit<'a> for BothUarts<'a> {
+    fn set_transmit_client(&self, client: &'a dyn kernel::hil::uart::TransmitClient) {
+        self.uart_lite.set_transmit_client(client);
+        self.uart_full.set_transmit_client(client);
+    }
+
+    fn transmit_buffer(
+        &self,
+        tx_buffer: &'static mut [u8],
+        tx_len: usize,
+    ) -> Result<(), (kernel::ErrorCode, &'static mut [u8])> {
+        let res_lite = lite::transmit_lossy(&tx_buffer[..tx_len]);
+        match res_lite {
+            Ok(()) => self.uart_full.transmit_buffer(tx_buffer, tx_len),
+            Err(err) => Err((err, tx_buffer)),
+        }
+    }
+
+    fn transmit_word(&self, word: u32) -> Result<(), kernel::ErrorCode> {
+        let res_full = self.uart_full.transmit_word(word);
+        let res_lite = self.uart_lite.transmit_word(word);
+        res_full.and(res_lite)
+    }
+
+    fn transmit_abort(&self) -> Result<(), kernel::ErrorCode> {
+        let res_full = self.uart_full.transmit_abort();
+        let res_lite = self.uart_lite.transmit_abort();
+        res_full.and(res_lite)
+    }
+}
+
+impl<'a> kernel::hil::uart::Receive<'a> for BothUarts<'a> {
+    fn set_receive_client(&self, client: &'a dyn kernel::hil::uart::ReceiveClient) {
+        self.uart_full.set_receive_client(client)
+    }
+
+    fn receive_buffer(
+        &self,
+        rx_buffer: &'static mut [u8],
+        rx_len: usize,
+    ) -> Result<(), (kernel::ErrorCode, &'static mut [u8])> {
+        self.uart_full.receive_buffer(rx_buffer, rx_len)
+    }
+
+    fn receive_word(&self) -> Result<(), kernel::ErrorCode> {
+        self.uart_full.receive_word()
+    }
+
+    fn receive_abort(&self) -> Result<(), kernel::ErrorCode> {
+        self.uart_full.receive_abort()
+    }
+}
+
+impl<'a> kernel::hil::uart::Configure for BothUarts<'a> {
+    fn configure(&self, params: kernel::hil::uart::Parameters) -> Result<(), kernel::ErrorCode> {
+        self.uart_full.configure(params)
+    }
+}
