@@ -40,6 +40,15 @@ mod full {
     const CLOCK_FREQ: u32 = 48_000_000;
     pub const BAUD_RATE: u32 = 115_200;
 
+    mod pins {
+        use crate::driverlib;
+
+        pub(crate) const IOC_UART_RX: u32 = driverlib::IOID_2;
+        pub(crate) const IOC_UART_TX: u32 = driverlib::IOID_3;
+        pub(crate) const IOC_UART_CTS: u32 = driverlib::IOID_4;
+        pub(crate) const IOC_UART_RTS: u32 = driverlib::IOID_8;
+    }
+
     pub struct UartFull<'a> {
         uart: cc2650::UART0,
         udma: udma::Udma,
@@ -87,10 +96,10 @@ mod full {
             unsafe {
                 driverlib::IOCPinTypeUart(
                     driverlib::UART0_BASE,
-                    driverlib::IOID_2,
-                    driverlib::IOID_3,
-                    driverlib::IOID_UNUSED,
-                    driverlib::IOID_UNUSED,
+                    pins::IOC_UART_RX,
+                    pins::IOC_UART_TX,
+                    pins::IOC_UART_CTS,
+                    pins::IOC_UART_RTS,
                 )
             };
 
@@ -161,7 +170,7 @@ mod full {
         fn set_hw_flow_control(&self, on: bool) {
             self.uart
                 .ctl
-                .modify(|_r, w| w.ctsen().bit(on).rtsen().bit(on))
+                .modify(|_r, w| w.ctsen().bit(on).rtsen().bit(on));
         }
 
         /// The idea is that this is run each time MCU stops deep sleep.
