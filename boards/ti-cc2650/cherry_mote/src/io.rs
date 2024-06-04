@@ -5,7 +5,7 @@ use core::panic::PanicInfo;
 use cc2650_chip::uart::{PanicWriterFull, PanicWriterLite};
 use kernel::debug::IoWrite;
 
-pub(crate) const LED_PANIC_PIN: u32 = 25; // FIXME
+pub(crate) const LED_PANIC_PIN: u32 = 20;
 
 #[macro_export]
 macro_rules! print {
