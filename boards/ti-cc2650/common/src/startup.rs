@@ -8,6 +8,7 @@ use kernel::{
     capabilities,
     component::Component as _,
     create_capability, debug,
+    hil::uart::Configure as _,
     platform::{KernelResources, SyscallDriverLookup},
     scheduler::round_robin::RoundRobinSched,
     static_init,
@@ -148,12 +149,31 @@ pub unsafe fn start<const NUM_LEDS: usize>(
     )
     .finalize(components::alarm_component_static!(cc2650_chip::gpt::Gpt));
 
-    let uart_mux = components::console::UartMuxComponent::new(&chip.uart_full, uart::BAUD_RATE)
-        .finalize(components::uart_mux_component_static!());
-    let console =
-        components::console::ConsoleComponent::new(board_kernel, console::DRIVER_NUM, &uart_mux)
-            .finalize(components::console_component_static!(128, 128)); // (64, 64) is the default
-    let _debug_writer = components::debug_writer::DebugWriterComponent::new(&uart_mux)
+    // UART I/O
+    let uart_full_mux =
+        components::console::UartMuxComponent::new(&chip.uart_full, uart::BAUD_RATE)
+            .finalize(components::uart_mux_component_static!()); // 64 is the default
+
+    // This is to turn HW flow control on again, after UartMux::new() turns it off.
+    chip.uart_full
+        .configure(kernel::hil::uart::Parameters {
+            baud_rate: uart::BAUD_RATE,
+            width: kernel::hil::uart::Width::Eight,
+            stop_bits: kernel::hil::uart::StopBits::One,
+            parity: kernel::hil::uart::Parity::None,
+            hw_flow_control: true,
+        })
+        .unwrap();
+
+    let console = components::console::ConsoleComponent::new(
+        board_kernel,
+        console::DRIVER_NUM,
+        &uart_full_mux,
+    )
+    .finalize(components::console_component_static!(32, 32)); // (64, 64) is the default
+
+    let debug_writer_uart = uart_full_mux;
+    let _debug_writer = components::debug_writer::DebugWriterComponent::new(debug_writer_uart)
         .finalize(components::debug_writer_component_static!());
     /* END CAPSULES CONFIGURATION */
 
