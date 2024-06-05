@@ -174,7 +174,8 @@ pub unsafe fn start<const NUM_LEDS: usize>(
 
     let debug_writer_uart = uart_full_mux;
     let _debug_writer = components::debug_writer::DebugWriterComponent::new(debug_writer_uart)
-        .finalize(components::debug_writer_component_static!());
+        .finalize(components::debug_writer_component_static!(0)); // 0 kB buffer to save RAM
+
     /* END CAPSULES CONFIGURATION */
 
     /* PLATFORM CONFIGURATION */
