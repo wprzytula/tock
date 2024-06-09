@@ -175,7 +175,7 @@ pub unsafe fn start<const NUM_LEDS: usize>(
         &chip.uart_lite,
         uart::lite::SCIF_UART_BAUD_RATE,
     )
-    .finalize(components::uart_mux_component_static!(0)); // 64 is the default
+    .finalize(components::uart_mux_component_static!(64)); // 64 is the default
 
     #[cfg(not(feature = "uart_lite"))]
     // As a fallback, when UART-lite is not configured on the board, user write requests
@@ -188,7 +188,7 @@ pub unsafe fn start<const NUM_LEDS: usize>(
             console_lite::DRIVER_NUM,
             &uart_lite_mux,
         )
-        .finalize(components::console_component_static!(0, 0))
+        .finalize(components::console_component_static!(0, 64))
         // (64, 64) is the default; we need no buffers because 1) no reading occurs 2) writing is instantaneous.
     };
 
