@@ -1,5 +1,8 @@
 use core::fmt::{self, Write as _};
 
+#[cfg(not(feature = "uart_lite"))]
+use cc2650_chip::uart::PanicWriterFull;
+#[cfg(feature = "uart_lite")]
 use cc2650_chip::uart::PanicWriterLite;
 
 pub(crate) const LED_PANIC_PIN: u32 = 20;
@@ -17,7 +20,10 @@ macro_rules! println {
 
 #[doc(hidden)]
 pub fn _print(args: fmt::Arguments) {
+    #[cfg(feature = "uart_lite")]
     PanicWriterLite.write_fmt(args).unwrap();
+    #[cfg(not(feature = "uart_lite"))]
+    PanicWriterFull.write_fmt(args).unwrap();
 }
 
 #[cfg(not(test))]

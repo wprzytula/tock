@@ -640,6 +640,8 @@ mod full {
     }
     pub use panic_writer::PanicWriter;
 }
+
+#[cfg(feature = "uart_lite")]
 use core::fmt;
 
 pub use full::{PanicWriter as PanicWriterFull, UartFull, BAUD_RATE};
@@ -1355,16 +1357,20 @@ pub mod lite {
 #[cfg(feature = "uart_lite")]
 pub use lite::{PanicWriter as PanicWriterLite, UartLite};
 
-use kernel::debug::IoWrite as _;
 #[cfg(feature = "uart_lite")]
+use kernel::debug::IoWrite as _;
 
+#[cfg(feature = "uart_lite")]
 pub struct PanicWriterLiteAndFull;
+
+#[cfg(feature = "uart_lite")]
 impl PanicWriterLiteAndFull {
     pub fn capture_uart(&mut self) {
         PanicWriterFull.capture_uart();
     }
 }
 
+#[cfg(feature = "uart_lite")]
 impl kernel::debug::IoWrite for PanicWriterLiteAndFull {
     fn write(&mut self, buf: &[u8]) -> usize {
         PanicWriterLite.write(buf);
@@ -1373,6 +1379,7 @@ impl kernel::debug::IoWrite for PanicWriterLiteAndFull {
     }
 }
 
+#[cfg(feature = "uart_lite")]
 impl fmt::Write for PanicWriterLiteAndFull {
     fn write_str(&mut self, s: &str) -> fmt::Result {
         self.write(s.as_bytes());
@@ -1386,6 +1393,7 @@ pub struct BothUarts<'a> {
     uart_lite: &'a UartLite<'a>,
 }
 
+#[cfg(feature = "uart_lite")]
 impl<'a> BothUarts<'a> {
     pub fn new(uart_full: &'a UartFull<'a>, uart_lite: &'a UartLite<'a>) -> Self {
         Self {
@@ -1395,6 +1403,7 @@ impl<'a> BothUarts<'a> {
     }
 }
 
+#[cfg(feature = "uart_lite")]
 impl<'a> kernel::hil::uart::Transmit<'a> for BothUarts<'a> {
     fn set_transmit_client(&self, client: &'a dyn kernel::hil::uart::TransmitClient) {
         self.uart_lite.set_transmit_client(client);
@@ -1426,6 +1435,7 @@ impl<'a> kernel::hil::uart::Transmit<'a> for BothUarts<'a> {
     }
 }
 
+#[cfg(feature = "uart_lite")]
 impl<'a> kernel::hil::uart::Receive<'a> for BothUarts<'a> {
     fn set_receive_client(&self, client: &'a dyn kernel::hil::uart::ReceiveClient) {
         self.uart_full.set_receive_client(client)
@@ -1448,6 +1458,7 @@ impl<'a> kernel::hil::uart::Receive<'a> for BothUarts<'a> {
     }
 }
 
+#[cfg(feature = "uart_lite")]
 impl<'a> kernel::hil::uart::Configure for BothUarts<'a> {
     fn configure(&self, params: kernel::hil::uart::Parameters) -> Result<(), kernel::ErrorCode> {
         self.uart_full.configure(params)
