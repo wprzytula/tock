@@ -120,14 +120,6 @@ pub unsafe fn start<const NUM_LEDS: usize>(
 
     let board_kernel = static_init!(kernel::Kernel, kernel::Kernel::new(&*addr_of!(PROCESSES)));
 
-    // let dynamic_deferred_call_clients =
-    //     static_init!([DynamicDeferredCallClientState; 2], Default::default());
-    // let dynamic_deferred_caller = static_init!(
-    //     DynamicDeferredCall,
-    //     DynamicDeferredCall::new(dynamic_deferred_call_clients)
-    // );
-    // DynamicDeferredCall::set_global_instance(dynamic_deferred_caller);
-
     // Powering on domains and clock gating is done in Cc2650::new().
 
     CHIP = Some(chip);
