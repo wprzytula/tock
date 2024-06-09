@@ -173,8 +173,18 @@ pub unsafe fn start<const NUM_LEDS: usize>(
     .finalize(components::console_component_static!(32, 32)); // (64, 64) is the default
 
     let debug_writer_uart = uart_full_mux;
-    let _debug_writer = components::debug_writer::DebugWriterComponent::new(debug_writer_uart)
-        .finalize(components::debug_writer_component_static!(0)); // 0 kB buffer to save RAM
+    components::debug_writer::DebugWriterComponent::new(debug_writer_uart).finalize({
+        let uart = kernel::static_buf!(capsules_core::virtualizers::virtual_uart::UartDevice);
+        let ring = kernel::static_buf!(kernel::collections::ring_buffer::RingBuffer<'static, u8>);
+        // 256B buffer to save RAM (2kB is the default). This means 64B for output buffer (the one passed to uart::transmit_buffer)
+        // and 192B for internal buffer (the one storing debug prints to be yet done). With UART-lite, internal buffer can be
+        // as small as the biggest debug message issued and everything should still work correctly.
+        let buffer = kernel::static_buf!([u8; /* 256 */ 1024 * 2]);
+        let debug = kernel::static_buf!(kernel::debug::DebugWriter);
+        let debug_wrapper = kernel::static_buf!(kernel::debug::DebugWriterWrapper);
+
+        (uart, ring, buffer, debug, debug_wrapper)
+    });
 
     /* END CAPSULES CONFIGURATION */
 
