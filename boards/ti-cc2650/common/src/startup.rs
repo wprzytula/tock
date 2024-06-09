@@ -189,6 +189,7 @@ pub unsafe fn start<const NUM_LEDS: usize>(
     /* END CAPSULES CONFIGURATION */
 
     /* PLATFORM CONFIGURATION */
+    // Process Printer consumes 6,5 kB of flash.
     let process_printer = components::process_printer::ProcessPrinterTextComponent::new()
         .finalize(components::process_printer_text_component_static!());
     PROCESS_PRINTER = Some(process_printer);
