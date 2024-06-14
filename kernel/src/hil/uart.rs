@@ -332,3 +332,42 @@ pub trait ReceiveAdvanced<'a>: Receive<'a> {
         interbyte_timeout: u8,
     ) -> Result<(), (ErrorCode, &'static mut [u8])>;
 }
+
+pub enum UartLiteWord {
+    TwoByte(u8, u8),
+    EndingOneByte(u8),
+}
+
+impl UartLiteWord {
+    pub fn iter_from_slice(slice: &[u8]) -> impl Iterator<Item = Self> + '_ {
+        let mut iter = slice.iter().copied();
+        core::iter::from_fn(move || {
+            iter.next().map(|c1| {
+                if let Some(c2) = iter.next() {
+                    Self::TwoByte(c1, c2)
+                } else {
+                    Self::EndingOneByte(c1)
+                }
+            })
+        })
+    }
+}
+
+pub struct UartLiteInput<'a> {
+    pub iter: &'a mut (dyn Iterator<Item = UartLiteWord> + 'a),
+    pub len: usize,
+}
+
+impl<'a> UartLiteInput<'a> {
+    pub fn new(iter: &'a mut (dyn Iterator<Item = UartLiteWord> + 'a), len: usize) -> Self {
+        Self { iter, len }
+    }
+}
+
+pub trait UartLite<'a> {
+    /// Transmit an iterator of data.
+    ///
+    /// Data are expected to be packed in two-byte portions. Once a single-byte
+    /// variant is encountered (EndingOneByte), transfer will be stopped.
+    fn transmit_iterator(&self, tx_iter: UartLiteInput);
+}
