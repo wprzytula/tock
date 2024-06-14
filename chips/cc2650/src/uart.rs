@@ -1141,9 +1141,9 @@ pub mod lite {
         }
     }
 
-    pub(super) fn transmit_lossy(s: &[u8]) -> Result<(), ErrorCode> {
-        let mut len = s.len();
-
+    pub(super) fn transmit_lossy(input: hil::uart::UartLiteInput) -> Result<(), ErrorCode> {
+        let hil::uart::UartLiteInput { iter, mut len } = input;
+        kernel::debug!("transmit_lossy len: {}", len);
         static BYTES_LOST: AtomicUsize = AtomicUsize::new(0);
         let mut lost_buffer = [0_u8; LOST_BUFFER_SIZE];
 
@@ -1182,8 +1182,13 @@ pub mod lite {
         }
 
         let free_bytes = 2 * scif_uart_get_tx_fifo_free_slots() as usize;
+        kernel::debug!(
+            "FIFO bytes count = {}, head = {}",
+            2 * scif_uart_get_tx_fifo_count(),
+            unsafe { safe_packed_ref!(SCIF_TASK_DATA().uart_emulator.state.tx_head).get() as u32 }
+        );
+
         let bytes_lost = BYTES_LOST.load(Ordering::Relaxed);
-        let mut i = 0;
 
         if bytes_lost > 0 {
             // We have already lost some bytes and haven't reported that yet.
@@ -1233,25 +1238,48 @@ pub mod lite {
 
         // Actually write the message (at least its prefix that fits).
 
-        // Put pairs of bytes.
-        while i + 1 < len
-        /* && s[i] != b'\0' && s[i + 1] != b'\0' */
-        {
-            unsafe {
-                scif_uart_tx_put_two_chars(s[i], s[i + 1]);
+        kernel::debug!("-------- PRINTING -----------");
+        while let Some(item) = iter.next() {
+            if len == 0 {
+                break;
             }
-            i += 2;
-        }
-        // Put the last, odd byte if present.
-        if i < len
-        /* && s[i] != b'\0' */
-        {
-            unsafe {
-                scif_uart_tx_put_char(s[i]);
+            match item {
+                hil::uart::UartLiteWord::TwoByte(c1, c2) => unsafe {
+                    if len >= 2 {
+                        kernel::debug!("Two chars: {}{}", c1 as char, c2 as char);
+                        kernel::debug!(
+                            "head before: {}",
+                            safe_packed_ref!(SCIF_TASK_DATA().uart_emulator.state.tx_head).get()
+                        );
+                        scif_uart_tx_put_two_chars(c1, c2);
+                        kernel::debug!(
+                            "head after: {}",
+                            safe_packed_ref!(SCIF_TASK_DATA().uart_emulator.state.tx_head).get()
+                        );
+                        len -= 2;
+                    } else {
+                        scif_uart_tx_put_char(c1);
+                        break;
+                    }
+                },
+                hil::uart::UartLiteWord::EndingOneByte(c) => {
+                    kernel::debug!("One char: {}", c as char);
+                    unsafe {
+                        kernel::debug!(
+                            "head before: {}",
+                            safe_packed_ref!(SCIF_TASK_DATA().uart_emulator.state.tx_head).get()
+                        );
+                        scif_uart_tx_put_char(c);
+                        kernel::debug!(
+                            "head after: {}",
+                            safe_packed_ref!(SCIF_TASK_DATA().uart_emulator.state.tx_head).get()
+                        );
+                    }
+                    break;
+                }
             }
-            i += 1
         }
-        assert_eq!(i, len);
+        kernel::debug!("-------- END PRINTING -----------");
 
         Ok(())
     }
@@ -1273,15 +1301,22 @@ pub mod lite {
             if tx_len > tx_buffer.len() {
                 return Err((ErrorCode::SIZE, tx_buffer));
             }
+            let ret = {
+                let mut iter = hil::uart::UartLiteWord::iter_from_slice(&tx_buffer[..tx_len]);
+                let tx_iter = hil::uart::UartLiteInput::new(&mut iter, tx_len);
+                transmit_lossy(tx_iter)
+            };
 
-            match transmit_lossy(tx_buffer) {
+            let ret = match ret {
                 Ok(()) => {
                     self.tx_client
                         .map(|client| client.transmitted_buffer(tx_buffer, tx_len, Ok(())));
                     Ok(())
                 }
                 Err(err) => Err((err, tx_buffer)),
-            }
+            };
+
+            ret
         }
 
         fn transmit_word(&self, _word: u32) -> Result<(), ErrorCode> {
@@ -1290,6 +1325,12 @@ pub mod lite {
 
         fn transmit_abort(&self) -> Result<(), ErrorCode> {
             Ok(())
+        }
+    }
+
+    impl<'a> hil::uart::UartLite<'a> for UartLite<'a> {
+        fn transmit_iterator(&self, tx_iter: hil::uart::UartLiteInput) {
+            let _ = transmit_lossy(tx_iter);
         }
     }
 
@@ -1415,7 +1456,11 @@ impl<'a> kernel::hil::uart::Transmit<'a> for BothUarts<'a> {
         tx_buffer: &'static mut [u8],
         tx_len: usize,
     ) -> Result<(), (kernel::ErrorCode, &'static mut [u8])> {
-        let res_lite = lite::transmit_lossy(&tx_buffer[..tx_len]);
+        let res_lite = {
+            let mut iter = kernel::hil::uart::UartLiteWord::iter_from_slice(tx_buffer);
+            let tx_iter = kernel::hil::uart::UartLiteInput::new(&mut iter, tx_len);
+            lite::transmit_lossy(tx_iter)
+        };
         match res_lite {
             Ok(()) => self.uart_full.transmit_buffer(tx_buffer, tx_len),
             Err(err) => Err((err, tx_buffer)),
