@@ -141,6 +141,8 @@ impl Component for ConsoleLiteComponent {
             self.board_kernel.create_grant(self.driver_num, &grant_cap),
         ));
 
+        kernel::deferred_call::DeferredCallClient::register(console_lite);
+
         console_lite
     }
 }

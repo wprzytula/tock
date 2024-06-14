@@ -41,10 +41,12 @@
 //! the driver. Successive writes must call `allow` each time a buffer is to be
 //! written.
 
+use kernel::deferred_call::{DeferredCall, DeferredCallClient};
 use kernel::grant::{AllowRoCount, AllowRwCount, Grant, GrantKernelData, UpcallCount};
 use kernel::hil::uart;
 use kernel::processbuffer::ReadableProcessBuffer;
 use kernel::syscall::{CommandReturn, SyscallDriver};
+use kernel::utilities::cells::OptionalCell;
 use kernel::{ErrorCode, ProcessId};
 
 /// Syscall driver number.
@@ -77,6 +79,11 @@ mod rw_allow {
     pub const COUNT: u8 = 0;
 }
 
+struct Operation {
+    process_id: ProcessId,
+    write_len: usize,
+}
+
 pub struct ConsoleLite<'a> {
     uart: &'a dyn uart::UartLite<'a>,
     apps: Grant<
@@ -85,6 +92,8 @@ pub struct ConsoleLite<'a> {
         AllowRoCount<{ ro_allow::COUNT }>,
         AllowRwCount<{ rw_allow::COUNT }>,
     >,
+    deferred_call: DeferredCall,
+    tx_in_progress: OptionalCell<Operation>,
 }
 
 impl<'a> ConsoleLite<'a> {
@@ -97,22 +106,38 @@ impl<'a> ConsoleLite<'a> {
             AllowRwCount<{ rw_allow::COUNT }>,
         >,
     ) -> ConsoleLite<'a> {
-        ConsoleLite { uart, apps: grant }
+        ConsoleLite {
+            uart,
+            apps: grant,
+            deferred_call: DeferredCall::new(),
+            tx_in_progress: OptionalCell::empty(),
+        }
     }
 
-    /// Internal helper function for setting up a new send transaction
-    fn send_new(&self, kernel_data: &GrantKernelData, len: usize) -> Result<(), ErrorCode> {
+    fn send_new(
+        &self,
+        process_id: ProcessId,
+        kernel_data: &GrantKernelData,
+        len: usize,
+    ) -> Result<(), ErrorCode> {
         // kernel::debug!("ConsoleLite::send_new()");
+        if self.tx_in_progress.is_some() {
+            return Err(ErrorCode::BUSY);
+        }
+
         let write_len = kernel_data
             .get_readonly_processbuffer(ro_allow::WRITE)
             .map_or(0, |write| write.len())
             .min(len);
         self.send(write_len, kernel_data);
+        self.tx_in_progress.set(Operation {
+            process_id,
+            write_len,
+        });
+        self.deferred_call.set();
         Ok(())
     }
 
-    /// Internal helper function for sending data for an existing transaction.
-    /// Cannot fail. If can't send now, it will schedule for sending later.
     fn send(&self, write_len: usize, kernel_data: &GrantKernelData) {
         if let Ok(write) = kernel_data.get_readonly_processbuffer(ro_allow::WRITE) {
             let _ = write.enter(|data| {
@@ -154,9 +179,20 @@ impl<'a> ConsoleLite<'a> {
                 let lite_input = kernel::hil::uart::UartLiteInput::new(&mut iter, write_len);
 
                 self.uart.transmit_iterator(lite_input);
-                let _ = kernel_data.schedule_upcall(upcall::WRITE_DONE, (write_len, 0, 0));
 
                 0 // This is just to type check; it bears no meaning.
+            });
+        }
+    }
+
+    fn tx_done(&self) {
+        if let Some(Operation {
+            process_id,
+            write_len,
+        }) = self.tx_in_progress.take()
+        {
+            let _ = self.apps.enter(process_id, |_app, kernel_data| {
+                let _ = kernel_data.schedule_upcall(upcall::WRITE_DONE, (write_len, 0, 0));
             });
         }
     }
@@ -185,7 +221,7 @@ impl SyscallDriver for ConsoleLite<'_> {
                     1 => {
                         // putstr
                         let len = arg1;
-                        self.send_new(kernel_data, len)
+                        self.send_new(processid, kernel_data, len)
                     }
                     _ => Err(ErrorCode::NOSUPPORT),
                 }
@@ -200,5 +236,15 @@ impl SyscallDriver for ConsoleLite<'_> {
 
     fn allocate_grant(&self, processid: ProcessId) -> Result<(), kernel::process::Error> {
         self.apps.enter(processid, |_, _| {})
+    }
+}
+
+impl DeferredCallClient for ConsoleLite<'_> {
+    fn handle_deferred_call(&self) {
+        self.tx_done();
+    }
+
+    fn register(&'static self) {
+        self.deferred_call.register(self);
     }
 }
