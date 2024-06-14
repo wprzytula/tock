@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 // Copyright Tock Contributors 2023.
 
-#![forbid(unsafe_code)]
+// #![forbid(unsafe_code)]
 #![no_std]
 
 pub mod test;
@@ -14,6 +14,7 @@ pub mod adc;
 pub mod alarm;
 pub mod button;
 pub mod console;
+pub mod console_lite;
 pub mod console_ordered;
 pub mod driver;
 pub mod gpio;

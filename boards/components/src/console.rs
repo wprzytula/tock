@@ -33,8 +33,8 @@
 // Author: Philip Levis <pal@cs.stanford.edu>
 // Last modified: 1/08/2023
 
-use capsules_core::console;
 use capsules_core::console_ordered::ConsoleOrdered;
+use capsules_core::{console, console_lite};
 
 use capsules_core::virtualizers::virtual_alarm::{MuxAlarm, VirtualMuxAlarm};
 use capsules_core::virtualizers::virtual_uart::{MuxUart, UartDevice};
@@ -97,6 +97,51 @@ impl<const RX_BUF_LEN: usize> Component for UartMuxComponent<RX_BUF_LEN> {
         hil::uart::Receive::set_receive_client(self.uart, uart_mux);
 
         uart_mux
+    }
+}
+
+#[macro_export]
+macro_rules! console_lite_component_static {
+    () => {{
+        use kernel::static_buf;
+        let console = static_buf!(capsules_core::console_lite::ConsoleLite<'static>);
+        (console,)
+    }};
+}
+
+pub struct ConsoleLiteComponent {
+    board_kernel: &'static kernel::Kernel,
+    driver_num: usize,
+    uart_lite: &'static dyn kernel::hil::uart::UartLite<'static>,
+}
+
+impl ConsoleLiteComponent {
+    pub fn new(
+        board_kernel: &'static kernel::Kernel,
+        driver_num: usize,
+        uart_lite: &'static dyn kernel::hil::uart::UartLite<'static>,
+    ) -> Self {
+        Self {
+            board_kernel,
+            driver_num,
+            uart_lite,
+        }
+    }
+}
+
+impl Component for ConsoleLiteComponent {
+    type StaticInput = (&'static mut MaybeUninit<console_lite::ConsoleLite<'static>>,);
+    type Output = &'static console_lite::ConsoleLite<'static>;
+
+    fn finalize(self, s: Self::StaticInput) -> Self::Output {
+        let grant_cap = create_capability!(capabilities::MemoryAllocationCapability);
+
+        let console_lite = s.0.write(console_lite::ConsoleLite::new(
+            self.uart_lite,
+            self.board_kernel.create_grant(self.driver_num, &grant_cap),
+        ));
+
+        console_lite
     }
 }
 
