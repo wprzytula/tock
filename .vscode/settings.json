@@ -6,6 +6,7 @@
         "RUSTUP_TOOLCHAIN": "nightly-2024-04-19"
     },
     "rust-analyzer.check.allTargets": false,
+    "rust-analyzer.check.workspace": false,
     "rust-analyzer.cargo.target": "thumbv7m-none-eabi",
     "[toml]": {
         "editor.defaultFormatter": "tamasfe.even-better-toml"
