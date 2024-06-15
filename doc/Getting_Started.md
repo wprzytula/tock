@@ -8,22 +8,23 @@ developing Tock.
 
 <!-- toc -->
 
-- [Super Quick Setup to Build the Tock Kernel](#super-quick-setup-to-build-the-tock-kernel)
-- [Detailed Setup for Building the Tock Kernel](#detailed-setup-for-building-the-tock-kernel)
-  * [Installing Requirements](#installing-requirements)
-    + [Rust (nightly)](#rust-nightly)
-  * [Compiling the Kernel](#compiling-the-kernel)
-- [Hardware and Running Tock](#hardware-and-running-tock)
-  * [Tockloader](#tockloader)
-  * [Programming Adapter](#programming-adapter)
-    + [Installing `JLinkExe`](#installing-jlinkexe)
-    + [Installing `openocd`](#installing-openocd)
-  * [Loading the Kernel onto a Board](#loading-the-kernel-onto-a-board)
-- [Installing Applications](#installing-applications)
-  * [Compiling Your Own Applications](#compiling-your-own-applications)
-- [Developing TockOS](#developing-tockos)
-  * [Formatting Rust source code](#formatting-rust-source-code)
-  * [Keeping build tools up to date](#keeping-build-tools-up-to-date)
+- [Tock Getting Started Guide](#tock-getting-started-guide)
+  - [Super Quick Setup to Build the Tock Kernel](#super-quick-setup-to-build-the-tock-kernel)
+  - [Detailed Setup for Building the Tock Kernel](#detailed-setup-for-building-the-tock-kernel)
+    - [Installing Requirements](#installing-requirements)
+      - [Rust (nightly)](#rust-nightly)
+    - [Compiling the Kernel](#compiling-the-kernel)
+  - [Hardware and Running Tock](#hardware-and-running-tock)
+    - [Tockloader](#tockloader)
+    - [Programming Adapter](#programming-adapter)
+      - [Installing `JLinkExe`](#installing-jlinkexe)
+      - [Installing `openocd`](#installing-openocd)
+    - [Loading the Kernel onto a Board](#loading-the-kernel-onto-a-board)
+  - [Installing Applications](#installing-applications)
+    - [Compiling Your Own Applications](#compiling-your-own-applications)
+  - [Developing TockOS](#developing-tockos)
+    - [Formatting Rust source code](#formatting-rust-source-code)
+    - [Keeping build tools up to date](#keeping-build-tools-up-to-date)
 
 <!-- tocstop -->
 
@@ -72,7 +73,7 @@ of installing some of these tools, but you can also install them yourself.
 
 #### Rust (nightly)
 
-We are using `nightly-2024-04-19`. We require
+We are using `nightly-2024-05-26`. We require
 installing it with [rustup](http://www.rustup.rs) so you can manage multiple
 versions of Rust and continue using stable versions for other Rust code:
 
@@ -87,7 +88,7 @@ to your `$PATH`.
 Then install the correct nightly version of Rust:
 
 ```bash
-$ rustup install nightly-2024-04-19
+$ rustup install nightly-2024-05-26
 ```
 
 ### Compiling the Kernel
