@@ -131,13 +131,13 @@ impl kernel::platform::chip::InterruptService for Cc2650<'_> {
         match interrupt {
             irq::GPIO => todo!(),
             irq::I2C => todo!(),
-            irq::RF_CORE_PE_1 => todo!(),
+            irq::RF_CPE1 => todo!(),
             irq::AON_RTC => todo!(),
             irq::UART0 => self.uart_full.handle_interrupt(),
             irq::AUX_SWEV0 => (), // FIXME: don't just ignore AUX_SWEV0
             irq::SSI0 => todo!(),
             irq::SSI1 => todo!(),
-            irq::RF_CORE_PE_2 => todo!(),
+            irq::RF_CPE0 => todo!(),
             irq::RF_CORE_HW => todo!(),
             irq::RF_CMD_ACK => todo!(),
             irq::I2S => todo!(),
