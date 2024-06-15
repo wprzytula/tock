@@ -1,13 +1,13 @@
 pub(crate) const GPIO: u32 = 0;
 pub(crate) const I2C: u32 = 1;
-pub(crate) const RF_CORE_PE_1: u32 = 2;
+pub(crate) const RF_CPE1: u32 = 2;
 // 3 is unassigned
 pub(crate) const AON_RTC: u32 = 4;
 pub(crate) const UART0: u32 = 5;
 pub(crate) const AUX_SWEV0: u32 = 6;
 pub(crate) const SSI0: u32 = 7;
 pub(crate) const SSI1: u32 = 8;
-pub(crate) const RF_CORE_PE_2: u32 = 9;
+pub(crate) const RF_CPE0: u32 = 9;
 pub(crate) const RF_CORE_HW: u32 = 10;
 pub(crate) const RF_CMD_ACK: u32 = 11;
 pub(crate) const I2S: u32 = 12;
