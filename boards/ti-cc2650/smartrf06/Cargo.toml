@@ -6,6 +6,10 @@ edition.workspace = true
 build = "../../build.rs"
 
 [features]
+default = [
+    #
+    "ccfg",
+]
 ccfg = ["ti-cc2650-common/ccfg"]
 uart_lite = ["ti-cc2650-common/uart_lite"]
 
