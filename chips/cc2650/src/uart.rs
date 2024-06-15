@@ -56,6 +56,8 @@ mod full {
         rx_client: OptionalCell<&'a dyn hil::uart::ReceiveClient>,
         tx_transaction: MapCell<Transaction>,
         rx_transaction: MapCell<Transaction>,
+        // TODO: actually use it
+        #[allow(unused)]
         rx_abort_in_progress: Cell<bool>,
     }
 
@@ -217,6 +219,7 @@ mod full {
             self.uart.dmactl.modify(|_r, w| w.rxdmae().clear_bit());
         }
 
+        #[allow(unused)]
         fn enable_rx_interrupts(&self) {
             // Set interrupts:
             // - receive interrupt
@@ -226,12 +229,14 @@ mod full {
                 .modify(|_r, w| w.rxim().set_bit().rtim().set_bit())
         }
 
+        #[allow(unused)]
         fn enable_tx_interrupts(&self) {
             // Set interrupts:
             // - transmit interrupt
             self.uart.imsc.modify(|_r, w| w.txim().set_bit())
         }
 
+        #[allow(unused)]
         fn disable_rx_interrupts(&self) {
             // Unset interrupts:
             // - receive interrupt
@@ -241,6 +246,7 @@ mod full {
                 .modify(|_r, w| w.rxim().clear_bit().rtim().clear_bit())
         }
 
+        #[allow(unused)]
         fn disable_tx_interrupts(&self) {
             // Unset interrupts:
             // - transmit interrupt
@@ -393,22 +399,26 @@ mod full {
             self.uart.dr.write(|w| unsafe { w.data().bits(byte) })
         }
 
+        #[allow(unused)]
         // Pulls a byte out of the RX FIFO.
         #[inline]
         unsafe fn read(&self) -> u8 {
             self.uart.dr.read().data().bits()
         }
 
+        #[allow(unused)]
         /// Check if the UART transmission is done
         fn tx_fifo_empty(&self) -> bool {
             self.uart.fr.read().txfe().bit_is_set()
         }
 
+        #[allow(unused)]
         // Check if no more bytes can be enqueued in TX FIFO
         fn tx_fifo_full(&self) -> bool {
             self.uart.fr.read().txff().bit_is_set()
         }
 
+        #[allow(unused)]
         /// Check if either the rx_buffer is full or the UART has timed out
         fn rx_ready(&self) -> bool {
             self.uart.fr.read().rxff().bit_is_clear()
