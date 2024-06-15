@@ -1117,6 +1117,11 @@ pub mod lite {
     // NOTICE: the current implementation is blocking; i.e. it wait until there is enough
     // space in the cyclic buffer, so that the whole message is sent.
     unsafe fn transmit_blocking(message: &[u8]) {
+        super::PanicWriterFull.capture_uart();
+        for byte in message {
+            super::PanicWriterFull.write_byte(*byte);
+        }
+
         let tx_len = message.len();
         let mut idx = 0;
         while idx < tx_len {
