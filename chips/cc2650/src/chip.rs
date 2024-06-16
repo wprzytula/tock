@@ -31,11 +31,18 @@ impl<'a> Cc2650<'a> {
         let peripherals = cc2650::Peripherals::take().unwrap();
 
         let prcm = Prcm::new(peripherals.PRCM);
-        // Power on peripherals (eg. GPIO) and Serial
+
         prcm.enable_domains(prcm::PowerDomains::empty().peripherals().serial().rfc());
 
-        // Enable the GPIO, UART and GPT clocks
-        prcm.enable_clocks(prcm::Clocks::empty().gpio().uart().gpt().dma().rfc());
+        prcm.enable_clocks(
+            prcm::Clocks::empty()
+                .gpio()
+                .uart()
+                .gpt()
+                .dma()
+                .crypto()
+                .rfc(),
+        );
 
         let udma = Udma::new(peripherals.UDMA0);
         udma.enable();
