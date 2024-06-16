@@ -116,6 +116,7 @@ pub struct Clocks {
     uart: bool,
     gpt: bool,
     dma: bool,
+    crypto: bool,
     rfc: bool,
 }
 
@@ -126,6 +127,7 @@ impl Clocks {
             uart: false,
             gpt: false,
             dma: false,
+            crypto: false,
             rfc: false,
         }
     }
@@ -144,6 +146,13 @@ impl Clocks {
 
     pub const fn dma(self) -> Self {
         Self { dma: true, ..self }
+    }
+
+    pub const fn crypto(self) -> Self {
+        Self {
+            crypto: true,
+            ..self
+        }
     }
 
     pub const fn rfc(self) -> Self {
@@ -184,11 +193,27 @@ impl Clock {
             prcm.gptclkgs.write(|w| w.clk_en().gpt0());
             prcm.gptclkgds.write(|w| w.clk_en().gpt0());
         }
-        if clocks.dma {
-            prcm.secdmaclkgr.write(|w| w.dma_clk_en().set_bit());
-            prcm.secdmaclkgs.write(|w| w.dma_clk_en().set_bit());
-            prcm.secdmaclkgds.write(|w| w.dma_clk_en().set_bit());
+        if clocks.dma || clocks.crypto {
+            prcm.secdmaclkgr.write(|w| {
+                w.dma_clk_en()
+                    .bit(clocks.dma)
+                    .crypto_clk_en()
+                    .bit(clocks.crypto)
+            });
+            prcm.secdmaclkgs.write(|w| {
+                w.dma_clk_en()
+                    .bit(clocks.dma)
+                    .crypto_clk_en()
+                    .bit(clocks.crypto)
+            });
+            prcm.secdmaclkgds.write(|w| {
+                w.dma_clk_en()
+                    .bit(clocks.dma)
+                    .crypto_clk_en()
+                    .bit(clocks.crypto)
+            });
         }
+
         if clocks.rfc {
             prcm.rfcclkg.write(|w| w.clk_en().set_bit());
         }
