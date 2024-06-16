@@ -654,6 +654,7 @@ pub mod lite {
     };
 
     use kernel::{
+        deferred_call::{DeferredCall, DeferredCallClient},
         hil::{
             self,
             uart::{Configure, Receive, Transmit},
@@ -917,6 +918,8 @@ pub mod lite {
     pub struct UartLite<'a> {
         scif: Scif,
         tx_client: OptionalCell<&'a dyn hil::uart::TransmitClient>,
+        txd_buf_and_len: OptionalCell<(&'static mut [u8], usize)>,
+        deferred_call: DeferredCall,
     }
 
     impl<'a> UartLite<'a> {
@@ -944,6 +947,8 @@ pub mod lite {
             Self {
                 scif,
                 tx_client: OptionalCell::empty(),
+                txd_buf_and_len: OptionalCell::empty(),
+                deferred_call: DeferredCall::new(),
             }
         }
 
@@ -986,6 +991,19 @@ pub mod lite {
 
                 self.scif.uart_set_baud_rate(SCIF_UART_BAUD_RATE);
             }
+        }
+    }
+
+    impl<'a> DeferredCallClient for UartLite<'a> {
+        fn handle_deferred_call(&self) {
+            self.txd_buf_and_len.take().map(|(tx_buffer, tx_len)| {
+                self.tx_client
+                    .map(|client| client.transmitted_buffer(tx_buffer, tx_len, Ok(())));
+            });
+        }
+
+        fn register(&'static self) {
+            self.deferred_call.register(self)
         }
     }
 
@@ -1301,6 +1319,10 @@ pub mod lite {
             if tx_len > tx_buffer.len() {
                 return Err((ErrorCode::SIZE, tx_buffer));
             }
+            if self.txd_buf_and_len.is_some() {
+                return Err((ErrorCode::BUSY, tx_buffer));
+            }
+
             let ret = {
                 let mut iter = hil::uart::UartLiteWord::iter_from_slice(&tx_buffer[..tx_len]);
                 let tx_iter = hil::uart::UartLiteInput::new(&mut iter, tx_len);
@@ -1309,8 +1331,8 @@ pub mod lite {
 
             let ret = match ret {
                 Ok(()) => {
-                    self.tx_client
-                        .map(|client| client.transmitted_buffer(tx_buffer, tx_len, Ok(())));
+                    self.txd_buf_and_len.set((tx_buffer, tx_len));
+                    self.deferred_call.set();
                     Ok(())
                 }
                 Err(err) => Err((err, tx_buffer)),

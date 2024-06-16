@@ -140,17 +140,6 @@ impl<'a> ConsoleLite<'a> {
     fn send(&self, write_len: usize, kernel_data: &GrantKernelData) {
         if let Ok(write) = kernel_data.get_readonly_processbuffer(ro_allow::WRITE) {
             let _ = write.enter(|data| {
-                kernel::debug!(
-                    "ConsoleLite::send(write_len={}, data=<{:?}>)",
-                    write_len,
-                    "DATA",
-                    // unsafe {
-                    //     core::slice::from_raw_parts(
-                    //         data as *const kernel::processbuffer::ReadableProcessSlice as *const u8,
-                    //         write.len(),
-                    //     )
-                    // }
-                );
                 let remaining_data = match data.get_to(..write_len) {
                     Some(remaining_data) => remaining_data,
                     None => {

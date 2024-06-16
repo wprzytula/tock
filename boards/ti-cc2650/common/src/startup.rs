@@ -172,6 +172,9 @@ pub unsafe fn start<const NUM_LEDS: usize>(
     .finalize(components::console_component_static!(64, 64)); // (64, 64) is the default
 
     #[cfg(feature = "uart_lite")]
+    kernel::deferred_call::DeferredCallClient::register(&chip.uart_lite);
+
+    #[cfg(feature = "uart_lite")]
     let console_lite = {
         components::console::ConsoleLiteComponent::new(
             board_kernel,

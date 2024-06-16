@@ -6,13 +6,13 @@ edition.workspace = true
 build = "../../build.rs"
 
 [features]
-default = ["ccfg", "uart_lite"]
+default = ["ccfg", "uart_lite", "debug_to_lite"]
 # By default enabled, because CherryMote is assumed to be programmed with serial bootloader,
 # which currently erases the whole flash, requiring CCFG to be reflashed.
 ccfg = ["ti-cc2650-common/ccfg"]
 # By default enabled, because Cherry Mote has UART-lite hard-wired in a way it works.
 uart_lite = ["ti-cc2650-common/uart_lite"]
-# By default disabled, because something is not yes with Lite debug.
+# By default enabled, because it's Lite that is intended for debug purposes.
 debug_to_lite = ["ti-cc2650-common/debug_to_lite"]
 
 
