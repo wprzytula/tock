@@ -1143,7 +1143,7 @@ pub mod lite {
 
     pub(super) fn transmit_lossy(input: hil::uart::UartLiteInput) -> Result<(), ErrorCode> {
         let hil::uart::UartLiteInput { iter, mut len } = input;
-        kernel::debug!("transmit_lossy len: {}", len);
+        // kernel::debug!("transmit_lossy len: {}", len);
         static BYTES_LOST: AtomicUsize = AtomicUsize::new(0);
         let mut lost_buffer = [0_u8; LOST_BUFFER_SIZE];
 
@@ -1182,11 +1182,11 @@ pub mod lite {
         }
 
         let free_bytes = 2 * scif_uart_get_tx_fifo_free_slots() as usize;
-        kernel::debug!(
-            "FIFO bytes count = {}, head = {}",
-            2 * scif_uart_get_tx_fifo_count(),
-            unsafe { safe_packed_ref!(SCIF_TASK_DATA().uart_emulator.state.tx_head).get() as u32 }
-        );
+        // kernel::debug!(
+        //     "FIFO bytes count = {}, head = {}",
+        //     2 * scif_uart_get_tx_fifo_count(),
+        //     unsafe { safe_packed_ref!(SCIF_TASK_DATA().uart_emulator.state.tx_head).get() as u32 }
+        // );
 
         let bytes_lost = BYTES_LOST.load(Ordering::Relaxed);
 
@@ -1238,7 +1238,7 @@ pub mod lite {
 
         // Actually write the message (at least its prefix that fits).
 
-        kernel::debug!("-------- PRINTING -----------");
+        // kernel::debug!("-------- PRINTING -----------");
         while let Some(item) = iter.next() {
             if len == 0 {
                 break;
@@ -1246,16 +1246,16 @@ pub mod lite {
             match item {
                 hil::uart::UartLiteWord::TwoByte(c1, c2) => unsafe {
                     if len >= 2 {
-                        kernel::debug!("Two chars: {}{}", c1 as char, c2 as char);
-                        kernel::debug!(
-                            "head before: {}",
-                            safe_packed_ref!(SCIF_TASK_DATA().uart_emulator.state.tx_head).get()
-                        );
+                        // kernel::debug!("Two chars: {}{}", c1 as char, c2 as char);
+                        // kernel::debug!(
+                        //     "head before: {}",
+                        //     safe_packed_ref!(SCIF_TASK_DATA().uart_emulator.state.tx_head).get()
+                        // );
                         scif_uart_tx_put_two_chars(c1, c2);
-                        kernel::debug!(
-                            "head after: {}",
-                            safe_packed_ref!(SCIF_TASK_DATA().uart_emulator.state.tx_head).get()
-                        );
+                        // kernel::debug!(
+                        //     "head after: {}",
+                        //     safe_packed_ref!(SCIF_TASK_DATA().uart_emulator.state.tx_head).get()
+                        // );
                         len -= 2;
                     } else {
                         scif_uart_tx_put_char(c1);
@@ -1263,23 +1263,23 @@ pub mod lite {
                     }
                 },
                 hil::uart::UartLiteWord::EndingOneByte(c) => {
-                    kernel::debug!("One char: {}", c as char);
+                    // kernel::debug!("One char: {}", c as char);
                     unsafe {
-                        kernel::debug!(
-                            "head before: {}",
-                            safe_packed_ref!(SCIF_TASK_DATA().uart_emulator.state.tx_head).get()
-                        );
+                        // kernel::debug!(
+                        //     "head before: {}",
+                        //     safe_packed_ref!(SCIF_TASK_DATA().uart_emulator.state.tx_head).get()
+                        // );
                         scif_uart_tx_put_char(c);
-                        kernel::debug!(
-                            "head after: {}",
-                            safe_packed_ref!(SCIF_TASK_DATA().uart_emulator.state.tx_head).get()
-                        );
+                        // kernel::debug!(
+                        //     "head after: {}",
+                        //     safe_packed_ref!(SCIF_TASK_DATA().uart_emulator.state.tx_head).get()
+                        // );
                     }
                     break;
                 }
             }
         }
-        kernel::debug!("-------- END PRINTING -----------");
+        // kernel::debug!("-------- END PRINTING -----------");
 
         Ok(())
     }
