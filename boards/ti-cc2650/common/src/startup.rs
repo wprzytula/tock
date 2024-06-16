@@ -172,18 +172,6 @@ pub unsafe fn start<const NUM_LEDS: usize>(
     .finalize(components::console_component_static!(64, 64)); // (64, 64) is the default
 
     #[cfg(feature = "uart_lite")]
-    let uart_lite_mux = components::console::UartMuxComponent::new(
-        &chip.uart_lite,
-        uart::lite::SCIF_UART_BAUD_RATE,
-    )
-    .finalize(components::uart_mux_component_static!(64)); // 64 is the default
-
-    #[cfg(not(feature = "uart_lite"))]
-    // As a fallback, when UART-lite is not configured on the board, user write requests
-    // are routed to the default, UART-full backend.
-    let uart_lite_mux = uart_full_mux;
-
-    #[cfg(feature = "uart_lite")]
     let console_lite = {
         components::console::ConsoleLiteComponent::new(
             board_kernel,
@@ -193,8 +181,10 @@ pub unsafe fn start<const NUM_LEDS: usize>(
         .finalize(components::console_lite_component_static!())
     };
 
-    let debug_writer_uart = uart_full_mux;
-    components::debug_writer::DebugWriterComponent::new(debug_writer_uart).finalize({
+    // Debug writer
+
+    #[cfg(not(feature = "debug_to_lite"))]
+    components::debug_writer::DebugWriterComponent::new(uart_full_mux).finalize({
         let uart = kernel::static_buf!(capsules_core::virtualizers::virtual_uart::UartDevice);
         let ring = kernel::static_buf!(kernel::collections::ring_buffer::RingBuffer<'static, u8>);
         // 256B buffer to save RAM (2kB is the default). This means 64B for output buffer (the one passed to uart::transmit_buffer)
@@ -206,6 +196,37 @@ pub unsafe fn start<const NUM_LEDS: usize>(
 
         (uart, ring, buffer, debug, debug_wrapper)
     });
+
+    #[cfg(feature = "debug_to_lite")]
+    {
+        let debugger_uart = &chip.uart_lite;
+
+        const INTERNAL_BUF_SIZE: usize = 128;
+        const OUTPUT_BUF_SIZE: usize = 128;
+        const BUF_SIZE: usize = INTERNAL_BUF_SIZE + OUTPUT_BUF_SIZE;
+        let buf = static_init!([u8; BUF_SIZE], [0_u8; BUF_SIZE]);
+
+        let (output_buf, internal_buf) = buf.split_at_mut(OUTPUT_BUF_SIZE);
+
+        // Create virtual device for kernel debug.
+        let ring_buffer = kernel::static_init!(
+            kernel::collections::ring_buffer::RingBuffer<'static, u8>,
+            kernel::collections::ring_buffer::RingBuffer::new(internal_buf,)
+        );
+        let debugger = kernel::static_init!(
+            kernel::debug::DebugWriter,
+            kernel::debug::DebugWriter::new(debugger_uart, output_buf, ring_buffer,)
+        );
+        kernel::hil::uart::Transmit::set_transmit_client(debugger_uart, debugger);
+
+        let debug_wrapper = static_init!(
+            kernel::debug::DebugWriterWrapper,
+            kernel::debug::DebugWriterWrapper::new(debugger)
+        );
+        unsafe {
+            kernel::debug::set_debug_writer_wrapper(debug_wrapper);
+        }
+    }
 
     /* END CAPSULES CONFIGURATION */
 

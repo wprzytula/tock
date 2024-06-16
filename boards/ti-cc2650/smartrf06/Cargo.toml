@@ -10,12 +10,16 @@ default = [
     #
     "ccfg",
 ]
+# By default enabled, because the default serial bootloader erases whole Flash, so CCFG needs to be reflashed.
 ccfg = ["ti-cc2650-common/ccfg"]
+# By default disabled, because SmartRF06 requires additional equipment to operate UART Lite.
 uart_lite = ["ti-cc2650-common/uart_lite"]
+# By default disabled, because something is not yes with Lite debug.
+debug_to_lite = ["ti-cc2650-common/debug_to_lite"]
 
 [dependencies]
 cortexm3 = { path = "../../../arch/cortex-m3" }
 cc2650 = "0.1.1"
 cc2650_chip = { package = "cc2650", path = "../../../chips/cc2650" }
-ti-cc2650-common = { path = "../common"}
+ti-cc2650-common = { path = "../common" }
 kernel = { path = "../../../kernel" }

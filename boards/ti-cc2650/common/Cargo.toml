@@ -13,6 +13,10 @@ ccfg = ["cc2650_chip/ccfg"]
 # which SmartRF06 has not connected by default.
 uart_lite = ["cc2650_chip/uart_lite"]
 
+# By default disabled, as Lite is not available in all setups (on SmartRF06 by default it's not present).
+# Full works correctly, so it's the default.
+debug_to_lite = ["uart_lite"]
+
 [dependencies]
 components = { path = "../../components" }
 cortexm3 = { path = "../../../arch/cortex-m3" }
@@ -23,4 +27,3 @@ cc2650_chip = { package = "cc2650", path = "../../../chips/cc2650" }
 capsules-core = { path = "../../../capsules/core" }
 capsules-extra = { path = "../../../capsules/extra" }
 capsules-system = { path = "../../../capsules/system" }
-
