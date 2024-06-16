@@ -120,7 +120,6 @@ impl<'a> ConsoleLite<'a> {
         kernel_data: &GrantKernelData,
         len: usize,
     ) -> Result<(), ErrorCode> {
-        // kernel::debug!("ConsoleLite::send_new()");
         if self.tx_in_progress.is_some() {
             return Err(ErrorCode::BUSY);
         }
@@ -144,12 +143,13 @@ impl<'a> ConsoleLite<'a> {
                 kernel::debug!(
                     "ConsoleLite::send(write_len={}, data=<{:?}>)",
                     write_len,
-                    unsafe {
-                        core::slice::from_raw_parts(
-                            data as *const kernel::processbuffer::ReadableProcessSlice as *const u8,
-                            write.len(),
-                        )
-                    }
+                    "DATA",
+                    // unsafe {
+                    //     core::slice::from_raw_parts(
+                    //         data as *const kernel::processbuffer::ReadableProcessSlice as *const u8,
+                    //         write.len(),
+                    //     )
+                    // }
                 );
                 let remaining_data = match data.get_to(..write_len) {
                     Some(remaining_data) => remaining_data,
