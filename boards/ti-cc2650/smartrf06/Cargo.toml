@@ -14,7 +14,7 @@ default = [
 ccfg = ["ti-cc2650-common/ccfg"]
 # By default disabled, because SmartRF06 requires additional equipment to operate UART Lite.
 uart_lite = ["ti-cc2650-common/uart_lite"]
-# By default disabled, because something is not yes with Lite debug.
+# By default disabled, because requires UART Lite.
 debug_to_lite = ["ti-cc2650-common/debug_to_lite"]
 
 [dependencies]

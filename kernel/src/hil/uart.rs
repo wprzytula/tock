@@ -369,5 +369,8 @@ pub trait UartLite<'a> {
     ///
     /// Data are expected to be packed in two-byte portions. Once a single-byte
     /// variant is encountered (EndingOneByte), transfer will be stopped.
+    ///
+    /// This is synchronous operation. For issuing async callbacks, callers should
+    /// resort to deferred calls.
     fn transmit_iterator(&self, tx_iter: UartLiteInput);
 }
