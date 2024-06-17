@@ -8,6 +8,9 @@ HENI := docker run --privileged --rm -it --user=1000 -v /home/xps15/.mim-dsg/hen
 $(TOCK_ROOT_DIRECTORY)target/$(TARGET)/release/$(PLATFORM).hex: $(TOCK_ROOT_DIRECTORY)target/$(TARGET)/release/$(PLATFORM).bin
 	arm-none-eabi-objcopy -I binary -O ihex $(TOCK_ROOT_DIRECTORY)target/$(TARGET)/release/$(PLATFORM).bin $(TOCK_ROOT_DIRECTORY)target/$(TARGET)/release/$(PLATFORM).hex
 
+$(TOCK_ROOT_DIRECTORY)target/$(TARGET)/release/$(PLATFORM).flash: $(TOCK_ROOT_DIRECTORY)target/$(TARGET)/release/$(PLATFORM).bin
+	ln -f $< $(<:.bin=.flash)
+
 .PHONY: hex
 hex: $(TOCK_ROOT_DIRECTORY)target/$(TARGET)/release/$(PLATFORM).hex
 
@@ -22,11 +25,21 @@ $(TOCK_ROOT_DIRECTORY)target/$(TARGET)/release/$(PLATFORM)-%.elf: $(LIBTOCK_RS_T
 $(TOCK_ROOT_DIRECTORY)target/$(TARGET)/release/$(PLATFORM)-%.hex: $(TOCK_ROOT_DIRECTORY)target/$(TARGET)/release/$(PLATFORM)-%.elf
 	arm-none-eabi-objcopy -O ihex $< $(<:.elf=.hex)
 
+.PRECIOUS:
+$(TOCK_ROOT_DIRECTORY)target/$(TARGET)/release/$(PLATFORM)-%.bin: $(TOCK_ROOT_DIRECTORY)target/$(TARGET)/release/$(PLATFORM)-%.elf
+	arm-none-eabi-objcopy -O binary $< $(<:.elf=.bin)
+
+$(TOCK_ROOT_DIRECTORY)target/$(TARGET)/release/$(PLATFORM)-%.flash: $(TOCK_ROOT_DIRECTORY)target/$(TARGET)/release/$(PLATFORM)-%.bin
+	ln -f $< $(<:.bin=.flash)
+
 .PHONY: app-*-elf
 app-%-elf: $(TOCK_ROOT_DIRECTORY)target/$(TARGET)/release/$(PLATFORM)-%.elf
 
 .PHONY: app-*-hex
 app-%-hex: $(TOCK_ROOT_DIRECTORY)target/$(TARGET)/release/$(PLATFORM)-%.hex
+
+.PHONY: app-*-bin
+app-%-bin: $(TOCK_ROOT_DIRECTORY)target/$(TARGET)/release/$(PLATFORM)-%.bin
 
 .PRECIOUS:
 $(LIBTOCK_RS_TARGET)/%.tbf: $(LIBTOCK_RS)/examples/%.rs

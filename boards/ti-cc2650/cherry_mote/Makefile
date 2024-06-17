@@ -12,10 +12,10 @@ HENI_PROGRAM := $(HENI) node program cherry -d dev:$(HENI_DEVICE)
 
 ### Flashing kernel only
 .PHONY: flash
-flash: $(TOCK_ROOT_DIRECTORY)target/$(TARGET)/release/$(PLATFORM).hex
+flash: $(TOCK_ROOT_DIRECTORY)target/$(TARGET)/release/$(PLATFORM).flash
 	$(HENI_PROGRAM) $<
 
 ### Flashing kernel + an app
 .PHONY: app-*-flash
-app-%-flash: $(TOCK_ROOT_DIRECTORY)target/$(TARGET)/release/$(PLATFORM)-%.hex
+app-%-flash: $(TOCK_ROOT_DIRECTORY)target/$(TARGET)/release/$(PLATFORM)-%.flash
 	$(HENI_PROGRAM) $<
