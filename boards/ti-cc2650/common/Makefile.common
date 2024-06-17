@@ -2,6 +2,7 @@ LIBTOCK_RS := $(TOCK_ROOT_DIRECTORY)../libtock-rs
 LIBTOCK_RS_TARGET := $(LIBTOCK_RS)/target/cc2650dk/thumbv7m-none-eabi/release/examples
 HENI := docker run --privileged --rm -it --user=1000 -v /home/xps15/.mim-dsg/heni:/home/heni/.heni -v $(TOCK_ROOT_DIRECTORY):$(TOCK_ROOT_DIRECTORY) -w=$(TOCK_ROOT_DIRECTORY) --mount type=bind,source=/dev,target=/dev ghcr.io/mimuw-distributed-systems-group/heni_client:heni heni
 
+RUSTC_FLAGS += -C target-cpu=cortex-m3
 
 ### Building kernel only
 
