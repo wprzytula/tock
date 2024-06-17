@@ -657,7 +657,7 @@ pub mod lite {
         deferred_call::{DeferredCall, DeferredCallClient},
         hil::{
             self,
-            uart::{Configure, Receive, Transmit},
+            uart::{Configure, Receive, Transmit, UartLiteInput, UartLiteWord},
         },
         ErrorCode,
     };
@@ -1353,6 +1353,14 @@ pub mod lite {
     impl<'a> hil::uart::UartLite<'a> for UartLite<'a> {
         fn transmit_iterator(&self, tx_iter: hil::uart::UartLiteInput) {
             let _ = transmit_lossy(tx_iter);
+        }
+    }
+
+    pub struct LossyWriter;
+    impl core::fmt::Write for LossyWriter {
+        fn write_str(&mut self, s: &str) -> fmt::Result {
+            let mut iter = UartLiteWord::iter_from_slice(s.as_bytes());
+            transmit_lossy(UartLiteInput::new(&mut iter, s.len())).map_err(|_| core::fmt::Error)
         }
     }
 
