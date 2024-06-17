@@ -179,7 +179,7 @@ pub unsafe fn start<const NUM_LEDS: usize>(
         components::console::ConsoleLiteComponent::new(
             board_kernel,
             console_lite::DRIVER_NUM,
-            &chip.uart_lite,
+            &chip.uart_lite, // Does not use callbacks from UART, so no need to set client.
         )
         .finalize(components::console_lite_component_static!())
     };
@@ -220,6 +220,8 @@ pub unsafe fn start<const NUM_LEDS: usize>(
             kernel::debug::DebugWriter,
             kernel::debug::DebugWriter::new(debugger_uart, output_buf, ring_buffer,)
         );
+
+        // Debugger is the exclusive callback client of UART-Lite. ConsoleLite uses it synchronously.
         kernel::hil::uart::Transmit::set_transmit_client(debugger_uart, debugger);
 
         let debug_wrapper = static_init!(
