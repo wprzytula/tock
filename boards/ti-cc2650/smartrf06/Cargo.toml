@@ -7,7 +7,7 @@ build = "../../build.rs"
 
 [features]
 default = [
-    #
+    # comment kept for formatter to keep features in separate lines
     "ccfg",
 ]
 # By default enabled, because the default serial bootloader erases whole Flash, so CCFG needs to be reflashed.

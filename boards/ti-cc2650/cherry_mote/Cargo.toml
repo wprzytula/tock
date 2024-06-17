@@ -6,7 +6,12 @@ edition.workspace = true
 build = "../../build.rs"
 
 [features]
-default = ["ccfg", "uart_lite", "debug_to_lite"]
+default = [
+    # comment kept for formatter to keep features in separate lines
+    "ccfg",
+    "uart_lite",
+    "debug_to_lite",
+]
 # By default enabled, because CherryMote is assumed to be programmed with serial bootloader,
 # which currently erases the whole flash, requiring CCFG to be reflashed.
 ccfg = ["ti-cc2650-common/ccfg"]

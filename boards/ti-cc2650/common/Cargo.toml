@@ -5,6 +5,10 @@ authors.workspace = true
 edition.workspace = true
 
 [features]
+default = [
+    # comment kept for formatter to keep features in separate lines
+]
+
 # By default disabled, because SmartRF06 is assumed to be programmed with openocd,
 # so no need for CCFG there.
 ccfg = ["cc2650_chip/ccfg"]
