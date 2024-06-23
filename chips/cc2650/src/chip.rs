@@ -8,12 +8,17 @@ use crate::{
     gpt::Gpt,
     peripheral_interrupts as irq,
     prcm::{self, Prcm},
-    uart::UartFull,
+    uart::{UartFull, UartPinConfig},
     udma::Udma,
 };
 
 #[cfg(feature = "uart_lite")]
 use crate::uart::UartLite;
+
+/// This trait should require all pin config traits,
+/// as this forces board crates to provide all needed pins.
+pub trait PinConfig: UartPinConfig + Copy {}
+impl<T> PinConfig for T where T: UartPinConfig + Copy {}
 
 pub struct Cc2650<'a> {
     userspace_kernel_boundary: cortexm3::syscall::SysCall,
@@ -27,7 +32,7 @@ pub struct Cc2650<'a> {
 const MASK_AON_PROG: (u128, u128) = cortexm3::interrupt_mask!(irq::AON_PROG);
 
 impl<'a> Cc2650<'a> {
-    pub unsafe fn new() -> Self {
+    pub unsafe fn new(pin_config: impl PinConfig) -> Self {
         let peripherals = cc2650::Peripherals::take().unwrap();
 
         let prcm = Prcm::new(peripherals.PRCM);
@@ -66,7 +71,7 @@ impl<'a> Cc2650<'a> {
         };
 
         let uart_full = UartFull::new(peripherals.UART0);
-        uart_full.initialize();
+        uart_full.initialize(pin_config);
         uart_full.enable();
 
         let fcfg = Fcfg::new(peripherals.FCFG1);

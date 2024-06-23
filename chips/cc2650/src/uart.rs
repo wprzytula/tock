@@ -40,13 +40,11 @@ mod full {
     const CLOCK_FREQ: u32 = 48_000_000;
     pub const BAUD_RATE: u32 = 115_200;
 
-    mod pins {
-        use crate::driverlib;
-
-        pub(crate) const IOC_UART_RX: u32 = driverlib::IOID_2;
-        pub(crate) const IOC_UART_TX: u32 = driverlib::IOID_3;
-        pub(crate) const IOC_UART_CTS: u32 = driverlib::IOID_4;
-        pub(crate) const IOC_UART_RTS: u32 = driverlib::IOID_8;
+    pub trait UartPinConfig {
+        fn tx() -> u32;
+        fn rx() -> u32;
+        fn rts() -> u32;
+        fn cts() -> u32;
     }
 
     pub struct UartFull<'a> {
@@ -81,7 +79,7 @@ mod full {
 
         /// The idea is that this is only called once per MCU reboot.
         #[inline]
-        pub fn initialize(&self) {
+        pub fn initialize<PinCfg: UartPinConfig>(&self, _pin_cfg: PinCfg) {
             /*
             // 2. Configure the IOC module to map UART signals to the correct GPIO pins.
             // RF1.7_UART_RX EM -> DIO_2
@@ -98,10 +96,10 @@ mod full {
             unsafe {
                 driverlib::IOCPinTypeUart(
                     driverlib::UART0_BASE,
-                    pins::IOC_UART_RX,
-                    pins::IOC_UART_TX,
-                    pins::IOC_UART_CTS,
-                    pins::IOC_UART_RTS,
+                    PinCfg::rx(),
+                    PinCfg::tx(),
+                    PinCfg::cts(),
+                    PinCfg::rts(),
                 )
             };
 
@@ -644,7 +642,7 @@ mod full {
 #[cfg(feature = "uart_lite")]
 use core::fmt;
 
-pub use full::{PanicWriter as PanicWriterFull, UartFull, BAUD_RATE};
+pub use full::{PanicWriter as PanicWriterFull, UartFull, UartPinConfig, BAUD_RATE};
 
 #[cfg(feature = "uart_lite")]
 pub mod lite {
@@ -1137,6 +1135,7 @@ pub mod lite {
     unsafe fn transmit_blocking(message: &[u8]) {
         let tx_len = message.len();
         let mut idx = 0;
+
         while idx < tx_len {
             let remaining = tx_len - idx;
             let written;
