@@ -2,7 +2,10 @@ use core::ptr::{addr_of, addr_of_mut};
 
 use capsules_core::{console, led::LedDriver};
 use capsules_system::{process_policies::PanicFaultPolicy, process_printer::ProcessPrinterText};
-use cc2650_chip::{chip::Cc2650, uart};
+use cc2650_chip::{
+    chip::{Cc2650, PinConfig},
+    uart,
+};
 
 use kernel::{
     capabilities,
@@ -108,6 +111,7 @@ impl<'a, const NUM_LEDS: usize> KernelResources<Cc2650<'a>> for Platform<NUM_LED
 /// these static_inits is wasted.
 #[inline(never)]
 pub unsafe fn start<const NUM_LEDS: usize>(
+    pin_config: impl PinConfig,
     leds: &'static [&'static kernel::hil::led::LedHigh<'static, cc2650_chip::gpio::GPIOPin>;
                  NUM_LEDS],
 ) -> (
@@ -123,7 +127,7 @@ pub unsafe fn start<const NUM_LEDS: usize>(
         create_capability!(capabilities::ProcessManagementCapability);
 
     /* PERIPHERALS CONFIGURATION */
-    let chip = static_init!(Cc2650, Cc2650::new());
+    let chip = static_init!(Cc2650, Cc2650::new(pin_config));
 
     let board_kernel = static_init!(kernel::Kernel, kernel::Kernel::new(&*addr_of!(PROCESSES)));
 
