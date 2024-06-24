@@ -31,13 +31,17 @@ pub struct Cc2650<'a> {
     pub fcfg: Fcfg,
     pub radio: Radio<'a>,
 }
-const MASK_AON_PROG: (u128, u128) = cortexm3::interrupt_mask!(irq::AON_PROG);
+const MASK_AON_PROG_RFC_CMD_ACK: (u128, u128) =
+    cortexm3::interrupt_mask!(irq::AON_PROG, irq::RF_CMD_ACK);
 
 impl<'a> Cc2650<'a> {
     pub unsafe fn new(pin_config: impl PinConfig) -> Self {
         let peripherals = cc2650::Peripherals::take().unwrap();
 
         let prcm = Prcm::new(peripherals.PRCM);
+
+        // Debug RFC loop
+        prcm.disable_domains(prcm::PowerDomains::empty().rfc());
 
         prcm.enable_domains(prcm::PowerDomains::empty().peripherals().serial().rfc());
 
@@ -113,7 +117,7 @@ impl kernel::platform::chip::Chip for Cc2650<'_> {
 
     fn service_pending_interrupts(&self) {
         unsafe {
-            while let Some(interrupt) = nvic::next_pending_with_mask(MASK_AON_PROG) {
+            while let Some(interrupt) = nvic::next_pending_with_mask(MASK_AON_PROG_RFC_CMD_ACK) {
                 let supported = self.service_interrupt(interrupt);
                 assert!(supported, "Got unsupported interrupt: {}", interrupt);
 
@@ -127,7 +131,7 @@ impl kernel::platform::chip::Chip for Cc2650<'_> {
     }
 
     fn has_pending_interrupts(&self) -> bool {
-        unsafe { nvic::has_pending_with_mask(MASK_AON_PROG) }
+        unsafe { nvic::has_pending_with_mask(MASK_AON_PROG_RFC_CMD_ACK) }
     }
 
     fn sleep(&self) {
@@ -161,7 +165,7 @@ impl kernel::platform::chip::InterruptService for Cc2650<'_> {
             irq::SSI1 => todo!(),
             irq::RF_CPE0 => self.radio.handle_interrupt_cpe0(),
             irq::RF_CORE_HW => todo!(),
-            irq::RF_CMD_ACK => todo!(),
+            irq::RF_CMD_ACK => (),
             irq::I2S => todo!(),
             irq::WATCHDOG => todo!(),
             irq::GPT0A => self.gpt.handle_interrupt(),

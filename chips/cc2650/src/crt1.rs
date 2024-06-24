@@ -64,6 +64,8 @@ const AUX_SWEV1_HANDLER: unsafe extern "C" fn() = crate::scif::Scif::alert_handl
 #[cfg(not(feature = "full_scif"))]
 const AUX_SWEV1_HANDLER: unsafe extern "C" fn() = CortexM3::GENERIC_ISR;
 
+use crate::ieee802154_radio::rfc_cmd_ack_handler;
+
 #[cfg_attr(
     all(target_arch = "arm", target_os = "none"),
     link_section = ".vectors"
@@ -83,7 +85,7 @@ static IRQS: [unsafe extern "C" fn(); 34] = [
     CortexM3::GENERIC_ISR,    // SSI1 Rx and Tx
     CortexM3::GENERIC_ISR,    // RF Core & Packet Engine 2
     CortexM3::GENERIC_ISR,    // RF Core Hardware
-    CortexM3::GENERIC_ISR,    // RF Core Command Acknowledge
+    rfc_cmd_ack_handler,      // RF Core Command Acknowledge
     CortexM3::GENERIC_ISR,    // I2S
     AUX_SWEV1_HANDLER,        // AUX Software Event 1
     CortexM3::GENERIC_ISR,    // Watchdog timer
