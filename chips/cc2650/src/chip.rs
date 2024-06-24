@@ -1,4 +1,4 @@
-use core::{arch::asm, fmt::Write};
+use core::fmt::Write;
 
 use cortexm3::{nvic, CortexM3, CortexMVariant as _};
 use kernel::platform::chip::InterruptService as _;
@@ -146,7 +146,7 @@ impl kernel::platform::chip::InterruptService for Cc2650<'_> {
             irq::RF_CPE1 => todo!(),
             irq::AON_RTC => todo!(),
             irq::UART0 => self.uart_full.handle_interrupt(),
-            irq::AUX_SWEV0 => (), // FIXME: don't just ignore AUX_SWEV0
+            irq::AUX_SWEV0 => (),
             irq::SSI0 => todo!(),
             irq::SSI1 => todo!(),
             irq::RF_CPE0 => todo!(),
@@ -170,12 +170,7 @@ impl kernel::platform::chip::InterruptService for Cc2650<'_> {
             irq::AUX_COMBINED => todo!(),
 
             // We need to ignore JTAG events since some debuggers emit these
-            // These `nop`s are for debug purposes only.
-            irq::AON_PROG => asm! {
-                "nop",
-                "nop",
-                "nop",
-            },
+            irq::AON_PROG => (),
 
             irq::DYNAMIC_PROG => todo!(),
             irq::AUX_COMP_A => todo!(),
