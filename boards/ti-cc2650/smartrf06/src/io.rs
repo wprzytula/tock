@@ -1,26 +1,7 @@
-use core::fmt::{self, Write as _};
 #[cfg(not(test))]
 use core::panic::PanicInfo;
 
-use cc2650_chip::uart::PanicWriterFull;
-
 pub(crate) const LED_PANIC_PIN: u32 = 25;
-
-#[macro_export]
-macro_rules! print {
-    ($($arg:tt)*) => ($crate::io::_print(format_args!($($arg)*)));
-}
-
-#[macro_export]
-macro_rules! println {
-    () => ($crate::print!("\n"));
-    ($($arg:tt)*) => ($crate::print!("{}\n", format_args!($($arg)*)));
-}
-
-#[doc(hidden)]
-pub fn _print(args: fmt::Arguments) {
-    PanicWriterFull.write_fmt(args).unwrap();
-}
 
 #[cfg(not(test))]
 #[no_mangle]
