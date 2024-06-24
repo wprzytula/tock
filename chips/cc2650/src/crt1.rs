@@ -105,8 +105,7 @@ static IRQS: [unsafe extern "C" fn(); 34] = [
     CortexM3::GENERIC_ISR,    // Dynamic Programmable interrupt
     // source (Default: PRCM)
     CortexM3::GENERIC_ISR, // AUX Comparator A
-    CortexM3::GENERIC_ISR, // AUX ADC new sample or ADC DMA
-    // done, ADC underflow, ADC overflow
+    CortexM3::GENERIC_ISR, // AUX ADC new sample or ADC DMA done, ADC underflow, ADC overflow
     CortexM3::GENERIC_ISR, // TRNG event
 ];
 
