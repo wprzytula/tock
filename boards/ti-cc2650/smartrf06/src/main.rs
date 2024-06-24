@@ -46,8 +46,8 @@ pub unsafe fn main() {
 
     let (board_kernel, smartrf, chip) = ti_cc2650_common::start(PinConfig, leds);
 
-    println!("Hello world from board with loaded processes!");
-    println!("Proceeding to main kernel loop...!");
+    kernel::debug!("Hello world from board with loaded processes!");
+    kernel::debug!("Proceeding to main kernel loop...!");
 
     board_kernel.kernel_loop(
         &smartrf,
