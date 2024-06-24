@@ -1,5 +1,6 @@
 use crate::driverlib;
 use core::cell::Cell;
+use cortexm3::nvic::Nvic;
 use driverlib::dataQueue_t as RfcQueue;
 use driverlib::rfc_ieeeRxOutput_s as RfcRxOutput;
 use kernel::deferred_call::{DeferredCall, DeferredCallClient};
@@ -7,6 +8,18 @@ use kernel::hil::radio::{self, PowerClient, RadioChannel, RadioConfig, RadioData
 use kernel::utilities::cells::{OptionalCell, TakeCell};
 use kernel::ErrorCode;
 use tock_cells::volatile_cell::VolatileCell;
+
+/**    23.2.2.3 RF Core Command Acknowledge Interrupt
+ * The system-level interrupt RF_CMD_ACK is produced when an RF core command is acknowledged (that
+ * is, when the status becomes available in CMDSTA [see Section 23.8.2.2]). When the status becomes
+ * available, the RFACKIFG.ACKFLAG register bit is set to 1. Whenever this bit is 1, the RF_CMD_ACK
+ * interrupt is raised, which means that the ISR must clear RFACKIFG.ACKFLAG when processing the
+ * RF_CMD_ACK interrupt.
+ */
+pub(crate) unsafe extern "C" fn rfc_cmd_ack_handler() {
+    let rfc_dbell = cc2650::RFC_DBELL::ptr().as_ref().unwrap_unchecked();
+    rfc_dbell.rfackifg.write(|w| w.ackflag().clear_bit());
+}
 
 mod cmd {
     use crate::driverlib;
@@ -547,31 +560,39 @@ enum DeferredOperation {
 }
 
 pub struct Radio<'a> {
+    #[allow(unused)]
     rfc_pwr: cc2650::RFC_PWR,
     rfc_dbell: cc2650::RFC_DBELL,
     #[allow(unused)]
     rfc_rat: cc2650::RFC_RAT,
 
-    tx_power: Cell<PowerOutputConfig>,
+    // interrupts
+    cpe0: Nvic,
+    cpe1: Nvic,
+
+    // clients
     config_client: OptionalCell<&'a dyn radio::ConfigClient>,
     power_client: OptionalCell<&'a dyn radio::PowerClient>,
     rx_client: OptionalCell<&'a dyn radio::RxClient>,
     tx_client: OptionalCell<&'a dyn radio::TxClient>,
+
+    // bufs
     tx_buf: TakeCell<'static, [u8]>,
     rx_buf: TakeCell<'static, [u8]>,
     // ack_buf: TakeCell<'static, [u8]>,
+
+    // config
     addr: Cell<u16>,
     addr_long: Cell<[u8; 8]>,
     pan: Cell<u16>,
-    // cca_count: Cell<u8>,
-    // cca_be: Cell<u8>,
-    // random_nonce: Cell<u32>,
     channel: Cell<RadioChannel>,
-    // timer0: OptionalCell<&'a Gpt<'a>>,
-    // state: Cell<RadioState>,
+    tx_power: Cell<PowerOutputConfig>,
+
+    // rx helpers
     rx_result: VolatileCell<RfcRxOutput>,
     rx_queue: VolatileCell<RfcQueue>,
 
+    // deferred call machinery
     deferred_call: DeferredCall,
     deferred_call_operation: OptionalCell<DeferredOperation>,
 }
@@ -587,24 +608,26 @@ impl<'a> Radio<'a> {
             rfc_dbell,
             rfc_rat,
 
-            tx_power: Cell::new(OUTPUT_POWER_MAX),
+            cpe0: unsafe { Nvic::new(crate::peripheral_interrupts::RF_CPE0) },
+            cpe1: unsafe { Nvic::new(crate::peripheral_interrupts::RF_CPE1) },
+
+            config_client: OptionalCell::empty(),
+            power_client: OptionalCell::empty(),
             rx_client: OptionalCell::empty(),
             tx_client: OptionalCell::empty(),
+
             tx_buf: TakeCell::empty(),
             rx_buf: TakeCell::empty(),
+
             addr: Cell::new(0),
             addr_long: Cell::new([0x00; 8]),
             pan: Cell::new(0),
-            // cca_count: Cell::new(0),
-            // cca_be: Cell::new(0),
-            // random_nonce: Cell::new(0xDEADBEEF),
             channel: Cell::new(RadioChannel::Channel26),
-            // timer0: OptionalCell::empty(),
-            // state: Cell::new(RadioState::OFF),
+            tx_power: Cell::new(OUTPUT_POWER_MAX),
+
             rx_result: Default::default(),
             rx_queue: Default::default(),
-            config_client: OptionalCell::empty(),
-            power_client: OptionalCell::empty(),
+
             deferred_call: DeferredCall::new(),
             deferred_call_operation: OptionalCell::empty(),
         }
@@ -756,6 +779,8 @@ impl<'a> Radio<'a> {
     }
     } */
 
+    /* CMD convenience wrappers */
+
     /// Send ping to verify that CPE works.
     fn ping(&self) -> cmd::RadioCmdResult<()> {
         let mut cmd = cmd::RfcPing::new();
@@ -787,65 +812,6 @@ impl<'a> Radio<'a> {
         cmd.send()
     }
 
-    fn enable_interrupts(&self) {
-        self.rfc_dbell.rfcpeisl.modify(|_r, w| {
-            w.rx_data_written()
-                .cpe0()
-                .last_command_done()
-                .cpe0()
-                .internal_error()
-                .cpe1()
-                .rx_buf_full()
-                .cpe1()
-        });
-
-        self.change_interrupts_state::<true>()
-    }
-
-    fn disable_interrupts(&self) {
-        self.change_interrupts_state::<false>()
-    }
-
-    fn change_interrupts_state<const ON: bool>(&self) {
-        self.rfc_dbell
-            .rfcpeien
-            .modify(|_r, w| w.rx_data_written().bit(ON).last_command_done().bit(ON))
-    }
-
-    pub(crate) fn handle_interrupt_cpe0(&self) {
-        panic!("Got cpe0");
-        // FIXME: disable interrupts
-        kernel::debug!("handling interrupt cpe0");
-
-        // The interrupt means that we received or transmitted a frame. Let's determine
-        // whether it's RX or TX that has triggered the interrupt.
-
-        if let Some(tx_buf) = self.tx_buf.take() {
-            // TX completed
-            self.tx_client.map(|client| client.send_done(tx_buf, false /* FIXME: consider if we should set it to true, as automatic ACK is turned on */, Ok(())));
-        } else {
-            // RX completed
-            self.rx_buf.take().map(|rx_buf| {
-                let data_len = (rx_buf[radio::PHR_OFFSET] & 0x7F) as usize;
-
-                // LQI is found just after the data received.
-                let lqi = rx_buf[data_len];
-
-                // We drop the CRC bytes (the MFR) from our frame.
-                let frame_len = data_len - radio::MFR_SIZE;
-
-                // RX completed
-                self.rx_client
-                    .map(|client| client.receive(rx_buf, frame_len, lqi, true, Ok(())));
-            });
-        };
-        // FIXME: enable interrupts
-    }
-
-    pub(crate) fn handle_interrupt_cpe1(&self) {
-        unreachable!("interrupt cpe1 is disabled");
-    }
-
     fn rx(&self) -> cmd::RadioCmdResult<()> {
         let mut cmd = cmd::RfcIeeeRx::new(
             self.get_channel(),
@@ -863,6 +829,136 @@ impl<'a> Radio<'a> {
         cmd.send()?;
         Ok(cmd)
     }
+
+    /* Interrupt management */
+
+    fn configure_interrupts(&self) {
+        self.rfc_dbell.rfcpeisl.modify(|_r, w| {
+            w.rx_data_written()
+                .cpe0()
+                .tx_done()
+                .cpe0()
+                .tx_entry_done()
+                .cpe0()
+                .internal_error()
+                .cpe1()
+                .rx_buf_full()
+                .cpe1()
+        });
+
+        self.rfc_dbell.rfcpeien.write(|w| {
+            w.rx_data_written()
+                .set_bit()
+                .tx_done()
+                .set_bit()
+                .tx_entry_done()
+                .set_bit()
+                .internal_error()
+                .set_bit()
+                .rx_buf_full()
+                .set_bit()
+                .command_done()
+                .clear_bit()
+                .last_command_done()
+                .clear_bit()
+                .last_fg_command_done()
+                .clear_bit()
+        });
+
+        unsafe {
+            // We make no use of this interrupt.
+            let cmd_ack_interrupt =
+                cortexm3::nvic::Nvic::new(crate::peripheral_interrupts::RF_CMD_ACK);
+            cmd_ack_interrupt.disable();
+            cmd_ack_interrupt.clear_pending();
+        }
+    }
+
+    fn enable_interrupts(&self) {
+        self.cpe0.enable();
+        self.cpe1.enable();
+    }
+
+    fn disable_interrupts(&self) {
+        self.cpe0.disable();
+        self.cpe1.disable();
+    }
+
+    fn clear_pending_interrupts(&self) {
+        self.cpe0.clear_pending();
+        self.cpe1.clear_pending();
+    }
+
+    pub(crate) fn handle_interrupt_cpe0(&self) {
+        // FIXME: disable interrupts
+        self.disable_interrupts();
+        kernel::debug!("handling interrupt cpe0");
+
+        let interrupts = self.rfc_dbell.rfcpeifg.read();
+        let tx_done = interrupts.tx_done().bit_is_set();
+        let tx_entry_done = interrupts.tx_entry_done().bit_is_set();
+        let rx_data_written = interrupts.rx_data_written().bit_is_set();
+        kernel::debug!(
+            "interrupts: tx_done={}, tx_entry_done={}, rx_data_written={}",
+            tx_done,
+            tx_entry_done,
+            rx_data_written
+        );
+
+        self.rfc_dbell.rfcpeifg.write(|w| {
+            w.tx_done()
+                .clear_bit()
+                .tx_entry_done()
+                .clear_bit()
+                .rx_data_written()
+                .clear_bit()
+        });
+
+        // The interrupt means that we received or transmitted a frame. Let's determine
+        // whether it's RX or TX that has triggered the interrupt.
+
+        if let Some(tx_buf) = self.tx_buf.take() {
+            assert!(tx_done);
+            // TX completed
+            self.tx_client.map(|client| {
+                client.send_done(
+                    tx_buf,
+                    false /* FIXME: consider if we should set it to true, as automatic ACK is turned on */,
+                    Ok(())
+                )
+            });
+        } else {
+            assert!(rx_data_written);
+            // RX completed
+            self.rx_buf.take().map(|rx_buf| {
+                let data_len = (rx_buf[radio::PHR_OFFSET] & 0x7F) as usize;
+
+                // LQI is found just after the data received.
+                let lqi = rx_buf[data_len];
+
+                // We drop the CRC bytes (the MFR) from our frame.
+                let frame_len = data_len - radio::MFR_SIZE;
+
+                // RX completed
+                self.rx_client
+                    .map(|client| client.receive(rx_buf, frame_len, lqi, true, Ok(())));
+            });
+        };
+        // FIXME: enable interrupts
+        self.enable_interrupts();
+    }
+
+    pub(crate) fn handle_interrupt_cpe1(&self) {
+        let interrupts = self.rfc_dbell.rfcpeifg.read();
+        let internal_error = interrupts.internal_error().bit_is_set();
+        let rx_buf_full = interrupts.rx_buf_full().bit_is_set();
+        panic!(
+            "Raised interrupt cpe1 - RFC error! internal_error={}, rx_buf_full={}",
+            internal_error, rx_buf_full
+        );
+    }
+
+    /* Radio management logic */
 
     /**
      * \brief Check the RF's TX status
@@ -912,11 +1008,14 @@ impl<'a> Radio<'a> {
     }
 
     fn radio_on(&self) -> Result<(), ErrorCode> {
-        unsafe { driverlib::OSCHF_TurnOnXosc() }
+        unsafe {
+            driverlib::OSCHF_TurnOnXosc();
+        }
+        while unsafe { !driverlib::OSCHF_AttemptToSwitchToXosc() } {}
 
-        self.rfc_pwr
-            .pwmclken
-            .write(|w| w.cpe().set_bit().cperam().set_bit());
+        // self.rfc_pwr
+        //     .pwmclken
+        //     .write(|w| w.cpe().set_bit().cperam().set_bit());
 
         // self.rfc_pwr.pwmclken.write(|w| unsafe {
         //     w.bits(
@@ -933,41 +1032,48 @@ impl<'a> Radio<'a> {
         //             | driverlib::RFC_PWR_PWMCLKEN_RFC,
         //     )
         // });
-        // unsafe { driverlib::RFCClockEnable() }
-        // self.rfc_dbell.cmdr.write(|w| unsafe { w.cmd().bits(0) });
+        unsafe { driverlib::RFCClockEnable() }
 
-        self.ping()?;
-        self.setup()?;
-        self.start_rat()?;
+        self.ping().unwrap();
+        self.setup().unwrap();
+        self.start_rat().unwrap();
+
+        // Not to catch interrupts from before
+        self.clear_pending_interrupts();
 
         // Begin receiving procedure.
         self.enable_interrupts();
-        self.start_synthesizer()?;
-        self.rx()?;
+        self.start_synthesizer().unwrap();
+        self.rx().unwrap();
 
         Ok(())
     }
 
     fn radio_off(&self) -> Result<(), ErrorCode> {
-        kernel::debug!("before synth powered down");
-        // unsafe { driverlib::RFCSynthPowerDown() }
-        self.stop_synthesizer()?;
-        kernel::debug!("synth powered down");
         self.disable_interrupts();
-        kernel::debug!("interrupts disabled");
-        self.stop_rat()?;
-        kernel::debug!("RAT stopped");
+        // kernel::debug!("interrupts disabled");
+        if self.is_on() {
+            unsafe { driverlib::RFCSynthPowerDown() }
+            // self.stop_synthesizer().unwrap();
+            // kernel::debug!("synth powered down");
+            self.stop_rat().unwrap();
+            // kernel::debug!("RAT stopped");
+        }
         unsafe { driverlib::RFCClockDisable() }
-        kernel::debug!("clocks disabled");
+        // kernel::debug!("clocks disabled");
 
         Ok(())
     }
 
-    fn radio_initialize(&self) {}
+    fn radio_initialize(&self) {
+        self.configure_interrupts();
+        // self.radio_off().unwrap();
+    }
 }
 
 impl<'a> RadioConfig<'a> for Radio<'a> {
     fn initialize(&self) -> Result<(), ErrorCode> {
+        self.radio_initialize();
         Ok(())
     }
 
@@ -1012,7 +1118,7 @@ impl<'a> RadioConfig<'a> for Radio<'a> {
     }
 
     fn config_commit(&self) {
-        self.radio_initialize();
+        // self.radio_initialize();
 
         // Enable deferred call so we can generate a `ConfigClient` callback.
         self.deferred_call_operation
@@ -1124,6 +1230,10 @@ impl<'a> RadioData<'a> for Radio<'a> {
         {}
 
         let mut cmd = cmd::RfcIeeeTx::new(buf[radio::PSDU_OFFSET..].as_mut_ptr(), frame_len);
+
+        // Save buf before sending the CMD to prevent races.
+        self.tx_buf.put(Some(buf));
+
         cmd.send().unwrap();
 
         Ok(())
