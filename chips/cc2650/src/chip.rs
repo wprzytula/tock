@@ -1,11 +1,12 @@
 use core::fmt::Write;
 
 use cortexm3::{nvic, CortexM3, CortexMVariant as _};
-use kernel::platform::chip::InterruptService as _;
+use kernel::{hil::radio::RadioConfig as _, platform::chip::InterruptService as _};
 
 use crate::{
     fcfg::Fcfg,
     gpt::Gpt,
+    ieee802154_radio::Radio,
     peripheral_interrupts as irq,
     prcm::{self, Prcm},
     uart::{UartFull, UartPinConfig},
@@ -28,6 +29,7 @@ pub struct Cc2650<'a> {
     pub uart_lite: UartLite<'a>,
     pub prcm: Prcm,
     pub fcfg: Fcfg,
+    pub radio: Radio<'a>,
 }
 const MASK_AON_PROG: (u128, u128) = cortexm3::interrupt_mask!(irq::AON_PROG);
 
@@ -76,6 +78,13 @@ impl<'a> Cc2650<'a> {
 
         let fcfg = Fcfg::new(peripherals.FCFG1);
 
+        let radio = Radio::new(
+            peripherals.RFC_PWR,
+            peripherals.RFC_DBELL,
+            peripherals.RFC_RAT,
+        );
+        radio.initialize().unwrap();
+
         Self {
             userspace_kernel_boundary: cortexm3::syscall::SysCall::new(),
             gpt,
@@ -84,6 +93,7 @@ impl<'a> Cc2650<'a> {
             uart_lite,
             prcm,
             fcfg,
+            radio,
         }
     }
 }
@@ -143,13 +153,13 @@ impl kernel::platform::chip::InterruptService for Cc2650<'_> {
         match interrupt {
             irq::GPIO => todo!(),
             irq::I2C => todo!(),
-            irq::RF_CPE1 => todo!(),
+            irq::RF_CPE1 => self.radio.handle_interrupt_cpe1(),
             irq::AON_RTC => todo!(),
             irq::UART0 => self.uart_full.handle_interrupt(),
             irq::AUX_SWEV0 => (),
             irq::SSI0 => todo!(),
             irq::SSI1 => todo!(),
-            irq::RF_CPE0 => todo!(),
+            irq::RF_CPE0 => self.radio.handle_interrupt_cpe0(),
             irq::RF_CORE_HW => todo!(),
             irq::RF_CMD_ACK => todo!(),
             irq::I2S => todo!(),

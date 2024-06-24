@@ -11,6 +11,7 @@ pub mod driverlib;
 pub mod fcfg;
 pub mod gpio;
 pub mod gpt;
+pub mod ieee802154_radio;
 mod peripheral_interrupts;
 pub mod prcm;
 #[cfg(feature = "uart_lite")]
