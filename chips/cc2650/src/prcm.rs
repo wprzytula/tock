@@ -108,6 +108,11 @@ impl Prcm {
     pub fn enable_clocks(&self, clocks: Clocks) {
         Clock::enable_clocks(&self.prcm, clocks);
     }
+
+    #[inline]
+    pub fn rfc_modesel_configure(&self) {
+        self.prcm.rfcmodesel.write(|w| w.curr().mode5());
+    }
 }
 
 #[derive(Clone, Copy, Default)]

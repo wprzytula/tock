@@ -39,6 +39,12 @@ impl<'a> Cc2650<'a> {
 
         let prcm = Prcm::new(peripherals.PRCM);
 
+        prcm.disable_domains(prcm::PowerDomains::empty().rfc());
+
+        // Now, with RFC disabled, configure MODESEL to mode that is appropriate for CC2650
+        // (other similar chips use different modes).
+        prcm.rfc_modesel_configure();
+
         prcm.enable_domains(prcm::PowerDomains::empty().peripherals().serial().rfc());
 
         prcm.enable_clocks(
