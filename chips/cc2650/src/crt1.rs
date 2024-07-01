@@ -74,14 +74,14 @@ const AUX_SWEV1_HANDLER: unsafe extern "C" fn() = CortexM3::GENERIC_ISR;
 static IRQS: [unsafe extern "C" fn(); 34] = [
     CortexM3::GENERIC_ISR,    // GPIO Int handler
     CortexM3::GENERIC_ISR,    // I2C
-    CortexM3::GENERIC_ISR,    // RF Core Command & Packet Engine 1
+    CortexM3::GENERIC_ISR,    // RF Core Command & Packet Engine 1 - CPE1
     unhandled_interrupt,      // unassigned
     CortexM3::GENERIC_ISR,    // AON RTC
     CortexM3::GENERIC_ISR,    // UART0 Rx and Tx
     AUX_SWEV0_HANDLER,        // AUX Software Event 0
     CortexM3::GENERIC_ISR,    // SSI0 Rx and Tx
     CortexM3::GENERIC_ISR,    // SSI1 Rx and Tx
-    CortexM3::GENERIC_ISR,    // RF Core & Packet Engine 2
+    CortexM3::GENERIC_ISR,    // RF Core & Packet Engine 2 - CPE0
     CortexM3::GENERIC_ISR,    // RF Core Hardware
     CortexM3::GENERIC_ISR,    // RF Core Command Acknowledge
     CortexM3::GENERIC_ISR,    // I2S
