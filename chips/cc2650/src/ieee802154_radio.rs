@@ -809,7 +809,8 @@ impl<'a> Radio<'a> {
     }
 
     fn rx(&self) -> cmd::RadioCmdResult<()> {
-        let mut cmd = cmd::IeeeRx::new(
+        let mut rx = self.rx_cmd.borrow_mut();
+        *rx = cmd::IeeeRx::new(
             self.get_channel(),
             self.get_pan(),
             self.get_address(),
@@ -817,7 +818,7 @@ impl<'a> Radio<'a> {
             &self.rx_machinery.queue,
             &self.rx_machinery.stats,
         );
-        cmd.send()?;
+        rx.send()?;
 
         Ok(())
     }
