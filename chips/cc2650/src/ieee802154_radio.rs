@@ -1,13 +1,17 @@
 use crate::driverlib;
 use core::cell::Cell;
+use core::cell::RefCell;
+use core::marker::PhantomData;
 use cortexm3::nvic::Nvic;
 use driverlib::dataQueue_t as RfcQueue;
+use driverlib::rfc_dataEntryPointer_s as RfcDataEntryPointer;
 use driverlib::rfc_ieeeRxOutput_s as RfcRxOutput;
+
 use kernel::deferred_call::{DeferredCall, DeferredCallClient};
 use kernel::hil::radio::{self, PowerClient, RadioChannel, RadioConfig, RadioData};
+use kernel::static_init;
 use kernel::utilities::cells::{OptionalCell, TakeCell};
 use kernel::ErrorCode;
-use tock_cells::volatile_cell::VolatileCell;
 
 /**    23.2.2.3 RF Core Command Acknowledge Interrupt
  * The system-level interrupt RF_CMD_ACK is produced when an RF core command is acknowledged (that
@@ -21,10 +25,160 @@ pub(crate) unsafe extern "C" fn rfc_cmd_ack_handler() {
     rfc_dbell.rfackifg.write(|w| w.ackflag().clear_bit());
 }
 
+pub(crate) unsafe extern "C" fn rf_cpe1_handler() {
+    let dbell = cc2650::RFC_DBELL::ptr().as_ref().unwrap_unchecked();
+    let interrupts = dbell.rfcpeifg.read();
+    let internal_error = interrupts.internal_error().bit_is_set();
+    let boot_done = interrupts.boot_done().bit_is_set();
+    let modules_unlocked = interrupts.modules_unlocked().bit_is_set();
+    let synth_no_lock = interrupts.synth_no_lock().bit_is_set();
+    let irq27 = interrupts.irq27().bit_is_set();
+    let rx_aborted = interrupts.rx_aborted().bit_is_set();
+    let rx_n_data_written = interrupts.rx_n_data_written().bit_is_set();
+    let rx_data_written = interrupts.rx_data_written().bit_is_set();
+    let rx_entry_done = interrupts.rx_entry_done().bit_is_set();
+    let rx_buf_full = interrupts.rx_buf_full().bit_is_set();
+    let rx_ctrl_ack = interrupts.rx_ctrl_ack().bit_is_set();
+    let rx_ctrl = interrupts.rx_ctrl().bit_is_set();
+    let rx_empty = interrupts.rx_empty().bit_is_set();
+    let rx_ignored = interrupts.rx_ignored().bit_is_set();
+    let rx_nok = interrupts.rx_nok().bit_is_set();
+    let rx_ok = interrupts.rx_ok().bit_is_set();
+    let irq15 = interrupts.irq15().bit_is_set();
+    let irq14 = interrupts.irq14().bit_is_set();
+    let irq13 = interrupts.irq13().bit_is_set();
+    let irq12 = interrupts.irq12().bit_is_set();
+    let tx_buffer_changed = interrupts.tx_buffer_changed().bit_is_set();
+    let tx_entry_done = interrupts.tx_entry_done().bit_is_set();
+    let tx_retrans = interrupts.tx_retrans().bit_is_set();
+    let tx_ctrl_ack_ack = interrupts.tx_ctrl_ack_ack().bit_is_set();
+    let tx_ctrl_ack = interrupts.tx_ctrl_ack().bit_is_set();
+    let tx_ctrl = interrupts.tx_ctrl().bit_is_set();
+    let tx_ack = interrupts.tx_ack().bit_is_set();
+    let tx_done = interrupts.tx_done().bit_is_set();
+    let last_fg_command_done = interrupts.last_fg_command_done().bit_is_set();
+    let fg_command_done = interrupts.fg_command_done().bit_is_set();
+    let last_command_done = interrupts.last_command_done().bit_is_set();
+    let command_done = interrupts.command_done().bit_is_set();
+
+    let bits = interrupts.bits();
+
+    let sel = dbell.rfcpeisl.read();
+    let internal_error_sel = sel.internal_error().bit_is_set();
+    let boot_done_sel = sel.boot_done().bit_is_set();
+    let modules_unlocked_sel = sel.modules_unlocked().bit_is_set();
+    let synth_no_lock_sel = sel.synth_no_lock().bit_is_set();
+    let irq27_sel = sel.irq27().bit_is_set();
+    let rx_aborted_sel = sel.rx_aborted().bit_is_set();
+    let rx_n_data_written_sel = sel.rx_n_data_written().bit_is_set();
+    let rx_data_written_sel = sel.rx_data_written().bit_is_set();
+    let rx_entry_done_sel = sel.rx_entry_done().bit_is_set();
+    let rx_buf_full_sel = sel.rx_buf_full().bit_is_set();
+    let rx_ctrl_ack_sel = sel.rx_ctrl_ack().bit_is_set();
+    let rx_ctrl_sel = sel.rx_ctrl().bit_is_set();
+    let rx_empty_sel = sel.rx_empty().bit_is_set();
+    let rx_ignored_sel = sel.rx_ignored().bit_is_set();
+    let rx_nok_sel = sel.rx_nok().bit_is_set();
+    let rx_ok_sel = sel.rx_ok().bit_is_set();
+    let irq15_sel = sel.irq15().bit_is_set();
+    let irq14_sel = sel.irq14().bit_is_set();
+    let irq13_sel = sel.irq13().bit_is_set();
+    let irq12_sel = sel.irq12().bit_is_set();
+    let tx_buffer_changed_sel = sel.tx_buffer_changed().bit_is_set();
+    let tx_entry_done_sel = sel.tx_entry_done().bit_is_set();
+    let tx_retrans_sel = sel.tx_retrans().bit_is_set();
+    let tx_ctrl_ack_ack_sel = sel.tx_ctrl_ack_ack().bit_is_set();
+    let tx_ctrl_ack_sel = sel.tx_ctrl_ack().bit_is_set();
+    let tx_ctrl_sel = sel.tx_ctrl().bit_is_set();
+    let tx_ack_sel = sel.tx_ack().bit_is_set();
+    let tx_done_sel = sel.tx_done().bit_is_set();
+    let last_fg_command_done_sel = sel.last_fg_command_done().bit_is_set();
+    let fg_command_done_sel = sel.fg_command_done().bit_is_set();
+    let last_command_done_sel = sel.last_command_done().bit_is_set();
+    let command_done_sel = sel.command_done().bit_is_set();
+
+    panic!(
+        "Raised interrupt cpe1 - RFC error! bits={bits},
+
+        internal_error={internal_error},
+        modules_unlocked={modules_unlocked},
+        synth_no_lock={synth_no_lock},
+        irq27={irq27},
+        rx_aborted={rx_aborted},
+        rx_n_data_written={rx_n_data_written},
+        rx_data_written={rx_data_written},
+        rx_entry_done={rx_entry_done},
+        rx_buf_full={rx_buf_full},
+        rx_ctrl_ack={rx_ctrl_ack},
+        rx_ctrl={rx_ctrl},
+        rx_empty={rx_empty},
+        rx_ignored={rx_ignored},
+        rx_nok={rx_nok},
+        rx_ok={rx_ok},
+        irq15={irq15},
+        irq14={irq14},
+        irq13={irq13},
+        irq12={irq12},
+        tx_buffer_changed={tx_buffer_changed},
+        tx_entry_done={tx_entry_done},
+        tx_retrans={tx_retrans},
+        tx_ctrl_ack_ack={tx_ctrl_ack_ack},
+        tx_ctrl_ack={tx_ctrl_ack},
+        tx_ctrl={tx_ctrl},
+        tx_ack={tx_ack},
+        tx_done={tx_done},
+        last_fg_command_done={last_fg_command_done},
+        fg_command_done={fg_command_done},
+        last_command_done={last_command_done},
+        command_done={command_done},
+        ",
+    );
+}
+
 mod cmd {
+    use core::cell::Cell;
+
     use crate::driverlib;
     use kernel::ErrorCode;
-    use tock_cells::volatile_cell::VolatileCell;
+
+    /* RF Radio Op status constants. Field 'status' in Radio Op command struct */
+    pub(super) const RADIO_OP_STATUS_IDLE: u16 = 0x0000;
+    pub(super) const RADIO_OP_STATUS_PENDING: u16 = 0x0001;
+    pub(super) const RADIO_OP_STATUS_ACTIVE: u16 = 0x0002;
+    pub(super) const RADIO_OP_STATUS_SKIPPED: u16 = 0x0003;
+    pub(super) const RADIO_OP_STATUS_DONE_OK: u16 = 0x0400;
+    pub(super) const RADIO_OP_STATUS_DONE_COUNTDOWN: u16 = 0x0401;
+    pub(super) const RADIO_OP_STATUS_DONE_RXERR: u16 = 0x0402;
+    pub(super) const RADIO_OP_STATUS_DONE_TIMEOUT: u16 = 0x0403;
+    pub(super) const RADIO_OP_STATUS_DONE_STOPPED: u16 = 0x0404;
+    pub(super) const RADIO_OP_STATUS_DONE_ABORT: u16 = 0x0405;
+    pub(super) const RADIO_OP_STATUS_ERROR_PAST_START: u16 = 0x0800;
+    pub(super) const RADIO_OP_STATUS_ERROR_START_TRIG: u16 = 0x0801;
+    pub(super) const RADIO_OP_STATUS_ERROR_CONDITION: u16 = 0x0802;
+    pub(super) const RADIO_OP_STATUS_ERROR_PAR: u16 = 0x0803;
+    pub(super) const RADIO_OP_STATUS_ERROR_POINTER: u16 = 0x0804;
+    pub(super) const RADIO_OP_STATUS_ERROR_CMDID: u16 = 0x0805;
+    pub(super) const RADIO_OP_STATUS_ERROR_NO_SETUP: u16 = 0x0807;
+    pub(super) const RADIO_OP_STATUS_ERROR_NO_FS: u16 = 0x0808;
+    pub(super) const RADIO_OP_STATUS_ERROR_SYNTH_PROG: u16 = 0x0809;
+
+    /* Additional Op status values for IEEE mode */
+    pub(super) const RADIO_OP_STATUS_IEEE_SUSPENDED: u16 = 0x2001;
+    pub(super) const RADIO_OP_STATUS_IEEE_DONE_OK: u16 = 0x2400;
+    pub(super) const RADIO_OP_STATUS_IEEE_DONE_BUSY: u16 = 0x2401;
+    pub(super) const RADIO_OP_STATUS_IEEE_DONE_STOPPED: u16 = 0x2402;
+    pub(super) const RADIO_OP_STATUS_IEEE_DONE_ACK: u16 = 0x2403;
+    pub(super) const RADIO_OP_STATUS_IEEE_DONE_ACKPEND: u16 = 0x2404;
+    pub(super) const RADIO_OP_STATUS_IEEE_DONE_TIMEOUT: u16 = 0x2405;
+    pub(super) const RADIO_OP_STATUS_IEEE_DONE_BGEND: u16 = 0x2406;
+    pub(super) const RADIO_OP_STATUS_IEEE_DONE_ABORT: u16 = 0x2407;
+    pub(super) const RADIO_OP_STATUS_ERROR_WRONG_BG: u16 = 0x0806;
+    pub(super) const RADIO_OP_STATUS_IEEE_ERROR_PAR: u16 = 0x2800;
+    pub(super) const RADIO_OP_STATUS_IEEE_ERROR_NO_SETUP: u16 = 0x2801;
+    pub(super) const RADIO_OP_STATUS_IEEE_ERROR_NO_FS: u16 = 0x2802;
+    pub(super) const RADIO_OP_STATUS_IEEE_ERROR_SYNTH_PROG: u16 = 0x2803;
+    pub(super) const RADIO_OP_STATUS_IEEE_ERROR_RXOVF: u16 = 0x2804;
+    pub(super) const RADIO_OP_STATUS_IEEE_ERROR_TXUNF: u16 = 0x2805;
 
     #[must_use]
     #[allow(unused)]
@@ -193,7 +347,10 @@ mod cmd {
                 startTime: 0,
                 startTrigger: driverlib::rfc_CMD_RADIO_SETUP_s__bindgen_ty_1 {
                     _bitfield_1: driverlib::rfc_CMD_RADIO_SETUP_s__bindgen_ty_1::new_bitfield_1(
-                        0, 0, 0, 0,
+                        driverlib::TRIG_NOW as u8,
+                        0,
+                        0,
+                        0,
                     ),
                     ..Default::default()
                 },
@@ -246,7 +403,10 @@ mod cmd {
                 startTime: 0,
                 startTrigger: driverlib::rfc_CMD_SYNC_STOP_RAT_s__bindgen_ty_1 {
                     _bitfield_1: driverlib::rfc_CMD_SYNC_STOP_RAT_s__bindgen_ty_1::new_bitfield_1(
-                        0, 0, 0, 0,
+                        driverlib::TRIG_NOW as u8,
+                        0,
+                        0,
+                        0,
                     ),
                     ..Default::default()
                 },
@@ -276,7 +436,10 @@ mod cmd {
                 startTime: 0,
                 startTrigger: driverlib::rfc_CMD_FS_POWERUP_s__bindgen_ty_1 {
                     _bitfield_1: driverlib::rfc_CMD_FS_POWERUP_s__bindgen_ty_1::new_bitfield_1(
-                        0, 0, 0, 0,
+                        driverlib::TRIG_NOW as u8,
+                        0,
+                        0,
+                        0,
                     ),
                     ..Default::default()
                 },
@@ -306,7 +469,10 @@ mod cmd {
                 startTime: 0,
                 startTrigger: driverlib::rfc_CMD_FS_POWERDOWN_s__bindgen_ty_1 {
                     _bitfield_1: driverlib::rfc_CMD_FS_POWERDOWN_s__bindgen_ty_1::new_bitfield_1(
-                        0, 0, 0, 0,
+                        driverlib::TRIG_NOW as u8,
+                        0,
+                        0,
+                        0,
                     ),
                     ..Default::default()
                 },
@@ -331,8 +497,8 @@ mod cmd {
             pan: u16,
             addr: u16,
             addr_long: [u8; 8],
-            rx_queue: &VolatileCell<super::RfcQueue>,
-            rx_result: &VolatileCell<super::RfcRxOutput>,
+            rx_queue: &Cell<super::RfcQueue>,
+            rx_result: &Cell<super::RfcRxOutput>,
         ) -> Self {
             Self {
                 commandNo: Self::COMMAND_NO,
@@ -341,7 +507,10 @@ mod cmd {
                 startTime: 0,
                 startTrigger: driverlib::rfc_CMD_IEEE_RX_s__bindgen_ty_1 {
                     _bitfield_1: driverlib::rfc_CMD_IEEE_RX_s__bindgen_ty_1::new_bitfield_1(
-                        0, 0, 0, 0,
+                        driverlib::TRIG_NOW as u8,
+                        0,
+                        0,
+                        0,
                     ),
                     ..Default::default()
                 },
@@ -355,7 +524,7 @@ mod cmd {
                 channel,
                 rxConfig: driverlib::rfc_CMD_IEEE_RX_s__bindgen_ty_3 {
                     _bitfield_1: driverlib::rfc_CMD_IEEE_RX_s__bindgen_ty_3::new_bitfield_1(
-                        0, 0, 0, 0, 0, 0, 0, 0,
+                        1, 0, 0, 0, 0, 0, 0, 0,
                     ),
                     ..Default::default()
                 },
@@ -363,23 +532,23 @@ mod cmd {
                 pOutput: unsafe { core::mem::transmute(rx_result) },
                 frameFiltOpt: driverlib::rfc_CMD_IEEE_RX_s__bindgen_ty_4 {
                     _bitfield_1: driverlib::rfc_CMD_IEEE_RX_s__bindgen_ty_4::new_bitfield_1(
-                        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                        0, 0, 1, 0, 0, 0, 0, 0, 2, 0, 0, 0,
                     ),
                     ..Default::default()
                 },
                 frameTypes: driverlib::rfc_CMD_IEEE_RX_s__bindgen_ty_5 {
                     _bitfield_1: driverlib::rfc_CMD_IEEE_RX_s__bindgen_ty_5::new_bitfield_1(
-                        0, 0, 0, 0, 0, 0, 0, 0,
+                        1, 1, 1, 1, 1, 1, 1, 1,
                     ),
                     ..Default::default()
                 },
                 ccaOpt: driverlib::rfc_CMD_IEEE_RX_s__bindgen_ty_6 {
                     _bitfield_1: driverlib::rfc_CMD_IEEE_RX_s__bindgen_ty_6::new_bitfield_1(
-                        0, 0, 0, 0, 0, 0,
+                        1, 1, 1, 1, 0, 3,
                     ),
                     ..Default::default()
                 },
-                ccaRssiThr: 0, // TODO: is it correct? Then ccaEnergy is always BUSY.
+                ccaRssiThr: 0xA6_u8 as i8,
                 __dummy0: 0,
                 numExtEntries: 0,
                 numShortEntries: 0,
@@ -427,7 +596,10 @@ mod cmd {
                 startTime: 0,
                 startTrigger: driverlib::rfc_CMD_IEEE_TX_s__bindgen_ty_1 {
                     _bitfield_1: driverlib::rfc_CMD_IEEE_TX_s__bindgen_ty_1::new_bitfield_1(
-                        0, 0, 0, 0,
+                        driverlib::TRIG_NOW as u8,
+                        0,
+                        0,
+                        0,
                     ),
                     ..Default::default()
                 },
@@ -453,9 +625,9 @@ mod cmd {
 
     pub(crate) const RF_CORE_CMD_CCA_REQ_RSSI_UNKNOWN: i8 = -128;
 
-    pub(crate) const RF_CORE_CMD_CCA_REQ_CCA_STATE_IDLE     : u8 = 0 /* 00 */;
-    pub(crate) const RF_CORE_CMD_CCA_REQ_CCA_STATE_BUSY     : u8 = 1 /* 01 */;
-    pub(crate) const RF_CORE_CMD_CCA_REQ_CCA_STATE_INVALID  : u8 = 2 /* 10 */;
+    pub(crate) const RF_CORE_CMD_CCA_REQ_CCA_STATE_IDLE: u8 = 0; /* 00 */
+    pub(crate) const RF_CORE_CMD_CCA_REQ_CCA_STATE_BUSY: u8 = 1; /* 01 */
+    pub(crate) const RF_CORE_CMD_CCA_REQ_CCA_STATE_INVALID: u8 = 2; /* 10 */
 }
 use cmd::RadioCommand;
 
@@ -536,17 +708,6 @@ mod power {
 }
 use power::{get_power_cfg, PowerOutputConfig, OUTPUT_POWER_MAX};
 
-// #[derive(Debug, Clone, Copy)]
-// enum RadioState {
-//     OFF,
-//     TX,
-//     RX,
-//     ACK,
-// }
-
-// static mut RX_RESULT: RfcRxOutput = Default::default();
-// static mut RX_QUEUE: RfcRxOutput = Default::default();
-
 /// We use a single deferred call for two operations: triggering config clients
 /// and power change clients. This allows us to track which operation we need to
 /// perform when we get the deferred call callback.
@@ -557,6 +718,134 @@ enum DeferredOperation {
     /// Waiting to notify that the power state of the radio changed
     /// (i.e. it turned on or off).
     PowerClientCallback,
+}
+
+impl RfcDataEntryPointer {
+    const STATUS_PENDING: u8 = 0x00; /* Not in use by the Radio CPU */
+    const STATUS_ACTIVE: u8 = 0x01; /* Open for r/w by the radio CPU */
+    const STATUS_BUSY: u8 = 0x02; /* Ongoing r/w */
+    const STATUS_FINISHED: u8 = 0x03; /* Free to use and to free */
+    const STATUS_UNFINISHED: u8 = 0x04; /* Partial RX entry */
+
+    const POINTER_ENTRY_TYPE: u8 = 2;
+
+    fn new(data: *mut RxBuf, length: u16, next_entry: *mut RfcDataEntryPointer) -> Self {
+        Self {
+            pNextEntry: next_entry as *mut u8,
+            status: Self::STATUS_PENDING,
+            config: driverlib::rfc_dataEntryPointer_s__bindgen_ty_1 {
+                _bitfield_align_1: Default::default(),
+                _bitfield_1: driverlib::rfc_dataEntryPointer_s__bindgen_ty_1::new_bitfield_1(
+                    Self::POINTER_ENTRY_TYPE,
+                    // u16 is the type of the field, but little endian allows us
+                    // to ignore the more significant byte.
+                    1,
+                    0,
+                ),
+            },
+            length,
+            pData: data as *mut u8,
+        }
+    }
+}
+
+#[repr(transparent)]
+struct RxBuf([u8; radio::MAX_BUF_SIZE]);
+
+struct RxMachinery {
+    stats: Cell<RfcRxOutput>,
+    queue: Cell<RfcQueue>,
+
+    entry1: RefCell<RfcDataEntryPointer>,
+    entry2: RefCell<RfcDataEntryPointer>,
+    entry3: RefCell<RfcDataEntryPointer>,
+    entry4: RefCell<RfcDataEntryPointer>,
+
+    buf1: RxBuf,
+    buf2: RxBuf,
+    buf3: RxBuf,
+
+    // The buffer that is passed from higher layer upon `RadioData::set_receive_buffer()`.
+    buf_higher_layer: OptionalCell<&'static mut [u8]>,
+}
+
+impl RxMachinery {
+    fn new() -> Self {
+        // const CELL: VolatileCell<u8> = VolatileCell::new(0);
+        fn make_buf() -> RxBuf {
+            RxBuf([0_u8; radio::MAX_BUF_SIZE])
+        }
+        fn make_entry() -> RefCell<RfcDataEntryPointer> {
+            RefCell::new(RfcDataEntryPointer::new(
+                core::ptr::null_mut(),
+                radio::MAX_BUF_SIZE as u16,
+                core::ptr::null_mut(),
+            ))
+        }
+
+        Self {
+            stats: Default::default(),
+            queue: Default::default(),
+            entry1: make_entry(),
+            entry2: make_entry(),
+            entry3: make_entry(),
+            entry4: make_entry(),
+            buf1: make_buf(),
+            buf2: make_buf(),
+            buf3: make_buf(),
+            buf_higher_layer: OptionalCell::empty(),
+        }
+    }
+
+    fn link_entries(&'static mut self) -> &'static mut Self {
+        use core::ops::DerefMut as _;
+
+        // Make entries cycle.
+        self.entry1.borrow_mut().pNextEntry =
+            self.entry2.borrow_mut().deref_mut() as *mut RfcDataEntryPointer as *mut u8;
+        self.entry2.borrow_mut().pNextEntry =
+            self.entry3.borrow_mut().deref_mut() as *mut RfcDataEntryPointer as *mut u8;
+        self.entry3.borrow_mut().pNextEntry =
+            self.entry4.borrow_mut().deref_mut() as *mut RfcDataEntryPointer as *mut u8;
+        self.entry4.borrow_mut().pNextEntry =
+            self.entry1.borrow_mut().deref_mut() as *mut RfcDataEntryPointer as *mut u8;
+
+        // Map entries to buffers.
+        self.entry1.borrow_mut().pData = &mut self.buf1.0 as *mut u8;
+        self.entry2.borrow_mut().pData = &mut self.buf2.0 as *mut u8;
+        self.entry3.borrow_mut().pData = &mut self.buf3.0 as *mut u8;
+        // entry4 is going to be linked to the buffer received eventually from upper layer,
+        // when receive_buf() is called.
+
+        // Setup queue.
+        self.queue.set(RfcQueue {
+            pCurrEntry: self.entry1.borrow_mut().deref_mut() as *mut RfcDataEntryPointer as *mut u8,
+            pLastEntry: core::ptr::null_mut(), // This means cyclic queue.
+        });
+
+        self
+    }
+
+    fn poweroff_cleanup(&self) {
+        /*
+         * Just in case there was an ongoing RX (which started after we begun the
+         * shutdown sequence), we don't want to leave the buffer in state == ongoing
+         */
+        for status in [
+            &mut self.entry1.borrow_mut().status,
+            &mut self.entry2.borrow_mut().status,
+            &mut self.entry3.borrow_mut().status,
+            &mut self.entry4.borrow_mut().status,
+        ] {
+            if *status == RfcDataEntryPointer::STATUS_BUSY {
+                *status = RfcDataEntryPointer::STATUS_PENDING;
+            }
+        }
+    }
+
+    fn set_higher_layer_buffer(&self, buf: &'static mut [u8]) {
+        self.buf_higher_layer.set(buf);
+    }
 }
 
 pub struct Radio<'a> {
@@ -579,7 +868,6 @@ pub struct Radio<'a> {
     // bufs
     tx_buf: TakeCell<'static, [u8]>,
     rx_buf: TakeCell<'static, [u8]>,
-    // ack_buf: TakeCell<'static, [u8]>,
 
     // config
     addr: Cell<u16>,
@@ -589,8 +877,8 @@ pub struct Radio<'a> {
     tx_power: Cell<PowerOutputConfig>,
 
     // rx helpers
-    rx_result: VolatileCell<RfcRxOutput>,
-    rx_queue: VolatileCell<RfcQueue>,
+    rx_cmd: RefCell<cmd::RfcIeeeRx>,
+    rx_machinery: &'static mut RxMachinery,
 
     // deferred call machinery
     deferred_call: DeferredCall,
@@ -603,6 +891,17 @@ impl<'a> Radio<'a> {
         rfc_dbell: cc2650::RFC_DBELL,
         rfc_rat: cc2650::RFC_RAT,
     ) -> Self {
+        let rx_machinery = unsafe { static_init!(RxMachinery, RxMachinery::new()) };
+        let rx_machinery = rx_machinery.link_entries();
+        let rx_cmd = RefCell::new(cmd::RfcIeeeRx::new(
+            Default::default(),
+            Default::default(),
+            Default::default(),
+            Default::default(),
+            &rx_machinery.queue,
+            &rx_machinery.stats,
+        ));
+
         Self {
             rfc_pwr,
             rfc_dbell,
@@ -625,8 +924,8 @@ impl<'a> Radio<'a> {
             channel: Cell::new(RadioChannel::Channel26),
             tx_power: Cell::new(OUTPUT_POWER_MAX),
 
-            rx_result: Default::default(),
-            rx_queue: Default::default(),
+            rx_cmd,
+            rx_machinery,
 
             deferred_call: DeferredCall::new(),
             deferred_call_operation: OptionalCell::empty(),
@@ -812,16 +1111,44 @@ impl<'a> Radio<'a> {
         cmd.send()
     }
 
+    fn tx(&self, buf: &'static mut [u8], frame_len: u8) -> cmd::RadioCmdResult<()> {
+        /*
+         * We are certainly not TXing a frame as a result of CMD_IEEE_TX, but we may
+         * be in the process of TXing an ACK. In that case, wait for the TX to finish
+         * or return after approx TX_WAIT_TIMEOUT.
+         */
+        // TODO: add timeout
+        // t0 = RTIMER_NOW();
+        // FIXME: bring this back
+        // while self.is_transmitting().unwrap()
+        // && (RTIMER_CLOCK_LT(RTIMER_NOW(), t0 + RF_CORE_TX_TIMEOUT))
+        // {}
+
+        self.clear_pending_interrupts();
+        self.enable_tx_interrupt();
+
+        let mut cmd = cmd::RfcIeeeTx::new(buf[radio::PSDU_OFFSET..].as_mut_ptr(), frame_len);
+
+        // Save buf before sending the CMD to prevent races.
+        self.tx_buf.put(Some(buf));
+
+        cmd.send().unwrap();
+
+        Ok(())
+    }
+
     fn rx(&self) -> cmd::RadioCmdResult<()> {
         let mut cmd = cmd::RfcIeeeRx::new(
             self.get_channel(),
             self.get_pan(),
             self.get_address(),
             self.get_address_long(),
-            &self.rx_queue,
-            &self.rx_result,
+            &self.rx_machinery.queue,
+            &self.rx_machinery.stats,
         );
-        cmd.send()
+        cmd.send()?;
+
+        Ok(())
     }
 
     fn cca_req(&self) -> cmd::RadioCmdResult<cmd::RfcIeeeCcaReq> {
@@ -840,23 +1167,61 @@ impl<'a> Radio<'a> {
                 .cpe0()
                 .tx_entry_done()
                 .cpe0()
+                .last_fg_command_done()
+                .cpe0()
+                .fg_command_done()
+                .cpe0()
+                .last_command_done()
+                .cpe0()
+                .command_done()
+                .cpe0()
                 .internal_error()
-                .cpe1()
+                .cpe0()
                 .rx_buf_full()
-                .cpe1()
+                .cpe0()
+                .rx_nok()
+                .cpe0()
+                .rx_ok()
+                .cpe0()
+                .modules_unlocked()
+                .cpe0()
+                .rx_ignored()
+                .cpe0()
+                .boot_done()
+                .cpe0()
+                .synth_no_lock()
+                .cpe0()
+                .irq27()
+                .cpe0()
+                .rx_n_data_written()
+                .cpe0()
+                .rx_data_written()
+                .cpe0()
+                .rx_entry_done()
+                .cpe0()
+                .rx_ctrl_ack()
+                .cpe0()
+                .rx_ctrl()
+                .cpe0()
+                .rx_empty()
+                .cpe0()
+                .rx_aborted()
+                .cpe0()
         });
 
         self.rfc_dbell.rfcpeien.write(|w| {
             w.rx_data_written()
                 .set_bit()
-                .tx_done()
-                .set_bit()
-                .tx_entry_done()
-                .set_bit()
+                // .tx_done()
+                // .set_bit()
+                // .tx_entry_done()
+                // .set_bit()
                 .internal_error()
                 .set_bit()
                 .rx_buf_full()
                 .set_bit()
+                .fg_command_done()
+                .clear_bit()
                 .command_done()
                 .clear_bit()
                 .last_command_done()
@@ -871,10 +1236,20 @@ impl<'a> Radio<'a> {
                 cortexm3::nvic::Nvic::new(crate::peripheral_interrupts::RF_CMD_ACK);
             cmd_ack_interrupt.disable();
             cmd_ack_interrupt.clear_pending();
+
+            let rf_cpe0_interrupt =
+                cortexm3::nvic::Nvic::new(crate::peripheral_interrupts::RF_CPE0);
+            rf_cpe0_interrupt.clear_pending();
+
+            let rf_cpe1_interrupt =
+                cortexm3::nvic::Nvic::new(crate::peripheral_interrupts::RF_CPE1);
+            rf_cpe1_interrupt.clear_pending();
         }
     }
 
     fn enable_interrupts(&self) {
+        self.rfc_dbell.rfcpeifg.write(|w| unsafe { w.bits(0) });
+
         self.cpe0.enable();
         self.cpe1.enable();
     }
@@ -889,6 +1264,22 @@ impl<'a> Radio<'a> {
         self.cpe1.clear_pending();
     }
 
+    fn enable_tx_interrupt(&self) {
+        // self.rfc_dbell
+        //     .rfcpeifg
+        //     .write(|w| w.last_fg_command_done().clear_bit());
+
+        self.rfc_dbell
+            .rfcpeien
+            .modify(|_r, w| w.last_fg_command_done().set_bit());
+    }
+
+    fn disable_tx_interrupt(&self) {
+        self.rfc_dbell
+            .rfcpeien
+            .modify(|_r, w| w.last_fg_command_done().clear_bit());
+    }
+
     pub(crate) fn handle_interrupt_cpe0(&self) {
         // FIXME: disable interrupts
         self.disable_interrupts();
@@ -897,16 +1288,22 @@ impl<'a> Radio<'a> {
         let interrupts = self.rfc_dbell.rfcpeifg.read();
         let tx_done = interrupts.tx_done().bit_is_set();
         let tx_entry_done = interrupts.tx_entry_done().bit_is_set();
+        let last_fg_command_done = interrupts.last_fg_command_done().bit_is_set();
         let rx_data_written = interrupts.rx_data_written().bit_is_set();
         kernel::debug!(
-            "interrupts: tx_done={}, tx_entry_done={}, rx_data_written={}",
+            "interrupts: last_fg_command_done={}, tx_done={}, tx_entry_done={}, rx_data_written={}",
+            last_fg_command_done,
             tx_done,
             tx_entry_done,
             rx_data_written
         );
 
+        self.disable_tx_interrupt();
+
         self.rfc_dbell.rfcpeifg.write(|w| {
             w.tx_done()
+                .clear_bit()
+                .last_fg_command_done()
                 .clear_bit()
                 .tx_entry_done()
                 .clear_bit()
@@ -918,7 +1315,7 @@ impl<'a> Radio<'a> {
         // whether it's RX or TX that has triggered the interrupt.
 
         if let Some(tx_buf) = self.tx_buf.take() {
-            assert!(tx_done);
+            assert!(last_fg_command_done);
             // TX completed
             self.tx_client.map(|client| {
                 client.send_done(
@@ -944,21 +1341,129 @@ impl<'a> Radio<'a> {
                     .map(|client| client.receive(rx_buf, frame_len, lqi, true, Ok(())));
             });
         };
-        // FIXME: enable interrupts
+        //  FIXME: enable interrupts
         self.enable_interrupts();
     }
 
     pub(crate) fn handle_interrupt_cpe1(&self) {
         let interrupts = self.rfc_dbell.rfcpeifg.read();
+
         let internal_error = interrupts.internal_error().bit_is_set();
+        let boot_done = interrupts.boot_done().bit_is_set();
+        let modules_unlocked = interrupts.modules_unlocked().bit_is_set();
+        let synth_no_lock = interrupts.synth_no_lock().bit_is_set();
+        let irq27 = interrupts.irq27().bit_is_set();
+        let rx_aborted = interrupts.rx_aborted().bit_is_set();
+        let rx_n_data_written = interrupts.rx_n_data_written().bit_is_set();
+        let rx_data_written = interrupts.rx_data_written().bit_is_set();
+        let rx_entry_done = interrupts.rx_entry_done().bit_is_set();
         let rx_buf_full = interrupts.rx_buf_full().bit_is_set();
+        let rx_ctrl_ack = interrupts.rx_ctrl_ack().bit_is_set();
+        let rx_ctrl = interrupts.rx_ctrl().bit_is_set();
+        let rx_empty = interrupts.rx_empty().bit_is_set();
+        let rx_ignored = interrupts.rx_ignored().bit_is_set();
+        let rx_nok = interrupts.rx_nok().bit_is_set();
+        let rx_ok = interrupts.rx_ok().bit_is_set();
+        let irq15 = interrupts.irq15().bit_is_set();
+        let irq14 = interrupts.irq14().bit_is_set();
+        let irq13 = interrupts.irq13().bit_is_set();
+        let irq12 = interrupts.irq12().bit_is_set();
+        let tx_buffer_changed = interrupts.tx_buffer_changed().bit_is_set();
+        let tx_entry_done = interrupts.tx_entry_done().bit_is_set();
+        let tx_retrans = interrupts.tx_retrans().bit_is_set();
+        let tx_ctrl_ack_ack = interrupts.tx_ctrl_ack_ack().bit_is_set();
+        let tx_ctrl_ack = interrupts.tx_ctrl_ack().bit_is_set();
+        let tx_ctrl = interrupts.tx_ctrl().bit_is_set();
+        let tx_ack = interrupts.tx_ack().bit_is_set();
+        let tx_done = interrupts.tx_done().bit_is_set();
+        let last_fg_command_done = interrupts.last_fg_command_done().bit_is_set();
+        let fg_command_done = interrupts.fg_command_done().bit_is_set();
+        let last_command_done = interrupts.last_command_done().bit_is_set();
+        let command_done = interrupts.command_done().bit_is_set();
+
+        let bits = interrupts.bits();
+
+        let sel = self.rfc_dbell.rfcpeisl.read();
+        let internal_error_sel = sel.internal_error().bit_is_set();
+        let boot_done_sel = sel.boot_done().bit_is_set();
+        let modules_unlocked_sel = sel.modules_unlocked().bit_is_set();
+        let synth_no_lock_sel = sel.synth_no_lock().bit_is_set();
+        let irq27_sel = sel.irq27().bit_is_set();
+        let rx_aborted_sel = sel.rx_aborted().bit_is_set();
+        let rx_n_data_written_sel = sel.rx_n_data_written().bit_is_set();
+        let rx_data_written_sel = sel.rx_data_written().bit_is_set();
+        let rx_entry_done_sel = sel.rx_entry_done().bit_is_set();
+        let rx_buf_full_sel = sel.rx_buf_full().bit_is_set();
+        let rx_ctrl_ack_sel = sel.rx_ctrl_ack().bit_is_set();
+        let rx_ctrl_sel = sel.rx_ctrl().bit_is_set();
+        let rx_empty_sel = sel.rx_empty().bit_is_set();
+        let rx_ignored_sel = sel.rx_ignored().bit_is_set();
+        let rx_nok_sel = sel.rx_nok().bit_is_set();
+        let rx_ok_sel = sel.rx_ok().bit_is_set();
+        let irq15_sel = sel.irq15().bit_is_set();
+        let irq14_sel = sel.irq14().bit_is_set();
+        let irq13_sel = sel.irq13().bit_is_set();
+        let irq12_sel = sel.irq12().bit_is_set();
+        let tx_buffer_changed_sel = sel.tx_buffer_changed().bit_is_set();
+        let tx_entry_done_sel = sel.tx_entry_done().bit_is_set();
+        let tx_retrans_sel = sel.tx_retrans().bit_is_set();
+        let tx_ctrl_ack_ack_sel = sel.tx_ctrl_ack_ack().bit_is_set();
+        let tx_ctrl_ack_sel = sel.tx_ctrl_ack().bit_is_set();
+        let tx_ctrl_sel = sel.tx_ctrl().bit_is_set();
+        let tx_ack_sel = sel.tx_ack().bit_is_set();
+        let tx_done_sel = sel.tx_done().bit_is_set();
+        let last_fg_command_done_sel = sel.last_fg_command_done().bit_is_set();
+        let fg_command_done_sel = sel.fg_command_done().bit_is_set();
+        let last_command_done_sel = sel.last_command_done().bit_is_set();
+        let command_done_sel = sel.command_done().bit_is_set();
+
         panic!(
-            "Raised interrupt cpe1 - RFC error! internal_error={}, rx_buf_full={}",
-            internal_error, rx_buf_full
+            "Raised interrupt cpe1 - RFC error! bits={bits},
+
+            internal_error  ={internal_error},
+            modules_unlocked={modules_unlocked},
+            synth_no_lock={synth_no_lock},
+            irq27={irq27},
+            rx_aborted={rx_aborted},
+            rx_n_data_written={rx_n_data_written},
+            rx_data_written={rx_data_written},
+            rx_entry_done={rx_entry_done},
+            rx_buf_full={rx_buf_full},
+            rx_ctrl_ack={rx_ctrl_ack},
+            rx_ctrl={rx_ctrl},
+            rx_empty={rx_empty},
+            rx_ignored={rx_ignored},
+            rx_nok={rx_nok},
+            rx_ok={rx_ok},
+            irq15={irq15},
+            irq14={irq14},
+            irq13={irq13},
+            irq12={irq12},
+            tx_buffer_changed={tx_buffer_changed},
+            tx_entry_done={tx_entry_done},
+            tx_retrans={tx_retrans},
+            tx_ctrl_ack_ack={tx_ctrl_ack_ack},
+            tx_ctrl_ack={tx_ctrl_ack},
+            tx_ctrl={tx_ctrl},
+            tx_ack={tx_ack},
+            tx_done={tx_done},
+            last_fg_command_done={last_fg_command_done},
+            fg_command_done={fg_command_done},
+            last_command_done={last_command_done},
+            command_done={command_done},
+            ",
         );
     }
 
     /* Radio management logic */
+
+    fn rx_on(&self) -> bool {
+        if !self.is_on() {
+            return false;
+        }
+
+        self.rx_cmd.borrow().status == cmd::RADIO_OP_STATUS_ACTIVE
+    }
 
     /**
      * \brief Check the RF's TX status
@@ -1043,7 +1548,7 @@ impl<'a> Radio<'a> {
 
         // Begin receiving procedure.
         self.enable_interrupts();
-        self.start_synthesizer().unwrap();
+        // self.start_synthesizer().unwrap();
         self.rx().unwrap();
 
         Ok(())
@@ -1062,10 +1567,16 @@ impl<'a> Radio<'a> {
         unsafe { driverlib::RFCClockDisable() }
         // kernel::debug!("clocks disabled");
 
+        /* We pulled the plug, so we need to restore the status manually */
+        self.rx_cmd.borrow_mut().status = cmd::RADIO_OP_STATUS_IDLE;
+
+        self.rx_machinery.poweroff_cleanup();
+
         Ok(())
     }
 
     fn radio_initialize(&self) {
+        // self.rx_queue.set(RfcQueue{ pCurrEntry: core::ptr::addr_of!(self.rx_entry) as *mut u8, pLastEntry: core::ptr::null_mut() });
         self.configure_interrupts();
         // self.radio_off().unwrap();
     }
@@ -1218,23 +1729,7 @@ impl<'a> RadioData<'a> for Radio<'a> {
             return Err((ErrorCode::INVAL, buf));
         };
 
-        /*
-         * We are certainly not TXing a frame as a result of CMD_IEEE_TX, but we may
-         * be in the process of TXing an ACK. In that case, wait for the TX to finish
-         * or return after approx TX_WAIT_TIMEOUT.
-         */
-        // TODO: add timeout
-        // t0 = RTIMER_NOW();
-        while self.is_transmitting().unwrap()
-        // && (RTIMER_CLOCK_LT(RTIMER_NOW(), t0 + RF_CORE_TX_TIMEOUT))
-        {}
-
-        let mut cmd = cmd::RfcIeeeTx::new(buf[radio::PSDU_OFFSET..].as_mut_ptr(), frame_len);
-
-        // Save buf before sending the CMD to prevent races.
-        self.tx_buf.put(Some(buf));
-
-        cmd.send().unwrap();
+        self.tx(buf, frame_len).unwrap();
 
         Ok(())
     }
