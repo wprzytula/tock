@@ -46,17 +46,9 @@ impl<'a> Cc2650<'a> {
         // (other similar chips use different modes).
         prcm.rfc_modesel_configure();
 
-        prcm.enable_domains(prcm::PowerDomains::empty().peripherals().serial().rfc());
+        prcm.enable_domains(prcm::PowerDomains::empty().peripherals().serial());
 
-        prcm.enable_clocks(
-            prcm::Clocks::empty()
-                .gpio()
-                .uart()
-                .gpt()
-                .dma()
-                .crypto()
-                .rfc(),
-        );
+        prcm.enable_clocks(prcm::Clocks::empty().gpio().uart().gpt().dma().crypto());
 
         let udma = Udma::new(peripherals.UDMA0);
         udma.enable();

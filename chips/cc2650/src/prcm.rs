@@ -99,7 +99,7 @@ impl Prcm {
     }
 
     #[inline]
-    fn are_enabled(domains: PowerDomains) -> bool {
+    pub fn are_enabled(domains: PowerDomains) -> bool {
         let status = unsafe { driverlib::PRCMPowerDomainStatus(domains.into()) };
         status & driverlib::PRCM_DOMAIN_POWER_ON != 0
     }
@@ -165,7 +165,7 @@ impl Clocks {
     }
 }
 
-struct Clock;
+pub(crate) struct Clock;
 
 impl Clock {
     fn reload_clock_controller(clkloadctl: &cc2650::prcm::CLKLOADCTL) {
@@ -182,7 +182,7 @@ impl Clock {
         }
     }
 
-    fn enable_clocks(prcm: &cc2650::PRCM, clocks: Clocks) {
+    pub(crate) fn enable_clocks(prcm: &cc2650::prcm::RegisterBlock, clocks: Clocks) {
         if clocks.gpio {
             prcm.gpioclkgr.write(|w| w.clk_en().set_bit());
             prcm.gpioclkgs.write(|w| w.clk_en().set_bit());
@@ -221,6 +221,49 @@ impl Clock {
 
         if clocks.rfc {
             prcm.rfcclkg.write(|w| w.clk_en().set_bit());
+        }
+        Self::reload_clock_controller(&prcm.clkloadctl);
+    }
+
+    pub(crate) fn disable_clocks(prcm: &cc2650::prcm::RegisterBlock, clocks: Clocks) {
+        if clocks.gpio {
+            prcm.gpioclkgr.write(|w| w.clk_en().clear_bit());
+            prcm.gpioclkgs.write(|w| w.clk_en().clear_bit());
+            prcm.gpioclkgds.write(|w| w.clk_en().clear_bit());
+        }
+        if clocks.uart {
+            prcm.uartclkgr.write(|w| w.clk_en().clear_bit());
+            prcm.uartclkgs.write(|w| w.clk_en().clear_bit());
+            prcm.uartclkgds.write(|w| w.clk_en().clear_bit());
+        }
+        if clocks.gpt {
+            prcm.gptclkgr.write(|w| w);
+            prcm.gptclkgs.write(|w| w);
+            prcm.gptclkgds.write(|w| w);
+        }
+        if clocks.dma || clocks.crypto {
+            prcm.secdmaclkgr.write(|w| {
+                w.dma_clk_en()
+                    .bit(!clocks.dma)
+                    .crypto_clk_en()
+                    .bit(!clocks.crypto)
+            });
+            prcm.secdmaclkgs.write(|w| {
+                w.dma_clk_en()
+                    .bit(!clocks.dma)
+                    .crypto_clk_en()
+                    .bit(!clocks.crypto)
+            });
+            prcm.secdmaclkgds.write(|w| {
+                w.dma_clk_en()
+                    .bit(!clocks.dma)
+                    .crypto_clk_en()
+                    .bit(!clocks.crypto)
+            });
+        }
+
+        if clocks.rfc {
+            prcm.rfcclkg.write(|w| w.clk_en().clear_bit());
         }
         Self::reload_clock_controller(&prcm.clkloadctl);
     }

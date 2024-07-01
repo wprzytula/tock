@@ -46,6 +46,7 @@ impl DriverlibBuilder {
     fn new(out: PathBuf) -> Self {
         let driverlib_path = PathBuf::from(env::var_os("DRIVERLIB_PATH").unwrap_or_else(|| {
             OsString::from("/home/xps15/Studia/Sem8/Tock/driverlib/cc26x0/driverlib")
+            // FIXME: don't use such hardcoded path.
         }));
 
         let cc2650_crate_root = PathBuf::from(std::env::var_os("CARGO_MANIFEST_DIR").unwrap());

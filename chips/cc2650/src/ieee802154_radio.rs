@@ -1,7 +1,11 @@
 use crate::driverlib;
+use crate::prcm::Clock;
+use crate::prcm::Clocks;
+use crate::prcm::Prcm;
+use core::borrow::Borrow;
 use core::cell::Cell;
 use core::cell::RefCell;
-use core::marker::PhantomData;
+use core::cell::UnsafeCell;
 use cortexm3::nvic::Nvic;
 use driverlib::dataQueue_t as RfcQueue;
 use driverlib::rfc_dataEntryPointer_s as RfcDataEntryPointer;
@@ -26,9 +30,9 @@ pub(crate) unsafe extern "C" fn rfc_cmd_ack_handler() {
 }
 
 mod cmd {
+    use super::{driverlib, RfcDataEntryPointer, RfcQueue};
     use core::cell::Cell;
 
-    use crate::driverlib;
     use kernel::ErrorCode;
 
     /* RF Radio Op status constants. Field 'status' in Radio Op command struct */
@@ -122,6 +126,92 @@ mod cmd {
 
     pub(super) type RadioCmdResult<T> = Result<T, RadioCmdStatus>;
 
+    #[derive(Debug, Clone, Copy)]
+    #[repr(u16)]
+    pub(super) enum RadioOpStatus {
+        /* Operation Not Finished */
+        IDLE = 0x0000,    // Operation has not started.
+        PENDING = 0x0001, // Waiting for a start trigger.
+        ACTIVE = 0x0002,  // Running an operation.
+        SKIPPED = 0x0003, // Operation skipped due to condition in another command.
+        /* Operation Finished Normally */
+        DONE_OK = 0x0400,        // Operation ended normally.
+        DONE_COUNTDOWN = 0x0401, // Counter reached zero.
+        DONE_RXERR = 0x0402,     // Operation ended with CRC error.
+        DONE_TIMEOUT = 0x0403,   // Operation ended with time-out.
+        DONE_STOPPED = 0x0404,   // Operation stopped after CMD_STOP command.
+        DONE_ABORT = 0x0405,     // Operation aborted by CMD_ABORT command.
+        /* Operation Finished With Error */
+        ERROR_PAST_START = 0x0800, // The start trigger occurred in the past.
+        ERROR_START_TRIG = 0x0801, // Illegal start trigger parameter.
+        ERROR_CONDITION = 0x0802,  // Illegal condition for next operation.
+        ERROR_PAR = 0x0803,        // Error in a command specific parameter.
+        ERROR_POINTER = 0x0804,    // Invalid pointer to next operation.
+        ERROR_CMDID = 0x0805, // The next operation has a command ID that is undefined or not a radio operation command.
+        ERROR_NO_SETUP = 0x0807, // Operation using RX, TX, or synthesizer attempted without CMD_RADIO_SETUP.
+        ERROR_NO_FS = 0x0808, // Operation using RX or TX attempted without the synthesizer being programmed or powered on.
+        ERROR_SYNTH_PROG = 0x0809, // Synthesizer programming failed.
+        ERROR_TXUNF = 0x080A, // Modem TX underflow observed.
+        ERROR_RXOVF = 0x080B, // Modem RX overflow observed.
+        ERROR_NO_RX = 0x080C, // Data requested from last RX when no such data exists.
+    }
+
+    pub(super) type RadioOpResult<T> = Result<T, RadioOpStatus>;
+
+    impl RadioOpStatus {
+        pub(super) fn finished(&self) -> bool {
+            match self {
+                RadioOpStatus::IDLE | RadioOpStatus::PENDING | RadioOpStatus::ACTIVE => false,
+                RadioOpStatus::SKIPPED
+                | RadioOpStatus::DONE_OK
+                | RadioOpStatus::DONE_COUNTDOWN
+                | RadioOpStatus::DONE_RXERR
+                | RadioOpStatus::DONE_TIMEOUT
+                | RadioOpStatus::DONE_STOPPED
+                | RadioOpStatus::DONE_ABORT
+                | RadioOpStatus::ERROR_PAST_START
+                | RadioOpStatus::ERROR_START_TRIG
+                | RadioOpStatus::ERROR_CONDITION
+                | RadioOpStatus::ERROR_PAR
+                | RadioOpStatus::ERROR_POINTER
+                | RadioOpStatus::ERROR_CMDID
+                | RadioOpStatus::ERROR_NO_SETUP
+                | RadioOpStatus::ERROR_NO_FS
+                | RadioOpStatus::ERROR_SYNTH_PROG
+                | RadioOpStatus::ERROR_TXUNF
+                | RadioOpStatus::ERROR_RXOVF
+                | RadioOpStatus::ERROR_NO_RX => true,
+            }
+        }
+
+        pub(super) fn to_result(self) -> RadioOpResult<()> {
+            match self {
+                RadioOpStatus::IDLE | RadioOpStatus::PENDING | RadioOpStatus::ACTIVE => {
+                    unreachable!()
+                }
+                RadioOpStatus::DONE_OK => Ok(()),
+                RadioOpStatus::SKIPPED
+                | RadioOpStatus::DONE_COUNTDOWN
+                | RadioOpStatus::DONE_RXERR
+                | RadioOpStatus::DONE_TIMEOUT
+                | RadioOpStatus::DONE_STOPPED
+                | RadioOpStatus::DONE_ABORT
+                | RadioOpStatus::ERROR_PAST_START
+                | RadioOpStatus::ERROR_START_TRIG
+                | RadioOpStatus::ERROR_CONDITION
+                | RadioOpStatus::ERROR_PAR
+                | RadioOpStatus::ERROR_POINTER
+                | RadioOpStatus::ERROR_CMDID
+                | RadioOpStatus::ERROR_NO_SETUP
+                | RadioOpStatus::ERROR_NO_FS
+                | RadioOpStatus::ERROR_SYNTH_PROG
+                | RadioOpStatus::ERROR_TXUNF
+                | RadioOpStatus::ERROR_RXOVF
+                | RadioOpStatus::ERROR_NO_RX => Err(self),
+            }
+        }
+    }
+
     pub(super) trait RadioCommand {
         const COMMAND_NO: u16;
 
@@ -159,7 +249,7 @@ mod cmd {
         pub(super) fn new(tx_power: u16) -> Self {
             Self {
                 commandNo: Self::COMMAND_NO,
-                status: 0,
+                status: RadioOpStatus::IDLE as u16,
                 pNextOp: core::ptr::null_mut(),
                 startTime: 0,
                 startTrigger: driverlib::rfc_CMD_RADIO_SETUP_s__bindgen_ty_1 {
@@ -215,7 +305,7 @@ mod cmd {
         pub(super) fn new() -> Self {
             Self {
                 commandNo: Self::COMMAND_NO,
-                status: 0,
+                status: RadioOpStatus::IDLE as u16,
                 pNextOp: core::ptr::null_mut(),
                 startTime: 0,
                 startTrigger: driverlib::rfc_CMD_SYNC_STOP_RAT_s__bindgen_ty_1 {
@@ -248,7 +338,7 @@ mod cmd {
         pub(super) fn new() -> Self {
             Self {
                 commandNo: Self::COMMAND_NO,
-                status: 0,
+                status: RadioOpStatus::IDLE as u16,
                 pNextOp: core::ptr::null_mut(),
                 startTime: 0,
                 startTrigger: driverlib::rfc_CMD_FS_POWERUP_s__bindgen_ty_1 {
@@ -281,7 +371,7 @@ mod cmd {
         pub(super) fn new() -> Self {
             Self {
                 commandNo: Self::COMMAND_NO,
-                status: 0,
+                status: RadioOpStatus::IDLE as u16,
                 pNextOp: core::ptr::null_mut(),
                 startTime: 0,
                 startTrigger: driverlib::rfc_CMD_FS_POWERDOWN_s__bindgen_ty_1 {
@@ -319,7 +409,7 @@ mod cmd {
         ) -> Self {
             Self {
                 commandNo: Self::COMMAND_NO,
-                status: 0,
+                status: RadioOpStatus::IDLE as u16,
                 pNextOp: core::ptr::null_mut(),
                 startTime: 0,
                 startTrigger: driverlib::rfc_CMD_IEEE_RX_s__bindgen_ty_1 {
@@ -408,7 +498,7 @@ mod cmd {
         pub(super) fn new(payload: *mut u8, payload_len: u8) -> Self {
             Self {
                 commandNo: Self::COMMAND_NO,
-                status: 0,
+                status: RadioOpStatus::IDLE as u16,
                 pNextOp: core::ptr::null_mut(),
                 startTime: 0,
                 startTrigger: driverlib::rfc_CMD_IEEE_TX_s__bindgen_ty_1 {
@@ -436,6 +526,57 @@ mod cmd {
                 payloadLen: payload_len,
                 pPayload: payload,
                 timeStamp: 0,
+            }
+        }
+    }
+
+    /// On reception, the radio CPU appends the provided data entry to the queue indicated. The radio CPU
+    /// performs the following operations:
+    /// ```
+    /// Set pQueue-> pLastEntry-> pNextEntry = pEntry
+    /// Set pQueue-> pLastEntry = pEntry
+    /// ```
+    /// If either of the pointers pQueue or pEntry are invalid (that is, in an address range that is not memory or
+    /// without 32-bit word alignment), the command fails, and the radio CPU sets the result byte of CMDSTA to
+    /// ParError. If the queue specified in pQueue is set up not to allow entries to be appended (see
+    /// Section 23.3.2.7.1), the command fails, and the radio CPU sets the result byte of CMDSTA to QueueError.
+    pub(crate) use driverlib::rfc_CMD_ADD_DATA_ENTRY_s as AddDataEntry;
+    impl RadioCommand for AddDataEntry {
+        const COMMAND_NO: u16 = driverlib::CMD_ADD_DATA_ENTRY as u16;
+    }
+    impl AddDataEntry {
+        pub(super) fn new(queue: *mut RfcQueue, entry: &mut RfcDataEntryPointer) -> Self {
+            Self {
+                commandNo: Self::COMMAND_NO,
+                __dummy0: Default::default(),
+                pQueue: queue,
+                pEntry: entry as *mut RfcDataEntryPointer as *mut u8,
+            }
+        }
+    }
+
+    /// On reception, the radio CPU removes the first data entry from the queue indicated. The command returns
+    /// a pointer to the entry that was removed. The radio CPU performs the following operations:
+    /// ```
+    /// Set pEntry = pQueue->pCurrEntry
+    /// Set pQueue->pCurrEntry = pEntry->pNextEntry
+    /// Set pEntry->status = Finished
+    /// ```
+    /// If the pointer pQueue is invalid, the command fails, and the radio CPU sets the result byte of CMDSTA to
+    /// ParError. If the queue specified in pQueue is empty, the command fails, and the radio CPU sets the result
+    /// byte of CMDSTA to QueueError. If the entry to be removed is in the BUSY state, the command fails, and
+    /// the radio CPU sets the result byte of CMDSTA to QueueBusy.
+    pub(crate) use driverlib::rfc_CMD_REMOVE_DATA_ENTRY_s as RemoveDataEntry;
+    impl RadioCommand for RemoveDataEntry {
+        const COMMAND_NO: u16 = driverlib::CMD_REMOVE_DATA_ENTRY as u16;
+    }
+    impl RemoveDataEntry {
+        pub(super) fn new(queue: &mut RfcQueue) -> Self {
+            Self {
+                commandNo: Self::COMMAND_NO,
+                __dummy0: Default::default(),
+                pQueue: queue,
+                pEntry: core::ptr::null_mut(), // R parameter
             }
         }
     }
@@ -524,6 +665,7 @@ mod power {
     }
 }
 use power::{get_power_cfg, PowerOutputConfig, OUTPUT_POWER_MAX};
+use tock_cells::volatile_cell::VolatileCell;
 
 /// We use a single deferred call for two operations: triggering config clients
 /// and power change clients. This allows us to track which operation we need to
@@ -566,31 +708,38 @@ impl RfcDataEntryPointer {
     }
 }
 
-#[repr(transparent)]
-struct RxBuf([u8; radio::MAX_BUF_SIZE]);
+impl RfcQueue {
+    /// Set pQueue-> pLastEntry-> pNextEntry = pEntry
+    /// Set pQueue-> pLastEntry = pEntry
+    fn append_entry(&mut self, entry: &RfcDataEntryPointer) {
+        let last_entry = unsafe {
+            (self.pLastEntry as *mut RfcDataEntryPointer)
+                .as_mut()
+                .unwrap()
+        };
+        last_entry.pNextEntry = entry as *const RfcDataEntryPointer as *mut u8;
+        self.pLastEntry = entry as *const RfcDataEntryPointer as *mut u8;
+    }
+}
+
+type RxBuf = [u8; radio::MAX_BUF_SIZE];
 
 struct RxMachinery {
     stats: Cell<RfcRxOutput>,
     queue: Cell<RfcQueue>,
-
-    entry1: RefCell<RfcDataEntryPointer>,
-    entry2: RefCell<RfcDataEntryPointer>,
-    entry3: RefCell<RfcDataEntryPointer>,
-    entry4: RefCell<RfcDataEntryPointer>,
-
-    buf1: RxBuf,
-    buf2: RxBuf,
-    buf3: RxBuf,
-
-    // The buffer that is passed from higher layer upon `RadioData::set_receive_buffer()`.
-    buf_higher_layer: OptionalCell<&'static mut [u8]>,
+    bufs: [(RefCell<RfcDataEntryPointer>, TakeCell<'static, [u8]>); Self::N_BUFS],
+    next_finished: Cell<usize>,
 }
 
+const _N_BUFS_ASSERTION: () = assert!(RxMachinery::N_BUFS >= 2, "At least 2 RX bufs are needed");
+
 impl RxMachinery {
+    const N_BUFS: usize = 2;
+
     fn new() -> Self {
         // const CELL: VolatileCell<u8> = VolatileCell::new(0);
-        fn make_buf() -> RxBuf {
-            RxBuf([0_u8; radio::MAX_BUF_SIZE])
+        fn make_buf() -> &'static mut RxBuf {
+            unsafe { static_init!(RxBuf, [0_u8; radio::MAX_BUF_SIZE]) }
         }
         fn make_entry() -> RefCell<RfcDataEntryPointer> {
             RefCell::new(RfcDataEntryPointer::new(
@@ -603,41 +752,47 @@ impl RxMachinery {
         Self {
             stats: Default::default(),
             queue: Default::default(),
-            entry1: make_entry(),
-            entry2: make_entry(),
-            entry3: make_entry(),
-            entry4: make_entry(),
-            buf1: make_buf(),
-            buf2: make_buf(),
-            buf3: make_buf(),
-            buf_higher_layer: OptionalCell::empty(),
+            bufs: core::array::from_fn(|idx| {
+                (
+                    make_entry(),
+                    // The last buffer is going to be given from the layer above HIL,
+                    // by `RadioData::set_receive_buffer()`.
+                    if idx + 1 < Self::N_BUFS {
+                        TakeCell::new(make_buf().as_mut_slice())
+                    } else {
+                        TakeCell::empty()
+                    },
+                )
+            }),
+            next_finished: Cell::new(0),
         }
     }
 
     fn link_entries(&'static mut self) -> &'static mut Self {
         use core::ops::DerefMut as _;
 
-        // Make entries cycle.
-        self.entry1.borrow_mut().pNextEntry =
-            self.entry2.borrow_mut().deref_mut() as *mut RfcDataEntryPointer as *mut u8;
-        self.entry2.borrow_mut().pNextEntry =
-            self.entry3.borrow_mut().deref_mut() as *mut RfcDataEntryPointer as *mut u8;
-        self.entry3.borrow_mut().pNextEntry =
-            self.entry4.borrow_mut().deref_mut() as *mut RfcDataEntryPointer as *mut u8;
-        self.entry4.borrow_mut().pNextEntry =
-            self.entry1.borrow_mut().deref_mut() as *mut RfcDataEntryPointer as *mut u8;
+        // Link entries without cycles
+        for window in self.bufs.windows(2) {
+            let (entry1, _buf1) = &window[0];
+            let (entry2, _buf2) = &window[1];
 
-        // Map entries to buffers.
-        self.entry1.borrow_mut().pData = &mut self.buf1.0 as *mut u8;
-        self.entry2.borrow_mut().pData = &mut self.buf2.0 as *mut u8;
-        self.entry3.borrow_mut().pData = &mut self.buf3.0 as *mut u8;
-        // entry4 is going to be linked to the buffer received eventually from upper layer,
-        // when receive_buf() is called.
+            entry1.borrow_mut().pNextEntry =
+                entry2.borrow_mut().deref_mut() as *mut RfcDataEntryPointer as *mut u8;
+        }
+
+        for (entry, buf) in self.bufs[..Self::N_BUFS - 1].iter_mut() {
+            entry.get_mut().pData = buf.get_mut().unwrap() as *mut [u8] as *mut u8;
+        }
+
+        // The last entry is going to be linked to the buffer received eventually from upper layer,
+        // when `RadioData::set_receive_buf()` is called.
 
         // Setup queue.
         self.queue.set(RfcQueue {
-            pCurrEntry: self.entry1.borrow_mut().deref_mut() as *mut RfcDataEntryPointer as *mut u8,
-            pLastEntry: core::ptr::null_mut(), // This means cyclic queue.
+            pCurrEntry: self.bufs.first_mut().as_mut().unwrap().0.get_mut()
+                as *mut RfcDataEntryPointer as *mut u8,
+            pLastEntry: self.bufs.last_mut().as_mut().unwrap().0.get_mut()
+                as *mut RfcDataEntryPointer as *mut u8,
         });
 
         self
@@ -645,23 +800,56 @@ impl RxMachinery {
 
     fn poweroff_cleanup(&self) {
         /*
-         * Just in case there was an ongoing RX (which started after we begun the
+         * Just in case there was an ongoing RX (which started after we began the
          * shutdown sequence), we don't want to leave the buffer in state == ongoing
          */
-        for status in [
-            &mut self.entry1.borrow_mut().status,
-            &mut self.entry2.borrow_mut().status,
-            &mut self.entry3.borrow_mut().status,
-            &mut self.entry4.borrow_mut().status,
-        ] {
+        for (entry, _buf) in self.bufs.iter() {
+            let status = &mut entry.borrow_mut().status;
             if *status == RfcDataEntryPointer::STATUS_BUSY {
                 *status = RfcDataEntryPointer::STATUS_PENDING;
             }
         }
     }
 
-    fn set_higher_layer_buffer(&self, buf: &'static mut [u8]) {
-        self.buf_higher_layer.set(buf);
+    fn set_higher_layer_buffer(&self, buf: &'static mut [u8], radio_is_on: bool) {
+        use core::ops::{Deref as _, DerefMut as _};
+
+        if let Some((entry, buf_slot)) = self.bufs.iter().find(|(_entry, buf)| buf.is_none()) {
+            if radio_is_on {
+                // Radio is on, so to prevent races we employ itself to add the entry to the queue.
+                let mut cmd = cmd::AddDataEntry::new(
+                    &self.queue as *const Cell<RfcQueue> as *mut RfcQueue,
+                    entry.borrow_mut().deref_mut(),
+                );
+                cmd.send().unwrap();
+            } else {
+                // Radio is off, so we cannot use cmds.
+                // Instead, let's add the entry to the queue manually.
+                let mut queue = self.queue.get();
+                queue.append_entry(entry.borrow().deref());
+                self.queue.set(queue);
+            }
+            buf_slot.replace(buf);
+        } else {
+            let last_entry_ptr = self.queue.get().pLastEntry as *const RfcDataEntryPointer;
+            let (_entry, buf_slot) = self
+                .bufs
+                .iter()
+                .find(|(entry, _buf)| {
+                    entry.borrow().deref() as *const RfcDataEntryPointer == last_entry_ptr
+                })
+                .unwrap();
+            buf_slot.replace(buf);
+        }
+    }
+
+    fn take_finished(&self) -> Option<&'static mut [u8]> {
+        let next_finished = self.next_finished.get();
+        let (entry, buf_slot) = &self.bufs[next_finished];
+        (entry.borrow().status == RfcDataEntryPointer::STATUS_FINISHED).then(|| {
+            self.next_finished.set(next_finished + 1);
+            buf_slot.take().unwrap()
+        })
     }
 }
 
@@ -682,16 +870,16 @@ pub struct Radio<'a> {
     rx_client: OptionalCell<&'a dyn radio::RxClient>,
     tx_client: OptionalCell<&'a dyn radio::TxClient>,
 
-    // bufs
-    tx_buf: TakeCell<'static, [u8]>,
-    rx_buf: TakeCell<'static, [u8]>,
-
     // config
     addr: Cell<u16>,
     addr_long: Cell<[u8; 8]>,
     pan: Cell<u16>,
     channel: Cell<RadioChannel>,
     tx_power: Cell<PowerOutputConfig>,
+
+    // tx helpers
+    tx_buf: TakeCell<'static, [u8]>,
+    tx_cmd: RefCell<cmd::IeeeTx>,
 
     // rx helpers
     rx_cmd: RefCell<cmd::IeeeRx>,
@@ -719,6 +907,8 @@ impl<'a> Radio<'a> {
             &rx_machinery.stats,
         ));
 
+        let tx_cmd = RefCell::new(cmd::IeeeTx::new(core::ptr::null_mut(), Default::default()));
+
         Self {
             rfc_pwr,
             rfc_dbell,
@@ -733,7 +923,7 @@ impl<'a> Radio<'a> {
             tx_client: OptionalCell::empty(),
 
             tx_buf: TakeCell::empty(),
-            rx_buf: TakeCell::empty(),
+            tx_cmd,
 
             addr: Cell::new(0),
             addr_long: Cell::new([0x00; 8]),
@@ -758,8 +948,20 @@ impl<'a> Radio<'a> {
     }
 
     fn setup(&self) -> cmd::RadioCmdResult<()> {
-        let mut cmd = cmd::RadioSetup::new(self.tx_power.get().tx_power);
-        cmd.send()
+        let mut cmd = UnsafeCell::new(cmd::RadioSetup::new(self.tx_power.get().tx_power));
+        cmd.get_mut().send()?;
+
+        // Synchronously wait until radio setup finishes.
+        let status = loop {
+            let status: cmd::RadioOpStatus =
+                unsafe { core::mem::transmute((cmd.get().read_volatile()).status) };
+            if status.finished() {
+                break status;
+            }
+        };
+        status.to_result().unwrap();
+
+        Ok(())
     }
 
     fn start_rat(&self) -> cmd::RadioCmdResult<()> {
@@ -796,21 +998,35 @@ impl<'a> Radio<'a> {
         // {}
 
         self.clear_pending_interrupts();
-        self.enable_tx_interrupt();
+        self.clear_and_enable_tx_interrupt();
 
-        let mut cmd = cmd::IeeeTx::new(buf[radio::PSDU_OFFSET..].as_mut_ptr(), frame_len);
+        let mut cmd = self.tx_cmd.borrow_mut();
+        *cmd = cmd::IeeeTx::new(buf[radio::PSDU_OFFSET..].as_mut_ptr(), frame_len);
 
         // Save buf before sending the CMD to prevent races.
         self.tx_buf.put(Some(buf));
 
         cmd.send().unwrap();
+        // core::mem::drop(cmd);
+
+        // // Synchronously wait until TX finishes.
+        // let status = loop {
+        //     let status: cmd::RadioOpStatus =
+        //         unsafe { core::mem::transmute(self.tx_cmd.as_ptr().read_volatile().status) };
+        //     if status.finished() {
+        //         break status;
+        //     }
+        // };
+        // status
+        //     .to_result()
+        //     .unwrap_or_else(|err| panic!("Got TX result: {} = {:?}", status as u16, err));
 
         Ok(())
     }
 
     fn rx(&self) -> cmd::RadioCmdResult<()> {
-        let mut rx = self.rx_cmd.borrow_mut();
-        *rx = cmd::IeeeRx::new(
+        let mut cmd = self.rx_cmd.borrow_mut();
+        *cmd = cmd::IeeeRx::new(
             self.get_channel(),
             self.get_pan(),
             self.get_address(),
@@ -818,7 +1034,7 @@ impl<'a> Radio<'a> {
             &self.rx_machinery.queue,
             &self.rx_machinery.stats,
         );
-        rx.send()?;
+        cmd.send().unwrap();
 
         Ok(())
     }
@@ -848,7 +1064,7 @@ impl<'a> Radio<'a> {
                 .command_done()
                 .cpe0()
                 .internal_error()
-                .cpe0()
+                .cpe1()
                 .rx_buf_full()
                 .cpe0()
                 .rx_nok()
@@ -856,15 +1072,15 @@ impl<'a> Radio<'a> {
                 .rx_ok()
                 .cpe0()
                 .modules_unlocked()
-                .cpe0()
+                .cpe1()
                 .rx_ignored()
                 .cpe0()
                 .boot_done()
                 .cpe0()
                 .synth_no_lock()
-                .cpe0()
+                .cpe1()
                 .irq27()
-                .cpe0()
+                .cpe1()
                 .rx_n_data_written()
                 .cpe0()
                 .rx_data_written()
@@ -882,7 +1098,7 @@ impl<'a> Radio<'a> {
         });
 
         self.rfc_dbell.rfcpeien.write(|w| {
-            w.rx_data_written()
+            w.rx_entry_done()
                 .set_bit()
                 // .tx_done()
                 // .set_bit()
@@ -936,10 +1152,12 @@ impl<'a> Radio<'a> {
         self.cpe1.clear_pending();
     }
 
-    fn enable_tx_interrupt(&self) {
-        // self.rfc_dbell
-        //     .rfcpeifg
-        //     .write(|w| w.last_fg_command_done().clear_bit());
+    fn clear_and_enable_tx_interrupt(&self) {
+        self.rfc_dbell.rfcpeifg.write(|w| {
+            unsafe { w.bits(-1_i32 as u32) }
+                .last_fg_command_done()
+                .clear_bit()
+        });
 
         self.rfc_dbell
             .rfcpeien
@@ -959,27 +1177,24 @@ impl<'a> Radio<'a> {
 
         let interrupts = self.rfc_dbell.rfcpeifg.read();
         let tx_done = interrupts.tx_done().bit_is_set();
-        let tx_entry_done = interrupts.tx_entry_done().bit_is_set();
         let last_fg_command_done = interrupts.last_fg_command_done().bit_is_set();
-        let rx_data_written = interrupts.rx_data_written().bit_is_set();
+        let rx_entry_done = interrupts.rx_entry_done().bit_is_set();
         kernel::debug!(
-            "interrupts: last_fg_command_done={}, tx_done={}, tx_entry_done={}, rx_data_written={}",
+            "interrupts: last_fg_command_done={}, tx_done={}, rx_entry_done={}",
             last_fg_command_done,
             tx_done,
-            tx_entry_done,
-            rx_data_written
+            rx_entry_done
         );
 
         self.disable_tx_interrupt();
 
         self.rfc_dbell.rfcpeifg.write(|w| {
-            w.tx_done()
+            unsafe { w.bits(-1_i32 as u32) }
+                .tx_done()
                 .clear_bit()
                 .last_fg_command_done()
                 .clear_bit()
-                .tx_entry_done()
-                .clear_bit()
-                .rx_data_written()
+                .rx_entry_done()
                 .clear_bit()
         });
 
@@ -988,6 +1203,11 @@ impl<'a> Radio<'a> {
 
         if let Some(tx_buf) = self.tx_buf.take() {
             assert!(last_fg_command_done);
+            let status: cmd::RadioOpStatus =
+                unsafe { core::mem::transmute(self.tx_cmd.borrow().status) };
+            assert!(status.finished());
+            status.to_result().unwrap();
+
             // TX completed
             self.tx_client.map(|client| {
                 client.send_done(
@@ -997,9 +1217,9 @@ impl<'a> Radio<'a> {
                 )
             });
         } else {
-            assert!(rx_data_written);
+            assert!(rx_entry_done);
             // RX completed
-            self.rx_buf.take().map(|rx_buf| {
+            self.rx_machinery.take_finished().map(|rx_buf| {
                 let data_len = (rx_buf[radio::PHR_OFFSET] & 0x7F) as usize;
 
                 // LQI is found just after the data received.
@@ -1154,7 +1374,19 @@ impl<'a> Radio<'a> {
         unsafe {
             driverlib::OSCHF_TurnOnXosc();
         }
-        while unsafe { !driverlib::OSCHF_AttemptToSwitchToXosc() } {}
+
+        let prcm = unsafe { &*cc2650::PRCM::ptr() };
+
+        // Power domain
+        let domains = crate::prcm::PowerDomains::empty().rfc();
+        unsafe { driverlib::PRCMPowerDomainOn(domains.into()) };
+        while !Prcm::are_enabled(domains) {}
+
+        // Clock gating
+        Clock::enable_clocks(prcm, Clocks::empty().rfc());
+
+        assert!(self.is_on());
+        self.configure_interrupts();
 
         // self.rfc_pwr
         //     .pwmclken
@@ -1178,7 +1410,11 @@ impl<'a> Radio<'a> {
         unsafe { driverlib::RFCClockEnable() }
 
         self.ping().unwrap();
+
         self.setup().unwrap();
+
+        // Switch to OSC from RC is needed before starting RAT.
+        while unsafe { !driverlib::OSCHF_AttemptToSwitchToXosc() } {}
         self.start_rat().unwrap();
 
         // Not to catch interrupts from before
@@ -1210,12 +1446,19 @@ impl<'a> Radio<'a> {
 
         self.rx_machinery.poweroff_cleanup();
 
+        let prcm = unsafe { &*cc2650::PRCM::ptr() };
+
+        // Clock gating
+        Clock::disable_clocks(prcm, Clocks::empty().rfc());
+
+        // Power domain
+        let domains = crate::prcm::PowerDomains::empty().rfc();
+        unsafe { driverlib::PRCMPowerDomainOff(domains.into()) };
+
         Ok(())
     }
 
-    fn radio_initialize(&self) {
-        self.configure_interrupts();
-    }
+    fn radio_initialize(&self) {}
 }
 
 impl<'a> RadioConfig<'a> for Radio<'a> {
@@ -1341,7 +1584,8 @@ impl<'a> RadioData<'a> for Radio<'a> {
     }
 
     fn set_receive_buffer(&self, buffer: &'static mut [u8]) {
-        self.rx_buf.replace(buffer);
+        self.rx_machinery
+            .set_higher_layer_buffer(buffer, self.is_on());
     }
 
     fn transmit(
