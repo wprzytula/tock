@@ -139,11 +139,11 @@ mod cmd {
         }
     }
 
-    pub(crate) use driverlib::rfc_CMD_PING_s as RfcPing;
-    impl RadioCommand for RfcPing {
+    pub(crate) use driverlib::rfc_CMD_PING_s as Ping;
+    impl RadioCommand for Ping {
         const COMMAND_NO: u16 = driverlib::CMD_PING as u16;
     }
-    impl RfcPing {
+    impl Ping {
         pub(super) fn new() -> Self {
             Self {
                 commandNo: Self::COMMAND_NO,
@@ -151,11 +151,11 @@ mod cmd {
         }
     }
 
-    pub(crate) use driverlib::rfc_CMD_RADIO_SETUP_s as RfcRadioSetup;
-    impl RadioCommand for RfcRadioSetup {
+    pub(crate) use driverlib::rfc_CMD_RADIO_SETUP_s as RadioSetup;
+    impl RadioCommand for RadioSetup {
         const COMMAND_NO: u16 = driverlib::CMD_RADIO_SETUP as u16;
     }
-    impl RfcRadioSetup {
+    impl RadioSetup {
         pub(super) fn new(tx_power: u16) -> Self {
             Self {
                 commandNo: Self::COMMAND_NO,
@@ -195,11 +195,11 @@ mod cmd {
         }
     }
 
-    pub(crate) use driverlib::rfc_CMD_START_RAT_s as RfcStartRat;
-    impl RadioCommand for RfcStartRat {
+    pub(crate) use driverlib::rfc_CMD_START_RAT_s as StartRat;
+    impl RadioCommand for StartRat {
         const COMMAND_NO: u16 = driverlib::CMD_START_RAT as u16;
     }
-    impl RfcStartRat {
+    impl StartRat {
         pub(super) fn new() -> Self {
             Self {
                 commandNo: Self::COMMAND_NO,
@@ -207,11 +207,11 @@ mod cmd {
         }
     }
 
-    pub(crate) use driverlib::rfc_CMD_SYNC_STOP_RAT_s as RfcSyncStopRat;
-    impl RadioCommand for RfcSyncStopRat {
+    pub(crate) use driverlib::rfc_CMD_SYNC_STOP_RAT_s as SyncStopRat;
+    impl RadioCommand for SyncStopRat {
         const COMMAND_NO: u16 = driverlib::CMD_SYNC_STOP_RAT as u16;
     }
-    impl RfcSyncStopRat {
+    impl SyncStopRat {
         pub(super) fn new() -> Self {
             Self {
                 commandNo: Self::COMMAND_NO,
@@ -240,11 +240,11 @@ mod cmd {
         }
     }
 
-    pub(crate) use driverlib::rfc_CMD_FS_POWERUP_s as RfcFsPowerup;
-    impl RadioCommand for RfcFsPowerup {
+    pub(crate) use driverlib::rfc_CMD_FS_POWERUP_s as FsPowerup;
+    impl RadioCommand for FsPowerup {
         const COMMAND_NO: u16 = driverlib::CMD_FS_POWERUP as u16;
     }
-    impl RfcFsPowerup {
+    impl FsPowerup {
         pub(super) fn new() -> Self {
             Self {
                 commandNo: Self::COMMAND_NO,
@@ -273,11 +273,11 @@ mod cmd {
         }
     }
 
-    pub(crate) use driverlib::rfc_CMD_FS_POWERDOWN_s as RfcFsPowerdown;
-    impl RadioCommand for RfcFsPowerdown {
+    pub(crate) use driverlib::rfc_CMD_FS_POWERDOWN_s as FsPowerdown;
+    impl RadioCommand for FsPowerdown {
         const COMMAND_NO: u16 = driverlib::CMD_FS_POWERDOWN as u16;
     }
-    impl RfcFsPowerdown {
+    impl FsPowerdown {
         pub(super) fn new() -> Self {
             Self {
                 commandNo: Self::COMMAND_NO,
@@ -304,11 +304,11 @@ mod cmd {
         }
     }
 
-    pub(crate) use driverlib::rfc_CMD_IEEE_RX_s as RfcIeeeRx;
-    impl RadioCommand for RfcIeeeRx {
+    pub(crate) use driverlib::rfc_CMD_IEEE_RX_s as IeeeRx;
+    impl RadioCommand for IeeeRx {
         const COMMAND_NO: u16 = driverlib::CMD_IEEE_RX as u16;
     }
-    impl RfcIeeeRx {
+    impl IeeeRx {
         pub(super) fn new(
             channel: u8,
             pan: u16,
@@ -387,11 +387,11 @@ mod cmd {
         }
     }
 
-    pub(crate) use driverlib::rfc_CMD_IEEE_CCA_REQ_s as RfcIeeeCcaReq;
-    impl RadioCommand for RfcIeeeCcaReq {
+    pub(crate) use driverlib::rfc_CMD_IEEE_CCA_REQ_s as IeeeCcaReq;
+    impl RadioCommand for IeeeCcaReq {
         const COMMAND_NO: u16 = driverlib::CMD_IEEE_CCA_REQ as u16;
     }
-    impl RfcIeeeCcaReq {
+    impl IeeeCcaReq {
         pub(super) fn new() -> Self {
             Self {
                 commandNo: Self::COMMAND_NO,
@@ -400,11 +400,11 @@ mod cmd {
         }
     }
 
-    pub(crate) use driverlib::rfc_CMD_IEEE_TX_s as RfcIeeeTx;
-    impl RadioCommand for RfcIeeeTx {
+    pub(crate) use driverlib::rfc_CMD_IEEE_TX_s as IeeeTx;
+    impl RadioCommand for IeeeTx {
         const COMMAND_NO: u16 = driverlib::CMD_IEEE_TX as u16;
     }
-    impl RfcIeeeTx {
+    impl IeeeTx {
         pub(super) fn new(payload: *mut u8, payload_len: u8) -> Self {
             Self {
                 commandNo: Self::COMMAND_NO,
@@ -694,7 +694,7 @@ pub struct Radio<'a> {
     tx_power: Cell<PowerOutputConfig>,
 
     // rx helpers
-    rx_cmd: RefCell<cmd::RfcIeeeRx>,
+    rx_cmd: RefCell<cmd::IeeeRx>,
     rx_machinery: &'static mut RxMachinery,
 
     // deferred call machinery
@@ -710,7 +710,7 @@ impl<'a> Radio<'a> {
     ) -> Self {
         let rx_machinery = unsafe { static_init!(RxMachinery, RxMachinery::new()) };
         let rx_machinery = rx_machinery.link_entries();
-        let rx_cmd = RefCell::new(cmd::RfcIeeeRx::new(
+        let rx_cmd = RefCell::new(cmd::IeeeRx::new(
             Default::default(),
             Default::default(),
             Default::default(),
@@ -753,32 +753,32 @@ impl<'a> Radio<'a> {
 
     /// Send ping to verify that CPE works.
     fn ping(&self) -> cmd::RadioCmdResult<()> {
-        let mut cmd = cmd::RfcPing::new();
+        let mut cmd = cmd::Ping::new();
         cmd.send()
     }
 
     fn setup(&self) -> cmd::RadioCmdResult<()> {
-        let mut cmd = cmd::RfcRadioSetup::new(self.tx_power.get().tx_power);
+        let mut cmd = cmd::RadioSetup::new(self.tx_power.get().tx_power);
         cmd.send()
     }
 
     fn start_rat(&self) -> cmd::RadioCmdResult<()> {
-        let mut cmd = cmd::RfcStartRat::new();
+        let mut cmd = cmd::StartRat::new();
         cmd.send()
     }
 
     fn stop_rat(&self) -> cmd::RadioCmdResult<()> {
-        let mut cmd = cmd::RfcSyncStopRat::new();
+        let mut cmd = cmd::SyncStopRat::new();
         cmd.send()
     }
 
     fn start_synthesizer(&self) -> cmd::RadioCmdResult<()> {
-        let mut cmd = cmd::RfcFsPowerup::new();
+        let mut cmd = cmd::FsPowerup::new();
         cmd.send()
     }
 
     fn stop_synthesizer(&self) -> cmd::RadioCmdResult<()> {
-        let mut cmd = cmd::RfcFsPowerdown::new();
+        let mut cmd = cmd::FsPowerdown::new();
         cmd.send()
     }
 
@@ -798,7 +798,7 @@ impl<'a> Radio<'a> {
         self.clear_pending_interrupts();
         self.enable_tx_interrupt();
 
-        let mut cmd = cmd::RfcIeeeTx::new(buf[radio::PSDU_OFFSET..].as_mut_ptr(), frame_len);
+        let mut cmd = cmd::IeeeTx::new(buf[radio::PSDU_OFFSET..].as_mut_ptr(), frame_len);
 
         // Save buf before sending the CMD to prevent races.
         self.tx_buf.put(Some(buf));
@@ -809,7 +809,7 @@ impl<'a> Radio<'a> {
     }
 
     fn rx(&self) -> cmd::RadioCmdResult<()> {
-        let mut cmd = cmd::RfcIeeeRx::new(
+        let mut cmd = cmd::IeeeRx::new(
             self.get_channel(),
             self.get_pan(),
             self.get_address(),
@@ -822,8 +822,8 @@ impl<'a> Radio<'a> {
         Ok(())
     }
 
-    fn cca_req(&self) -> cmd::RadioCmdResult<cmd::RfcIeeeCcaReq> {
-        let mut cmd = cmd::RfcIeeeCcaReq::new();
+    fn cca_req(&self) -> cmd::RadioCmdResult<cmd::IeeeCcaReq> {
+        let mut cmd = cmd::IeeeCcaReq::new();
         cmd.send()?;
         Ok(cmd)
     }
