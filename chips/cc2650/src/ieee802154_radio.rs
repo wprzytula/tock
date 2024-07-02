@@ -26,6 +26,7 @@ pub(crate) unsafe extern "C" fn rfc_cmd_ack_handler() {
 }
 
 mod cmd {
+    use super::{driverlib, RfcDataEntryPointer, RfcQueue};
     use core::cell::Cell;
     use driverlib::rfc_radioOp_s as RfcRadioOp;
 
@@ -615,6 +616,57 @@ mod cmd {
                 payloadLen: payload_len,
                 pPayload: payload,
                 timeStamp: 0,
+            }
+        }
+    }
+
+    /// On reception, the radio CPU appends the provided data entry to the queue indicated. The radio CPU
+    /// performs the following operations:
+    /// ```
+    /// Set pQueue-> pLastEntry-> pNextEntry = pEntry
+    /// Set pQueue-> pLastEntry = pEntry
+    /// ```
+    /// If either of the pointers pQueue or pEntry are invalid (that is, in an address range that is not memory or
+    /// without 32-bit word alignment), the command fails, and the radio CPU sets the result byte of CMDSTA to
+    /// ParError. If the queue specified in pQueue is set up not to allow entries to be appended (see
+    /// Section 23.3.2.7.1), the command fails, and the radio CPU sets the result byte of CMDSTA to QueueError.
+    pub(crate) use driverlib::rfc_CMD_ADD_DATA_ENTRY_s as AddDataEntry;
+    impl RadioCommand for AddDataEntry {
+        const COMMAND_NO: u16 = driverlib::CMD_ADD_DATA_ENTRY as u16;
+    }
+    impl AddDataEntry {
+        pub(super) fn new(queue: *mut RfcQueue, entry: &mut RfcDataEntryPointer) -> Self {
+            Self {
+                commandNo: Self::COMMAND_NO,
+                __dummy0: Default::default(),
+                pQueue: queue,
+                pEntry: entry as *mut RfcDataEntryPointer as *mut u8,
+            }
+        }
+    }
+
+    /// On reception, the radio CPU removes the first data entry from the queue indicated. The command returns
+    /// a pointer to the entry that was removed. The radio CPU performs the following operations:
+    /// ```
+    /// Set pEntry = pQueue->pCurrEntry
+    /// Set pQueue->pCurrEntry = pEntry->pNextEntry
+    /// Set pEntry->status = Finished
+    /// ```
+    /// If the pointer pQueue is invalid, the command fails, and the radio CPU sets the result byte of CMDSTA to
+    /// ParError. If the queue specified in pQueue is empty, the command fails, and the radio CPU sets the result
+    /// byte of CMDSTA to QueueError. If the entry to be removed is in the BUSY state, the command fails, and
+    /// the radio CPU sets the result byte of CMDSTA to QueueBusy.
+    pub(crate) use driverlib::rfc_CMD_REMOVE_DATA_ENTRY_s as RemoveDataEntry;
+    impl RadioCommand for RemoveDataEntry {
+        const COMMAND_NO: u16 = driverlib::CMD_REMOVE_DATA_ENTRY as u16;
+    }
+    impl RemoveDataEntry {
+        pub(super) fn new(queue: &mut RfcQueue) -> Self {
+            Self {
+                commandNo: Self::COMMAND_NO,
+                __dummy0: Default::default(),
+                pQueue: queue,
+                pEntry: core::ptr::null_mut(), // R parameter
             }
         }
     }
