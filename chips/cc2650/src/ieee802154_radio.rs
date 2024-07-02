@@ -31,45 +31,6 @@ mod cmd {
     use crate::driverlib;
     use kernel::ErrorCode;
 
-    /* RF Radio Op status constants. Field 'status' in Radio Op command struct */
-    pub(super) const RADIO_OP_STATUS_IDLE: u16 = 0x0000;
-    pub(super) const RADIO_OP_STATUS_PENDING: u16 = 0x0001;
-    pub(super) const RADIO_OP_STATUS_ACTIVE: u16 = 0x0002;
-    pub(super) const RADIO_OP_STATUS_SKIPPED: u16 = 0x0003;
-    pub(super) const RADIO_OP_STATUS_DONE_OK: u16 = 0x0400;
-    pub(super) const RADIO_OP_STATUS_DONE_COUNTDOWN: u16 = 0x0401;
-    pub(super) const RADIO_OP_STATUS_DONE_RXERR: u16 = 0x0402;
-    pub(super) const RADIO_OP_STATUS_DONE_TIMEOUT: u16 = 0x0403;
-    pub(super) const RADIO_OP_STATUS_DONE_STOPPED: u16 = 0x0404;
-    pub(super) const RADIO_OP_STATUS_DONE_ABORT: u16 = 0x0405;
-    pub(super) const RADIO_OP_STATUS_ERROR_PAST_START: u16 = 0x0800;
-    pub(super) const RADIO_OP_STATUS_ERROR_START_TRIG: u16 = 0x0801;
-    pub(super) const RADIO_OP_STATUS_ERROR_CONDITION: u16 = 0x0802;
-    pub(super) const RADIO_OP_STATUS_ERROR_PAR: u16 = 0x0803;
-    pub(super) const RADIO_OP_STATUS_ERROR_POINTER: u16 = 0x0804;
-    pub(super) const RADIO_OP_STATUS_ERROR_CMDID: u16 = 0x0805;
-    pub(super) const RADIO_OP_STATUS_ERROR_NO_SETUP: u16 = 0x0807;
-    pub(super) const RADIO_OP_STATUS_ERROR_NO_FS: u16 = 0x0808;
-    pub(super) const RADIO_OP_STATUS_ERROR_SYNTH_PROG: u16 = 0x0809;
-
-    /* Additional Op status values for IEEE mode */
-    pub(super) const RADIO_OP_STATUS_IEEE_SUSPENDED: u16 = 0x2001;
-    pub(super) const RADIO_OP_STATUS_IEEE_DONE_OK: u16 = 0x2400;
-    pub(super) const RADIO_OP_STATUS_IEEE_DONE_BUSY: u16 = 0x2401;
-    pub(super) const RADIO_OP_STATUS_IEEE_DONE_STOPPED: u16 = 0x2402;
-    pub(super) const RADIO_OP_STATUS_IEEE_DONE_ACK: u16 = 0x2403;
-    pub(super) const RADIO_OP_STATUS_IEEE_DONE_ACKPEND: u16 = 0x2404;
-    pub(super) const RADIO_OP_STATUS_IEEE_DONE_TIMEOUT: u16 = 0x2405;
-    pub(super) const RADIO_OP_STATUS_IEEE_DONE_BGEND: u16 = 0x2406;
-    pub(super) const RADIO_OP_STATUS_IEEE_DONE_ABORT: u16 = 0x2407;
-    pub(super) const RADIO_OP_STATUS_ERROR_WRONG_BG: u16 = 0x0806;
-    pub(super) const RADIO_OP_STATUS_IEEE_ERROR_PAR: u16 = 0x2800;
-    pub(super) const RADIO_OP_STATUS_IEEE_ERROR_NO_SETUP: u16 = 0x2801;
-    pub(super) const RADIO_OP_STATUS_IEEE_ERROR_NO_FS: u16 = 0x2802;
-    pub(super) const RADIO_OP_STATUS_IEEE_ERROR_SYNTH_PROG: u16 = 0x2803;
-    pub(super) const RADIO_OP_STATUS_IEEE_ERROR_RXOVF: u16 = 0x2804;
-    pub(super) const RADIO_OP_STATUS_IEEE_ERROR_TXUNF: u16 = 0x2805;
-
     #[must_use]
     #[allow(unused)]
     #[repr(u32)]
@@ -121,6 +82,168 @@ mod cmd {
     }
 
     pub(super) type RadioCmdResult<T> = Result<T, RadioCmdStatus>;
+
+    #[allow(non_camel_case_types, unused)]
+    #[derive(Debug, Clone, Copy)]
+    #[repr(u16)]
+    pub(super) enum RadioOpStatus {
+        /* Operation Not Finished */
+        IDLE = 0x0000,    // Operation has not started.
+        PENDING = 0x0001, // Waiting for a start trigger.
+        ACTIVE = 0x0002,  // Running an operation.
+        SKIPPED = 0x0003, // Operation skipped due to condition in another command.
+        /* Operation Finished Normally */
+        DONE_OK = 0x0400,        // Operation ended normally.
+        DONE_COUNTDOWN = 0x0401, // Counter reached zero.
+        DONE_RXERR = 0x0402,     // Operation ended with CRC error.
+        DONE_TIMEOUT = 0x0403,   // Operation ended with time-out.
+        DONE_STOPPED = 0x0404,   // Operation stopped after CMD_STOP command.
+        DONE_ABORT = 0x0405,     // Operation aborted by CMD_ABORT command.
+        /* Operation Finished With Error */
+        ERROR_PAST_START = 0x0800, // The start trigger occurred in the past.
+        ERROR_START_TRIG = 0x0801, // Illegal start trigger parameter.
+        ERROR_CONDITION = 0x0802,  // Illegal condition for next operation.
+        ERROR_PAR = 0x0803,        // Error in a command specific parameter.
+        ERROR_POINTER = 0x0804,    // Invalid pointer to next operation.
+        ERROR_CMDID = 0x0805, // The next operation has a command ID that is undefined or not a radio operation command.
+        ERROR_NO_SETUP = 0x0807, // Operation using RX, TX, or synthesizer attempted without CMD_RADIO_SETUP.
+        ERROR_NO_FS = 0x0808, // Operation using RX or TX attempted without the synthesizer being programmed or powered on.
+        ERROR_SYNTH_PROG = 0x0809, // Synthesizer programming failed.
+        ERROR_TXUNF = 0x080A, // Modem TX underflow observed.
+        ERROR_RXOVF = 0x080B, // Modem RX overflow observed.
+        ERROR_NO_RX = 0x080C, // Data requested from last RX when no such data exists.
+
+        /* IEEE Additional variants */
+
+        /* Operation Not Finished */
+        IEEE_SUSPENDED = 0x2001, // Operation suspended
+
+        /* Normal Operation Ending */
+        IEEE_DONE_OK = 0x2400,      // Operation ended normally
+        IEEE_DONE_BUSY = 0x2401,    // CSMA-CA operation ended with failure
+        IEEE_DONE_STOPPED = 0x2402, // Operation stopped after stop command
+        IEEE_DONE_ACK = 0x2403,     // ACK packet received with pending data bit cleared
+        IEEE_DONE_ACKPEND = 0x2404, // ACK packet received with pending data bit set
+        IEEE_DONE_TIMEOUT = 0x2405, // Operation ended due to time-out
+        IEEE_DONE_BGEND = 0x2406, // FG operation ended because necessary background level operation ended
+        IEEE_DONE_ABORT = 0x2407, // Operation aborted by command
+
+        /* Operation Ending With Error */
+        ERROR_WRONG_BG = 0x0806, // Foreground level operation is not compatible with running background level operation
+        IEEE_ERROR_PAR = 0x2800, // Illegal parameter
+        IEEE_ERROR_NO_SETUP = 0x2801, // Radio was not set up in IEEE 802.15.4 mode
+        IEEE_ERROR_NO_FS = 0x2802, // Synthesizer was not programmed when running RX or TX
+        IEEE_ERROR_SYNTH_PROG = 0x2803, // Synthesizer programming failed
+        IEEE_ERROR_RXOVF = 0x2804, // overflow observed during operation
+        IEEE_ERROR_TXUNF = 0x2805, // underflow observed during operation
+    }
+
+    pub(super) type RadioOpResult<T> = Result<T, RadioOpStatus>;
+
+    impl TryFrom<u16> for RadioOpStatus {
+        type Error = u16;
+
+        fn try_from(raw: u16) -> Result<Self, Self::Error> {
+            if raw <= Self::SKIPPED as u16
+                || (raw >= Self::DONE_OK as u16 && raw <= Self::DONE_ABORT as u16)
+                || (raw >= Self::ERROR_PAST_START as u16 && raw <= Self::ERROR_NO_RX as u16)
+                || (raw == Self::IEEE_SUSPENDED as u16)
+                || (raw >= Self::IEEE_DONE_OK as u16 && raw <= Self::IEEE_DONE_ABORT as u16)
+                || (raw >= Self::IEEE_ERROR_PAR as u16 && raw <= Self::IEEE_ERROR_TXUNF as u16)
+            {
+                Ok(unsafe { core::mem::transmute(raw) })
+            } else {
+                Err(raw)
+            }
+        }
+    }
+
+    impl RadioOpStatus {
+        pub(super) fn finished(&self) -> bool {
+            match self {
+                RadioOpStatus::IDLE
+                | RadioOpStatus::PENDING
+                | RadioOpStatus::ACTIVE
+                | RadioOpStatus::IEEE_SUSPENDED => false,
+                RadioOpStatus::SKIPPED
+                | RadioOpStatus::DONE_OK
+                | RadioOpStatus::DONE_COUNTDOWN
+                | RadioOpStatus::DONE_RXERR
+                | RadioOpStatus::DONE_TIMEOUT
+                | RadioOpStatus::DONE_STOPPED
+                | RadioOpStatus::DONE_ABORT
+                | RadioOpStatus::ERROR_PAST_START
+                | RadioOpStatus::ERROR_START_TRIG
+                | RadioOpStatus::ERROR_CONDITION
+                | RadioOpStatus::ERROR_PAR
+                | RadioOpStatus::ERROR_POINTER
+                | RadioOpStatus::ERROR_CMDID
+                | RadioOpStatus::ERROR_NO_SETUP
+                | RadioOpStatus::ERROR_NO_FS
+                | RadioOpStatus::ERROR_SYNTH_PROG
+                | RadioOpStatus::ERROR_TXUNF
+                | RadioOpStatus::ERROR_RXOVF
+                | RadioOpStatus::ERROR_NO_RX
+                | RadioOpStatus::IEEE_DONE_OK
+                | RadioOpStatus::IEEE_DONE_BUSY
+                | RadioOpStatus::IEEE_DONE_STOPPED
+                | RadioOpStatus::IEEE_DONE_ACK
+                | RadioOpStatus::IEEE_DONE_ACKPEND
+                | RadioOpStatus::IEEE_DONE_TIMEOUT
+                | RadioOpStatus::IEEE_DONE_BGEND
+                | RadioOpStatus::IEEE_DONE_ABORT
+                | RadioOpStatus::ERROR_WRONG_BG
+                | RadioOpStatus::IEEE_ERROR_PAR
+                | RadioOpStatus::IEEE_ERROR_NO_SETUP
+                | RadioOpStatus::IEEE_ERROR_NO_FS
+                | RadioOpStatus::IEEE_ERROR_SYNTH_PROG
+                | RadioOpStatus::IEEE_ERROR_RXOVF
+                | RadioOpStatus::IEEE_ERROR_TXUNF => true,
+            }
+        }
+
+        pub(super) fn to_result(self) -> RadioOpResult<()> {
+            match self {
+                RadioOpStatus::DONE_OK | RadioOpStatus::IEEE_DONE_OK => Ok(()),
+                RadioOpStatus::IDLE
+                | RadioOpStatus::PENDING
+                | RadioOpStatus::ACTIVE
+                | RadioOpStatus::SKIPPED
+                | RadioOpStatus::DONE_COUNTDOWN
+                | RadioOpStatus::DONE_RXERR
+                | RadioOpStatus::DONE_TIMEOUT
+                | RadioOpStatus::DONE_STOPPED
+                | RadioOpStatus::DONE_ABORT
+                | RadioOpStatus::ERROR_PAST_START
+                | RadioOpStatus::ERROR_START_TRIG
+                | RadioOpStatus::ERROR_CONDITION
+                | RadioOpStatus::ERROR_PAR
+                | RadioOpStatus::ERROR_POINTER
+                | RadioOpStatus::ERROR_CMDID
+                | RadioOpStatus::ERROR_NO_SETUP
+                | RadioOpStatus::ERROR_NO_FS
+                | RadioOpStatus::ERROR_SYNTH_PROG
+                | RadioOpStatus::ERROR_TXUNF
+                | RadioOpStatus::ERROR_RXOVF
+                | RadioOpStatus::ERROR_NO_RX
+                | RadioOpStatus::IEEE_SUSPENDED
+                | RadioOpStatus::IEEE_DONE_BUSY
+                | RadioOpStatus::IEEE_DONE_STOPPED
+                | RadioOpStatus::IEEE_DONE_ACK
+                | RadioOpStatus::IEEE_DONE_ACKPEND
+                | RadioOpStatus::IEEE_DONE_TIMEOUT
+                | RadioOpStatus::IEEE_DONE_BGEND
+                | RadioOpStatus::IEEE_DONE_ABORT
+                | RadioOpStatus::ERROR_WRONG_BG
+                | RadioOpStatus::IEEE_ERROR_PAR
+                | RadioOpStatus::IEEE_ERROR_NO_SETUP
+                | RadioOpStatus::IEEE_ERROR_NO_FS
+                | RadioOpStatus::IEEE_ERROR_SYNTH_PROG
+                | RadioOpStatus::IEEE_ERROR_RXOVF
+                | RadioOpStatus::IEEE_ERROR_TXUNF => Err(self),
+            }
+        }
+    }
 
     pub(super) trait RadioCommand {
         const COMMAND_NO: u16;
@@ -1102,7 +1225,7 @@ impl<'a> Radio<'a> {
             return false;
         }
 
-        self.rx_cmd.borrow().status == cmd::RADIO_OP_STATUS_ACTIVE
+        self.rx_cmd.borrow().status == cmd::RadioOpStatus::ACTIVE as u16
     }
 
     /**
@@ -1208,7 +1331,7 @@ impl<'a> Radio<'a> {
         // kernel::debug!("clocks disabled");
 
         /* We pulled the plug, so we need to restore the status manually */
-        self.rx_cmd.borrow_mut().status = cmd::RADIO_OP_STATUS_IDLE;
+        self.rx_cmd.borrow_mut().status = cmd::RadioOpStatus::IDLE as u16;
 
         self.rx_machinery.poweroff_cleanup();
 
