@@ -922,7 +922,6 @@ pub mod lite {
 
     impl<'a> UartLite<'a> {
         pub(crate) fn new(
-            aon_rtc: cc2650::AON_RTC,
             aon_wuc: cc2650::AON_WUC,
             aux_aiodio0: cc2650::AUX_AIODIO0,
             aux_aiodio1: cc2650::AUX_AIODIO1,
@@ -932,7 +931,6 @@ pub mod lite {
             aux_wuc: cc2650::AUX_WUC,
         ) -> Self {
             let scif = Scif::new(
-                aon_rtc,
                 aon_wuc,
                 aux_aiodio0,
                 aux_aiodio1,

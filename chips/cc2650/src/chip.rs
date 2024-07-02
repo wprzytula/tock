@@ -57,7 +57,6 @@ impl<'a> Cc2650<'a> {
         #[cfg(feature = "uart_lite")]
         let uart_lite = {
             let uart_lite = UartLite::new(
-                peripherals.AON_RTC,
                 peripherals.AON_WUC,
                 peripherals.AUX_AIODIO0,
                 peripherals.AUX_AIODIO1,
