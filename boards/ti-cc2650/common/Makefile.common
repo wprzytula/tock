@@ -1,6 +1,7 @@
 LIBTOCK_RS := $(TOCK_ROOT_DIRECTORY)../libtock-rs
 LIBTOCK_RS_TARGET := $(LIBTOCK_RS)/target/cc2650dk/thumbv7m-none-eabi/release/examples
 HENI := docker run --privileged --rm -it --user=1000 -v /home/xps15/.mim-dsg/heni:/home/heni/.heni -v $(TOCK_ROOT_DIRECTORY):$(TOCK_ROOT_DIRECTORY) -w=$(TOCK_ROOT_DIRECTORY) --mount type=bind,source=/dev,target=/dev ghcr.io/mimuw-distributed-systems-group/heni_client:heni heni
+NOOP := @echo -n ""
 
 RUSTC_FLAGS += -C target-cpu=cortex-m3
 
@@ -35,12 +36,15 @@ $(TOCK_ROOT_DIRECTORY)target/$(TARGET)/release/$(PLATFORM)-%.flash: $(TOCK_ROOT_
 
 .PHONY: app-*-elf
 app-%-elf: $(TOCK_ROOT_DIRECTORY)target/$(TARGET)/release/$(PLATFORM)-%.elf
+	$(NOOP)
 
 .PHONY: app-*-hex
 app-%-hex: $(TOCK_ROOT_DIRECTORY)target/$(TARGET)/release/$(PLATFORM)-%.hex
+	$(NOOP)
 
 .PHONY: app-*-bin
 app-%-bin: $(TOCK_ROOT_DIRECTORY)target/$(TARGET)/release/$(PLATFORM)-%.bin
+	$(NOOP)
 
 .PRECIOUS:
 $(LIBTOCK_RS_TARGET)/%.tbf: $(LIBTOCK_RS)/examples/%.rs
