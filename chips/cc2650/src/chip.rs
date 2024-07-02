@@ -8,6 +8,7 @@ use crate::{
     gpt::Gpt,
     peripheral_interrupts as irq,
     prcm::{self, Prcm},
+    rtc::Rtc,
     uart::{UartFull, UartPinConfig},
     udma::Udma,
 };
@@ -22,6 +23,7 @@ impl<T> PinConfig for T where T: UartPinConfig + Copy {}
 
 pub struct Cc2650<'a> {
     userspace_kernel_boundary: cortexm3::syscall::SysCall,
+    pub rtc: Rtc,
     pub gpt: Gpt<'a>,
     pub uart_full: UartFull<'a>,
     #[cfg(feature = "uart_lite")]
@@ -52,6 +54,8 @@ impl<'a> Cc2650<'a> {
         let udma = Udma::new(peripherals.UDMA0);
         udma.enable();
 
+        let rtc = Rtc::new(peripherals.AON_RTC);
+
         let gpt = Gpt::new(peripherals.GPT0);
 
         #[cfg(feature = "uart_lite")]
@@ -77,6 +81,7 @@ impl<'a> Cc2650<'a> {
 
         Self {
             userspace_kernel_boundary: cortexm3::syscall::SysCall::new(),
+            rtc,
             gpt,
             uart_full,
             #[cfg(feature = "uart_lite")]
