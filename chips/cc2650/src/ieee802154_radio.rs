@@ -1,7 +1,7 @@
 use crate::driverlib;
+use cmd::RadioOp as _;
 use core::cell::Cell;
 use core::cell::RefCell;
-use core::marker::PhantomData;
 use cortexm3::nvic::Nvic;
 use driverlib::dataQueue_t as RfcQueue;
 use driverlib::rfc_dataEntryPointer_s as RfcDataEntryPointer;
@@ -27,8 +27,8 @@ pub(crate) unsafe extern "C" fn rfc_cmd_ack_handler() {
 
 mod cmd {
     use core::cell::Cell;
+    use driverlib::rfc_radioOp_s as RfcRadioOp;
 
-    use crate::driverlib;
     use kernel::ErrorCode;
 
     #[must_use]
@@ -262,6 +262,22 @@ mod cmd {
         }
     }
 
+    pub(super) trait RadioOp: RadioCommand {
+        fn wait_until_finished(&self) -> RadioOpStatus {
+            let radio_op = self as *const Self as *const RfcRadioOp;
+            // Synchronously wait until radio setup finishes.
+            loop {
+                let raw_status = unsafe { (radio_op.read_volatile()).status };
+                let status: Result<RadioOpStatus, u16> = raw_status.try_into();
+                if let Ok(status) = status {
+                    if status.finished() {
+                        return status;
+                    }
+                }
+            }
+        }
+    }
+
     pub(crate) use driverlib::rfc_CMD_PING_s as Ping;
     impl RadioCommand for Ping {
         const COMMAND_NO: u16 = driverlib::CMD_PING as u16;
@@ -278,11 +294,12 @@ mod cmd {
     impl RadioCommand for RadioSetup {
         const COMMAND_NO: u16 = driverlib::CMD_RADIO_SETUP as u16;
     }
+    impl RadioOp for RadioSetup {}
     impl RadioSetup {
         pub(super) fn new(tx_power: u16) -> Self {
             Self {
                 commandNo: Self::COMMAND_NO,
-                status: 0,
+                status: RadioOpStatus::IDLE as u16,
                 pNextOp: core::ptr::null_mut(),
                 startTime: 0,
                 startTrigger: driverlib::rfc_CMD_RADIO_SETUP_s__bindgen_ty_1 {
@@ -330,15 +347,50 @@ mod cmd {
         }
     }
 
+    pub(crate) use driverlib::rfc_CMD_SYNC_START_RAT_s as SyncStartRat;
+    impl RadioCommand for SyncStartRat {
+        const COMMAND_NO: u16 = driverlib::CMD_SYNC_START_RAT as u16;
+    }
+    impl RadioOp for SyncStartRat {}
+    impl SyncStartRat {
+        pub(super) fn new(rat_offset: u32) -> Self {
+            Self {
+                commandNo: Self::COMMAND_NO,
+                status: RadioOpStatus::IDLE as u16,
+                pNextOp: core::ptr::null_mut(),
+                startTime: 0,
+                startTrigger: driverlib::rfc_CMD_SYNC_START_RAT_s__bindgen_ty_1 {
+                    _bitfield_1: driverlib::rfc_CMD_SYNC_START_RAT_s__bindgen_ty_1::new_bitfield_1(
+                        driverlib::TRIG_NOW as u8,
+                        0,
+                        0,
+                        0,
+                    ),
+                    ..Default::default()
+                },
+                condition: driverlib::rfc_CMD_SYNC_START_RAT_s__bindgen_ty_2 {
+                    _bitfield_1: driverlib::rfc_CMD_SYNC_START_RAT_s__bindgen_ty_2::new_bitfield_1(
+                        driverlib::COND_NEVER as u8,
+                        0,
+                    ),
+                    ..Default::default()
+                },
+                __dummy0: 0,
+                rat0: rat_offset,
+            }
+        }
+    }
+
     pub(crate) use driverlib::rfc_CMD_SYNC_STOP_RAT_s as SyncStopRat;
     impl RadioCommand for SyncStopRat {
         const COMMAND_NO: u16 = driverlib::CMD_SYNC_STOP_RAT as u16;
     }
+    impl RadioOp for SyncStopRat {}
     impl SyncStopRat {
         pub(super) fn new() -> Self {
             Self {
                 commandNo: Self::COMMAND_NO,
-                status: 0,
+                status: RadioOpStatus::IDLE as u16,
                 pNextOp: core::ptr::null_mut(),
                 startTime: 0,
                 startTrigger: driverlib::rfc_CMD_SYNC_STOP_RAT_s__bindgen_ty_1 {
@@ -358,7 +410,7 @@ mod cmd {
                     ..Default::default()
                 },
                 __dummy0: 0,
-                rat0: 0, // FIXME: actually sync RAT
+                rat0: 0,
             }
         }
     }
@@ -367,11 +419,12 @@ mod cmd {
     impl RadioCommand for FsPowerup {
         const COMMAND_NO: u16 = driverlib::CMD_FS_POWERUP as u16;
     }
+    impl RadioOp for FsPowerup {}
     impl FsPowerup {
         pub(super) fn new() -> Self {
             Self {
                 commandNo: Self::COMMAND_NO,
-                status: 0,
+                status: RadioOpStatus::IDLE as u16,
                 pNextOp: core::ptr::null_mut(),
                 startTime: 0,
                 startTrigger: driverlib::rfc_CMD_FS_POWERUP_s__bindgen_ty_1 {
@@ -400,11 +453,12 @@ mod cmd {
     impl RadioCommand for FsPowerdown {
         const COMMAND_NO: u16 = driverlib::CMD_FS_POWERDOWN as u16;
     }
+    impl RadioOp for FsPowerdown {}
     impl FsPowerdown {
         pub(super) fn new() -> Self {
             Self {
                 commandNo: Self::COMMAND_NO,
-                status: 0,
+                status: RadioOpStatus::IDLE as u16,
                 pNextOp: core::ptr::null_mut(),
                 startTime: 0,
                 startTrigger: driverlib::rfc_CMD_FS_POWERDOWN_s__bindgen_ty_1 {
@@ -431,6 +485,7 @@ mod cmd {
     impl RadioCommand for IeeeRx {
         const COMMAND_NO: u16 = driverlib::CMD_IEEE_RX as u16;
     }
+    impl RadioOp for IeeeRx {}
     impl IeeeRx {
         pub(super) fn new(
             channel: u8,
@@ -442,7 +497,7 @@ mod cmd {
         ) -> Self {
             Self {
                 commandNo: Self::COMMAND_NO,
-                status: 0,
+                status: RadioOpStatus::IDLE as u16,
                 pNextOp: core::ptr::null_mut(),
                 startTime: 0,
                 startTrigger: driverlib::rfc_CMD_IEEE_RX_s__bindgen_ty_1 {
@@ -527,11 +582,12 @@ mod cmd {
     impl RadioCommand for IeeeTx {
         const COMMAND_NO: u16 = driverlib::CMD_IEEE_TX as u16;
     }
+    impl RadioOp for IeeeTx {}
     impl IeeeTx {
         pub(super) fn new(payload: *mut u8, payload_len: u8) -> Self {
             Self {
                 commandNo: Self::COMMAND_NO,
-                status: 0,
+                status: RadioOpStatus::IDLE as u16,
                 pNextOp: core::ptr::null_mut(),
                 startTime: 0,
                 startTrigger: driverlib::rfc_CMD_IEEE_TX_s__bindgen_ty_1 {
@@ -818,6 +874,10 @@ pub struct Radio<'a> {
     channel: Cell<RadioChannel>,
     tx_power: Cell<PowerOutputConfig>,
 
+    // miscellaneous
+    rat_offset: OptionalCell<u32>,
+
+
     // rx helpers
     rx_cmd: RefCell<cmd::IeeeRx>,
     rx_machinery: &'static mut RxMachinery,
@@ -860,6 +920,8 @@ impl<'a> Radio<'a> {
             tx_buf: TakeCell::empty(),
             rx_buf: TakeCell::empty(),
 
+            rat_offset: OptionalCell::empty(),
+
             addr: Cell::new(0),
             addr_long: Cell::new([0x00; 8]),
             pan: Cell::new(0),
@@ -884,27 +946,53 @@ impl<'a> Radio<'a> {
 
     fn setup(&self) -> cmd::RadioCmdResult<()> {
         let mut cmd = cmd::RadioSetup::new(self.tx_power.get().tx_power);
-        cmd.send()
+        cmd.send()?;
+
+        // Synchronously wait until radio setup finishes.
+        let status = cmd.wait_until_finished();
+        status.to_result().unwrap();
+
+        Ok(())
     }
 
     fn start_rat(&self) -> cmd::RadioCmdResult<()> {
-        let mut cmd = cmd::StartRat::new();
-        cmd.send()
+        let mut cmd = cmd::SyncStartRat::new(self.rat_offset.unwrap_or(0));
+        cmd.send()?;
+
+        cmd.wait_until_finished().to_result().unwrap();
+
+        Ok(())
     }
 
     fn stop_rat(&self) -> cmd::RadioCmdResult<()> {
         let mut cmd = cmd::SyncStopRat::new();
-        cmd.send()
+        cmd.send()?;
+
+        cmd.wait_until_finished().to_result().unwrap();
+
+        if self.rat_offset.is_none() {
+            self.rat_offset.set(cmd.rat0);
+        }
+
+        Ok(())
     }
 
     fn start_synthesizer(&self) -> cmd::RadioCmdResult<()> {
         let mut cmd = cmd::FsPowerup::new();
-        cmd.send()
+        cmd.send()?;
+        let status = cmd.wait_until_finished();
+        status.to_result().unwrap();
+
+        Ok(())
     }
 
     fn stop_synthesizer(&self) -> cmd::RadioCmdResult<()> {
         let mut cmd = cmd::FsPowerdown::new();
-        cmd.send()
+        cmd.send()?;
+        let status = cmd.wait_until_finished();
+        status.to_result().unwrap();
+
+        Ok(())
     }
 
     fn tx(&self, buf: &'static mut [u8], frame_len: u8) -> cmd::RadioCmdResult<()> {
