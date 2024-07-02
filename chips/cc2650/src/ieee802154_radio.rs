@@ -557,7 +557,10 @@ mod cmd {
                 __dummy2: 0,
                 endTrigger: driverlib::rfc_CMD_IEEE_RX_s__bindgen_ty_7 {
                     _bitfield_1: driverlib::rfc_CMD_IEEE_RX_s__bindgen_ty_7::new_bitfield_1(
-                        0, 0, 0, 0,
+                        driverlib::TRIG_NEVER as u8,
+                        0,
+                        0,
+                        0,
                     ),
                     ..Default::default()
                 },
