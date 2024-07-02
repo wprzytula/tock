@@ -5,8 +5,6 @@ use tock_cells::{map_cell::MapCell, optional_cell::OptionalCell, volatile_cell::
 use crate::driverlib;
 
 pub(crate) struct Scif {
-    #[allow(unused)]
-    pub(crate) aon_rtc: cc2650::AON_RTC,
     pub(crate) aon_wuc: cc2650::AON_WUC,
     #[allow(unused)]
     pub(crate) aux_aiodio0: cc2650::AUX_AIODIO0,
@@ -41,7 +39,6 @@ impl Scif {
     }
 
     pub(crate) fn new(
-        aon_rtc: cc2650::AON_RTC,
         aon_wuc: cc2650::AON_WUC,
         aux_aiodio0: cc2650::AUX_AIODIO0,
         aux_aiodio1: cc2650::AUX_AIODIO1,
@@ -54,7 +51,6 @@ impl Scif {
         let scif_data = MapCell::empty();
 
         Self {
-            aon_rtc,
             aon_wuc,
             aux_aiodio0,
             aux_aiodio1,
