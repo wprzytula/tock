@@ -17,11 +17,11 @@ flash: $(TOCK_ROOT_DIRECTORY)target/$(TARGET)/release/$(PLATFORM).flash
 	$(HENI_PROGRAM) $<
 
 ### Flashing kernel + an app
-.PHONY: app-*-flash
+.PHONY: app-%-flash
 app-%-flash: $(TOCK_ROOT_DIRECTORY)target/$(TARGET)/release/$(PLATFORM)-%.flash
 	$(HENI_PROGRAM) $<
 
 ### SCP kernel + an app .bin
-.PHONY: app-*-bin-scp
+.PHONY: app-%-bin-scp
 app-%-bin-scp: $(TOCK_ROOT_DIRECTORY)target/$(TARGET)/release/$(PLATFORM)-%.bin
 	$(HENI_SCP) $< /tmp/node_program.bin

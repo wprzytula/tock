@@ -16,6 +16,6 @@ flash: $(TOCK_ROOT_DIRECTORY)target/$(TARGET)/release/$(PLATFORM).bin
 	$(OPENOCD) -f flash-kernel.openocd
 
 ### Flashing kernel + an app
-.PHONY: app-*-flash
-app-%-flash: $(TOCK_ROOT_DIRECTORY)target/$(TARGET)/release/$(PLATFORM)-%.flash
+.PHONY: app-%-flash
+app-%-flash: $(TOCK_ROOT_DIRECTORY)target/$(TARGET)/release/$(PLATFORM)-%.hex
 	$(HENI_PROGRAM) $<
