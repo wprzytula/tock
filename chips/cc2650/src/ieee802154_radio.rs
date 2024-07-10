@@ -587,6 +587,49 @@ mod cmd {
         }
     }
 
+    pub(crate) use driverlib::rfc_CMD_IEEE_RX_ACK_s as IeeeRxAck;
+    impl RadioCommand for IeeeRxAck {
+        const COMMAND_NO: u16 = driverlib::CMD_IEEE_RX_ACK as u16;
+    }
+    impl RadioOp for IeeeRxAck {}
+    impl IeeeRxAck {
+        pub(super) fn new(seq_no: u8) -> Self {
+            Self {
+                commandNo: Self::COMMAND_NO,
+                status: RadioOpStatus::IDLE as u16,
+                pNextOp: core::ptr::null_mut(),
+                startTime: 0,
+                startTrigger: driverlib::rfc_CMD_IEEE_RX_ACK_s__bindgen_ty_1 {
+                    _bitfield_1: driverlib::rfc_CMD_IEEE_RX_ACK_s__bindgen_ty_1::new_bitfield_1(
+                        driverlib::TRIG_NOW as u8,
+                        0,
+                        0,
+                        0,
+                    ),
+                    ..Default::default()
+                },
+                condition: driverlib::rfc_CMD_IEEE_RX_ACK_s__bindgen_ty_2 {
+                    _bitfield_1: driverlib::rfc_CMD_IEEE_RX_ACK_s__bindgen_ty_2::new_bitfield_1(
+                        driverlib::COND_NEVER as u8,
+                        0,
+                    ),
+                    ..Default::default()
+                },
+                endTrigger: driverlib::rfc_CMD_IEEE_RX_ACK_s__bindgen_ty_3 {
+                    _bitfield_1: driverlib::rfc_CMD_IEEE_RX_ACK_s__bindgen_ty_3::new_bitfield_1(
+                        driverlib::TRIG_NEVER as u8,
+                        0,
+                        0,
+                        0,
+                    ),
+                    ..Default::default()
+                },
+                endTime: 0,
+                seqNo: seq_no,
+            }
+        }
+    }
+
     pub(crate) use driverlib::rfc_CMD_IEEE_CCA_REQ_s as IeeeCcaReq;
     impl RadioCommand for IeeeCcaReq {
         const COMMAND_NO: u16 = driverlib::CMD_IEEE_CCA_REQ as u16;
