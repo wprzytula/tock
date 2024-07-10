@@ -25,6 +25,24 @@ pub(crate) unsafe extern "C" fn rfc_cmd_ack_handler() {
     rfc_dbell.rfackifg.write(|w| w.ackflag().clear_bit());
 }
 
+/* Overrides for IEEE 802.15.4, differential mode */
+/* Taken from Contiki-NG radio driver */
+static mut IEEE_OVERRIDES: [u32; 11] = [
+    0x00354038, /* Synth: Set RTRIM (POTAILRESTRIM) to 5 */
+    0x4001402D, /* Synth: Correct CKVD latency setting (address) */
+    0x00608402, /* Synth: Correct CKVD latency setting (value) */
+    //  0x4001405D, /* Synth: Set ANADIV DIV_BIAS_MODE to PG1 (address) */
+    //  0x1801F800, /* Synth: Set ANADIV DIV_BIAS_MODE to PG1 (value) */
+    0x000784A3, /* Synth: Set FREF = 3.43 MHz (24 MHz / 7) */
+    0xA47E0583, /* Synth: Set loop bandwidth after lock to 80 kHz (K2) */
+    0xEAE00603, /* Synth: Set loop bandwidth after lock to 80 kHz (K3, LSB) */
+    0x00010623, /* Synth: Set loop bandwidth after lock to 80 kHz (K3, MSB) */
+    0x002B50DC, /* Adjust AGC DC filter */
+    0x05000243, /* Increase synth programming timeout */
+    0x002082C3, /* Increase synth programming timeout */
+    0xFFFFFFFF, /* End of override list */
+];
+
 mod cmd {
     use super::{driverlib, RfcDataEntryPointer, RfcQueue};
     use core::cell::Cell;
@@ -331,7 +349,7 @@ mod cmd {
                     ..Default::default()
                 },
                 txPower: tx_power,
-                pRegOverride: core::ptr::null_mut(),
+                pRegOverride: unsafe { super::IEEE_OVERRIDES.as_mut_ptr() },
             }
         }
     }
