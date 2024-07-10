@@ -861,6 +861,22 @@ impl RfcDataEntryPointer {
             pData: data as *mut u8,
         }
     }
+
+    fn print(self_ptr: *const Self) {
+        let self_ref = unsafe { self_ptr.as_ref() };
+        if let Some(entry) = self_ref {
+            kernel::debug!("|\nat {:p} -> {:?}", self_ptr, entry);
+        }
+    }
+
+    fn print_iteratively(mut self_ptr: *const Self) {
+        while let Some(entry) = unsafe { self_ptr.as_ref() } {
+            Self::print(self_ptr);
+            self_ptr = entry.pNextEntry as *const Self;
+        }
+    }
+}
+
 impl RfcQueue {
     /// Set pQueue-> pLastEntry-> pNextEntry = pEntry
     /// Set pQueue-> pLastEntry = pEntry
@@ -872,6 +888,11 @@ impl RfcQueue {
         };
         last_entry.pNextEntry = entry as *const RfcDataEntryPointer as *mut u8;
         self.pLastEntry = entry as *const RfcDataEntryPointer as *mut u8;
+    }
+
+    fn print(&self) {
+        kernel::debug!("Queue: {:#?}, entries:", self);
+        RfcDataEntryPointer::print_iteratively(self.pCurrEntry as *const RfcDataEntryPointer);
     }
 }
 
@@ -974,6 +995,15 @@ impl RxMachinery {
                     &self.queue as *const Cell<RfcQueue> as *mut RfcQueue,
                     entry.borrow_mut().deref_mut(),
                 );
+                for (entry, _) in self.bufs.iter() {
+                    RfcDataEntryPointer::print(entry.borrow().deref());
+                }
+                // panic!(
+                //     "AddDataEntry CMD: {:#?}, RfcQueue: {:#?}, added entry: {:#?}",
+                //     &cmd,
+                //     self.queue.get(),
+                //     entry.borrow().deref()
+                // );
                 cmd.send().unwrap();
                 self.queue.get().print();
             } else {
@@ -1181,6 +1211,10 @@ impl<'a> Radio<'a> {
 
         cmd.send().unwrap();
 
+        // Don't do it unless synchronous TX is desired.
+        // let status = cmd.wait_until_finished();
+        // status.to_result().unwrap();
+
         Ok(())
     }
 
@@ -1195,6 +1229,19 @@ impl<'a> Radio<'a> {
             &self.rx_machinery.stats,
         );
         cmd.send().unwrap();
+
+        // mem::drop(cmd);
+        // cmd.wait_until_finished().to_result().unwrap();
+
+        // Test if RX really terminates prematurely...
+        // let mut cmd = cmd::IeeeRxAck::new(0);
+        // cmd.send().unwrap();
+        // cmd.wait_until_finished().to_result().unwrap();
+
+        // unsafe { driverlib::CPUdelay(1000000) }
+        // let raw_status = self.rx_cmd.borrow().status;
+        // let status = RadioOpStatus::try_from(raw_status);
+        // panic!("RX status is: {} = {:?}", raw_status, status);
 
         Ok(())
     }
@@ -1529,6 +1576,8 @@ impl<'a> Radio<'a> {
 
     fn radio_on(&self) -> Result<(), ErrorCode> {
         kernel::debug!("Turning radio on...");
+        self.rx_machinery.queue.get().print();
+
         unsafe {
             driverlib::OSCHF_TurnOnXosc();
         }
