@@ -993,6 +993,8 @@ pub struct Radio<'a> {
     // miscellaneous
     rat_offset: OptionalCell<u32>,
 
+    // tx helpers
+    tx_cmd: RefCell<cmd::IeeeTx>,
 
     // rx helpers
     rx_cmd: RefCell<cmd::IeeeRx>,
@@ -1020,6 +1022,8 @@ impl<'a> Radio<'a> {
             &rx_machinery.stats,
         ));
 
+        let tx_cmd = RefCell::new(cmd::IeeeTx::new(core::ptr::null_mut(), Default::default()));
+
         Self {
             rfc_pwr,
             rfc_dbell,
@@ -1035,6 +1039,7 @@ impl<'a> Radio<'a> {
 
             tx_buf: TakeCell::empty(),
             rx_buf: TakeCell::empty(),
+            tx_cmd,
 
             rat_offset: OptionalCell::empty(),
 
@@ -1125,9 +1130,10 @@ impl<'a> Radio<'a> {
         // {}
 
         self.clear_pending_interrupts();
-        self.enable_tx_interrupt();
+        self.clear_and_enable_tx_interrupt();
 
-        let mut cmd = cmd::IeeeTx::new(buf[radio::PSDU_OFFSET..].as_mut_ptr(), frame_len);
+        let mut cmd = self.tx_cmd.borrow_mut();
+        *cmd = cmd::IeeeTx::new(buf[radio::PSDU_OFFSET..].as_mut_ptr(), frame_len);
 
         // Save buf before sending the CMD to prevent races.
         self.tx_buf.put(Some(buf));
@@ -1265,20 +1271,20 @@ impl<'a> Radio<'a> {
         self.cpe1.clear_pending();
     }
 
-    fn enable_tx_interrupt(&self) {
-        // self.rfc_dbell
-        //     .rfcpeifg
-        //     .write(|w| w.last_fg_command_done().clear_bit());
+    fn clear_and_enable_tx_interrupt(&self) {
+        self.rfc_dbell
+            .rfcpeifg
+            .write(|w| unsafe { w.bits(-1_i32 as u32) }.tx_done().clear_bit());
 
         self.rfc_dbell
             .rfcpeien
-            .modify(|_r, w| w.last_fg_command_done().set_bit());
+            .modify(|_r, w| w.tx_done().set_bit());
     }
 
     fn disable_tx_interrupt(&self) {
         self.rfc_dbell
             .rfcpeien
-            .modify(|_r, w| w.last_fg_command_done().clear_bit());
+            .modify(|_r, w| w.tx_done().clear_bit());
     }
 
     pub(crate) fn handle_interrupt_cpe0(&self) {
@@ -1288,27 +1294,22 @@ impl<'a> Radio<'a> {
 
         let interrupts = self.rfc_dbell.rfcpeifg.read();
         let tx_done = interrupts.tx_done().bit_is_set();
-        let tx_entry_done = interrupts.tx_entry_done().bit_is_set();
-        let last_fg_command_done = interrupts.last_fg_command_done().bit_is_set();
-        let rx_data_written = interrupts.rx_data_written().bit_is_set();
+        let rx_entry_done = interrupts.rx_entry_done().bit_is_set();
         kernel::debug!(
-            "interrupts: last_fg_command_done={}, tx_done={}, tx_entry_done={}, rx_data_written={}",
-            last_fg_command_done,
+            "interrupts: tx_done={}, rx_entry_done={}",
             tx_done,
-            tx_entry_done,
-            rx_data_written
+            rx_entry_done
         );
 
         self.disable_tx_interrupt();
 
         self.rfc_dbell.rfcpeifg.write(|w| {
-            w.tx_done()
+            unsafe { w.bits(-1_i32 as u32) }
+                .tx_done()
                 .clear_bit()
                 .last_fg_command_done()
                 .clear_bit()
-                .tx_entry_done()
-                .clear_bit()
-                .rx_data_written()
+                .rx_entry_done()
                 .clear_bit()
         });
 
@@ -1316,7 +1317,13 @@ impl<'a> Radio<'a> {
         // whether it's RX or TX that has triggered the interrupt.
 
         if let Some(tx_buf) = self.tx_buf.take() {
-            assert!(last_fg_command_done);
+            assert!(tx_done);
+            let raw_status = self.tx_cmd.borrow().status;
+            let status: Result<cmd::RadioOpStatus, u16> = raw_status.try_into();
+            kernel::debug!("TX status: {} = {:?}", raw_status, status);
+            assert!(status.unwrap().finished());
+            status.unwrap().to_result().unwrap();
+
             // TX completed
             self.tx_client.map(|client| {
                 client.send_done(
@@ -1326,7 +1333,7 @@ impl<'a> Radio<'a> {
                 )
             });
         } else {
-            assert!(rx_data_written);
+            assert!(rx_entry_done);
             // RX completed
             self.rx_buf.take().map(|rx_buf| {
                 let data_len = (rx_buf[radio::PHR_OFFSET] & 0x7F) as usize;
