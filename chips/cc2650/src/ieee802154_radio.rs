@@ -1,7 +1,7 @@
 use crate::driverlib;
+use crate::prcm::{Clock, Clocks, Prcm};
 use cmd::RadioOp as _;
-use core::cell::Cell;
-use core::cell::RefCell;
+use core::cell::{Cell, RefCell};
 use cortexm3::nvic::Nvic;
 use driverlib::dataQueue_t as RfcQueue;
 use driverlib::rfc_dataEntryPointer_s as RfcDataEntryPointer;
@@ -1480,10 +1480,23 @@ impl<'a> Radio<'a> {
     }
 
     fn radio_on(&self) -> Result<(), ErrorCode> {
+        kernel::debug!("Turning radio on...");
         unsafe {
             driverlib::OSCHF_TurnOnXosc();
         }
-        while unsafe { !driverlib::OSCHF_AttemptToSwitchToXosc() } {}
+
+        let prcm = unsafe { &*cc2650::PRCM::ptr() };
+
+        // Power domain
+        let domains = crate::prcm::PowerDomains::empty().rfc();
+        unsafe { driverlib::PRCMPowerDomainOn(domains.into()) };
+        while !Prcm::are_enabled(domains) {}
+
+        // Clock gating
+        Clock::enable_clocks(prcm, Clocks::empty().rfc());
+
+        assert!(self.is_on());
+        self.configure_interrupts();
 
         // self.rfc_pwr
         //     .pwmclken
@@ -1507,7 +1520,11 @@ impl<'a> Radio<'a> {
         unsafe { driverlib::RFCClockEnable() }
 
         self.ping().unwrap();
+
         self.setup().unwrap();
+
+        // Switch to OSC from RC is needed before starting RAT.
+        while unsafe { !driverlib::OSCHF_AttemptToSwitchToXosc() } {}
         self.start_rat().unwrap();
 
         // Not to catch interrupts from before
@@ -1515,7 +1532,7 @@ impl<'a> Radio<'a> {
 
         // Begin receiving procedure.
         self.enable_interrupts();
-        // self.start_synthesizer().unwrap();
+        self.start_synthesizer().unwrap();
         self.rx().unwrap();
 
         Ok(())
@@ -1539,12 +1556,19 @@ impl<'a> Radio<'a> {
 
         self.rx_machinery.poweroff_cleanup();
 
+        let prcm = unsafe { &*cc2650::PRCM::ptr() };
+
+        // Clock gating
+        Clock::disable_clocks(prcm, Clocks::empty().rfc());
+
+        // Power domain
+        let domains = crate::prcm::PowerDomains::empty().rfc();
+        unsafe { driverlib::PRCMPowerDomainOff(domains.into()) };
+
         Ok(())
     }
 
-    fn radio_initialize(&self) {
-        self.configure_interrupts();
-    }
+    fn radio_initialize(&self) {}
 }
 
 impl<'a> RadioConfig<'a> for Radio<'a> {
