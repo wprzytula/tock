@@ -901,20 +901,17 @@ type RxBuf = [u8; radio::MAX_BUF_SIZE];
 struct RxMachinery {
     stats: Cell<RfcRxOutput>,
     queue: Cell<RfcQueue>,
-    bufs: [(RefCell<RfcDataEntryPointer>, TakeCell<'static, [u8]>); Self::N_BUFS],
+    bufs: [(
+        RefCell<RfcDataEntryPointer>,
+        &'static mut [u8; radio::MAX_BUF_SIZE],
+    ); Self::N_BUFS],
     next_finished: Cell<usize>,
 }
-
-const _N_BUFS_ASSERTION: () = assert!(RxMachinery::N_BUFS >= 2, "At least 2 RX bufs are needed");
 
 impl RxMachinery {
     const N_BUFS: usize = 2;
 
     fn new() -> Self {
-        // const CELL: VolatileCell<u8> = VolatileCell::new(0);
-        fn make_buf() -> &'static mut RxBuf {
-            unsafe { static_init!(RxBuf, [0_u8; radio::MAX_BUF_SIZE]) }
-        }
         fn make_entry() -> RefCell<RfcDataEntryPointer> {
             RefCell::new(RfcDataEntryPointer::new(
                 core::ptr::null_mut(),
@@ -926,18 +923,16 @@ impl RxMachinery {
         Self {
             stats: Default::default(),
             queue: Default::default(),
-            bufs: core::array::from_fn(|idx| {
-                (
-                    make_entry(),
-                    // The last buffer is going to be given from the layer above HIL,
-                    // by `RadioData::set_receive_buffer()`.
-                    if idx + 1 < Self::N_BUFS {
-                        TakeCell::new(make_buf().as_mut_slice())
-                    } else {
-                        TakeCell::empty()
-                    },
-                )
-            }),
+            bufs: [
+                (make_entry(), unsafe {
+                    static_init!(RxBuf, [0_u8; radio::MAX_BUF_SIZE])
+                }),
+                (make_entry(), unsafe {
+                    static_init!(RxBuf, [0_u8; radio::MAX_BUF_SIZE])
+                }),
+                // ...
+                // Control number of buffers by adding them here ^
+            ],
             next_finished: Cell::new(0),
         }
     }
@@ -945,7 +940,12 @@ impl RxMachinery {
     fn link_entries(&'static mut self) -> &'static mut Self {
         use core::ops::DerefMut as _;
 
-        // Link entries without cycles
+        // Attach the entries to their data.
+        for (entry, buf) in self.bufs[..Self::N_BUFS].iter_mut() {
+            entry.get_mut().pData = *buf as *mut [u8] as *mut u8;
+        }
+
+        // Link entries without cycles.
         for window in self.bufs.windows(2) {
             let (entry1, _buf1) = &window[0];
             let (entry2, _buf2) = &window[1];
@@ -954,24 +954,20 @@ impl RxMachinery {
                 entry2.borrow_mut().deref_mut() as *mut RfcDataEntryPointer as *mut u8;
         }
 
-        for (entry, buf) in self.bufs[..Self::N_BUFS - 1].iter_mut() {
-            entry.get_mut().pData = buf.get_mut().unwrap() as *mut [u8] as *mut u8;
-        }
-
-        // The last entry is going to be linked to the buffer received eventually from upper layer,
-        // when `RadioData::set_receive_buf()` is called.
+        // Finish the cycle.
+        let (first_entry, last_entry) = {
+            let (head, tail) = self.bufs.split_first_mut().unwrap();
+            (head, tail.last_mut().unwrap())
+        };
+        last_entry.0.get_mut().pNextEntry =
+            first_entry.0.get_mut() as *mut RfcDataEntryPointer as *mut u8;
 
         // Setup queue.
         self.queue.set(RfcQueue {
-            pCurrEntry: self.bufs.first_mut().as_mut().unwrap().0.get_mut()
-                as *mut RfcDataEntryPointer as *mut u8,
-            pLastEntry: self.bufs.last_mut().as_mut().unwrap().0.get_mut()
-                as *mut RfcDataEntryPointer as *mut u8,
+            pCurrEntry: self.bufs.first_mut().unwrap().0.get_mut() as *mut RfcDataEntryPointer
+                as *mut u8,
+            pLastEntry: core::ptr::null_mut(),
         });
-
-        self.bufs
-            .last_mut()
-            .map(|(entry, _buf)| entry.get_mut().pNextEntry = core::ptr::null_mut());
 
         self
     }
@@ -989,70 +985,15 @@ impl RxMachinery {
         }
     }
 
-    fn set_higher_layer_buffer(&self, buf: &'static mut [u8], radio_is_on: bool) {
-        use core::ops::{Deref as _, DerefMut as _};
-
-        if let Some((entry, buf_slot)) = self.bufs.iter().find(|(entry, buf)| {
-            buf.is_none()
-                && matches!(
-                    entry.borrow().status,
-                    RfcDataEntryPointer::STATUS_FINISHED | RfcDataEntryPointer::STATUS_PENDING
-                )
-        }) {
-            match entry.borrow().status {
-                RfcDataEntryPointer::STATUS_PENDING | RfcDataEntryPointer::STATUS_FINISHED => (),
-                RfcDataEntryPointer::STATUS_ACTIVE
-                | RfcDataEntryPointer::STATUS_BUSY
-                | RfcDataEntryPointer::STATUS_UNFINISHED
-                | _ => panic!(),
-            }
-            entry.borrow_mut().status = RfcDataEntryPointer::STATUS_PENDING;
-            entry.borrow_mut().pData = buf as *mut [u8] as *mut u8;
-
-            if radio_is_on {
-                // Radio is on, so to prevent races we employ itself to add the entry to the queue.
-                let mut cmd = cmd::AddDataEntry::new(
-                    &self.queue as *const Cell<RfcQueue> as *mut RfcQueue,
-                    entry.borrow_mut().deref_mut(),
-                );
-                for (entry, _) in self.bufs.iter() {
-                    RfcDataEntryPointer::print(entry.borrow().deref());
-                }
-                // panic!(
-                //     "AddDataEntry CMD: {:#?}, RfcQueue: {:#?}, added entry: {:#?}",
-                //     &cmd,
-                //     self.queue.get(),
-                //     entry.borrow().deref()
-                // );
-                cmd.send().unwrap();
-                self.queue.get().print();
-            } else {
-                // Radio is off, so we cannot use cmds.
-                // Instead, let's add the entry to the queue manually.
-                let mut queue = self.queue.get();
-                queue.append_entry(entry.borrow().deref());
-                self.queue.set(queue);
-            }
-            buf_slot.replace(buf);
-        } else {
-            let last_entry_ptr = self.queue.get().pLastEntry as *const RfcDataEntryPointer;
-            let (_entry, buf_slot) = self
-                .bufs
-                .iter()
-                .find(|(entry, _buf)| {
-                    entry.borrow().deref() as *const RfcDataEntryPointer == last_entry_ptr
-                })
-                .unwrap();
-            buf_slot.replace(buf);
-        }
-    }
-
-    fn take_finished(&self) -> Option<&'static mut [u8]> {
+    fn take_finished(&self) -> Option<&&'static mut [u8; radio::MAX_BUF_SIZE]> {
         let next_finished = self.next_finished.get();
         let (entry, buf_slot) = &self.bufs[next_finished];
-        (entry.borrow().status == RfcDataEntryPointer::STATUS_FINISHED).then(|| {
-            self.next_finished.set(next_finished + 1);
-            buf_slot.take().unwrap()
+        let entry_status = { entry.borrow().status };
+        (entry_status == RfcDataEntryPointer::STATUS_FINISHED).then(|| {
+            self.next_finished
+                .set((next_finished + 1) % self.bufs.len());
+            entry.borrow_mut().status = RfcDataEntryPointer::STATUS_PENDING;
+            buf_slot
         })
     }
 }
@@ -1089,6 +1030,7 @@ pub struct Radio<'a> {
     tx_cmd: RefCell<cmd::IeeeTx>,
 
     // rx helpers
+    rx_buf: TakeCell<'static, [u8; radio::MAX_BUF_SIZE]>,
     rx_cmd: RefCell<cmd::IeeeRx>,
     rx_machinery: &'static mut RxMachinery,
 
@@ -1140,6 +1082,7 @@ impl<'a> Radio<'a> {
             channel: Cell::new(RadioChannel::Channel26),
             tx_power: Cell::new(OUTPUT_POWER_MAX),
 
+            rx_buf: TakeCell::empty(),
             rx_cmd,
             rx_machinery,
 
@@ -1395,8 +1338,27 @@ impl<'a> Radio<'a> {
             .modify(|_r, w| w.tx_done().clear_bit());
     }
 
+    fn handle_received_frame(
+        &self,
+        buf: &'static mut [u8; radio::MAX_BUF_SIZE],
+        frame: &[u8; radio::MAX_BUF_SIZE],
+    ) {
+        let data_len = (frame[radio::PHR_OFFSET] & 0x7F) as usize;
+
+        // LQI is found just after the data received.
+        let lqi = frame[data_len];
+
+        // We drop the CRC bytes (the MFR) from our frame.
+        let frame_len = data_len - radio::MFR_SIZE;
+
+        buf.copy_from_slice(frame);
+
+        // RX completed
+        self.rx_client
+            .map(|client| client.receive(buf, frame_len, lqi, true, Ok(())));
+    }
+
     pub(crate) fn handle_interrupt_cpe0(&self) {
-        // FIXME: disable interrupts
         self.disable_interrupts();
         kernel::debug!("handling interrupt cpe0");
 
@@ -1443,21 +1405,12 @@ impl<'a> Radio<'a> {
         } else {
             assert!(rx_entry_done);
             // RX completed
-            self.rx_machinery.take_finished().map(|rx_buf| {
-                let data_len = (rx_buf[radio::PHR_OFFSET] & 0x7F) as usize;
-
-                // LQI is found just after the data received.
-                let lqi = rx_buf[data_len];
-
-                // We drop the CRC bytes (the MFR) from our frame.
-                let frame_len = data_len - radio::MFR_SIZE;
-
-                // RX completed
-                self.rx_client
-                    .map(|client| client.receive(rx_buf, frame_len, lqi, true, Ok(())));
+            self.rx_machinery.take_finished().map(|frame| {
+                if let Some(rx_buf) = self.rx_buf.take() {
+                    self.handle_received_frame(rx_buf, frame);
+                }
             });
         };
-        //  FIXME: enable interrupts
         self.enable_interrupts();
     }
 
@@ -1595,12 +1548,7 @@ impl<'a> Radio<'a> {
     }
 
     fn radio_on(&self) -> Result<(), ErrorCode> {
-        use core::ops::Deref as _;
         kernel::debug!("Turning radio on...");
-        self.rx_machinery.queue.get().print();
-        for (entry, _) in self.rx_machinery.bufs.iter() {
-            RfcDataEntryPointer::print(entry.borrow().deref());
-        }
 
         unsafe {
             driverlib::OSCHF_TurnOnXosc();
@@ -1815,8 +1763,13 @@ impl<'a> RadioData<'a> for Radio<'a> {
     }
 
     fn set_receive_buffer(&self, buffer: &'static mut [u8]) {
-        self.rx_machinery
-            .set_higher_layer_buffer(buffer, self.is_on());
+        if let Some(frame) = self.rx_machinery.take_finished() {
+            // Some frame has already come. Let's put it in the buffer and return to the upper layer.
+            self.handle_received_frame(buffer.try_into().unwrap(), (&**frame).try_into().unwrap());
+        } else {
+            // No frame has come yet. Let's keep the buffer and wait for a frame to arrive.
+            self.rx_buf.replace(buffer.try_into().unwrap());
+        }
     }
 
     fn transmit(
