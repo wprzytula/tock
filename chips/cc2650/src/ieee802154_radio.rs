@@ -843,7 +843,7 @@ impl RfcDataEntryPointer {
 
     const POINTER_ENTRY_TYPE: u8 = 2;
 
-    fn new(data: *mut RxBuf, length: u16, next_entry: *mut RfcDataEntryPointer) -> Self {
+    fn new(data: *mut RxBuf, length: u16, next_entry: *mut Self) -> Self {
         Self {
             pNextEntry: next_entry as *mut u8,
             status: Self::STATUS_PENDING,
@@ -892,7 +892,7 @@ impl RfcQueue {
 
     fn print(&self) {
         kernel::debug!("Queue: {:#?}, entries:", self);
-        RfcDataEntryPointer::print_iteratively(self.pCurrEntry as *const RfcDataEntryPointer);
+        // RfcDataEntryPointer::print_iteratively(self.pCurrEntry as *const RfcDataEntryPointer);
     }
 }
 
@@ -969,6 +969,10 @@ impl RxMachinery {
                 as *mut RfcDataEntryPointer as *mut u8,
         });
 
+        self.bufs
+            .last_mut()
+            .map(|(entry, _buf)| entry.get_mut().pNextEntry = core::ptr::null_mut());
+
         self
     }
 
@@ -988,7 +992,23 @@ impl RxMachinery {
     fn set_higher_layer_buffer(&self, buf: &'static mut [u8], radio_is_on: bool) {
         use core::ops::{Deref as _, DerefMut as _};
 
-        if let Some((entry, buf_slot)) = self.bufs.iter().find(|(_entry, buf)| buf.is_none()) {
+        if let Some((entry, buf_slot)) = self.bufs.iter().find(|(entry, buf)| {
+            buf.is_none()
+                && matches!(
+                    entry.borrow().status,
+                    RfcDataEntryPointer::STATUS_FINISHED | RfcDataEntryPointer::STATUS_PENDING
+                )
+        }) {
+            match entry.borrow().status {
+                RfcDataEntryPointer::STATUS_PENDING | RfcDataEntryPointer::STATUS_FINISHED => (),
+                RfcDataEntryPointer::STATUS_ACTIVE
+                | RfcDataEntryPointer::STATUS_BUSY
+                | RfcDataEntryPointer::STATUS_UNFINISHED
+                | _ => panic!(),
+            }
+            entry.borrow_mut().status = RfcDataEntryPointer::STATUS_PENDING;
+            entry.borrow_mut().pData = buf as *mut [u8] as *mut u8;
+
             if radio_is_on {
                 // Radio is on, so to prevent races we employ itself to add the entry to the queue.
                 let mut cmd = cmd::AddDataEntry::new(
@@ -1445,7 +1465,7 @@ impl<'a> Radio<'a> {
         let interrupts = self.rfc_dbell.rfcpeifg.read();
 
         let internal_error = interrupts.internal_error().bit_is_set();
-        let boot_done = interrupts.boot_done().bit_is_set();
+        // let boot_done = interrupts.boot_done().bit_is_set();
         let modules_unlocked = interrupts.modules_unlocked().bit_is_set();
         let synth_no_lock = interrupts.synth_no_lock().bit_is_set();
         let irq27 = interrupts.irq27().bit_is_set();
@@ -1575,8 +1595,12 @@ impl<'a> Radio<'a> {
     }
 
     fn radio_on(&self) -> Result<(), ErrorCode> {
+        use core::ops::Deref as _;
         kernel::debug!("Turning radio on...");
         self.rx_machinery.queue.get().print();
+        for (entry, _) in self.rx_machinery.bufs.iter() {
+            RfcDataEntryPointer::print(entry.borrow().deref());
+        }
 
         unsafe {
             driverlib::OSCHF_TurnOnXosc();
@@ -1826,7 +1850,7 @@ impl DeferredCallClient for Radio<'_> {
     fn handle_deferred_call(&self) {
         // On deferred call we trigger the config or power callbacks. The
         // `.take()` ensures we clear what is pending.
-        kernel::debug!("RADIO: Handling deferred call");
+        // kernel::debug!("RADIO: Handling deferred call");
         self.deferred_call_operation.take().map(|op| match op {
             DeferredOperation::ConfigClientCallback => {
                 self.config_client.map(|client| {
