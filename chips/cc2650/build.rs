@@ -1,12 +1,14 @@
 //! The build script also sets the linker flags to tell it which link script to use.
 
 use std::env;
-use std::ffi::{OsStr, OsString};
+use std::ffi::OsStr;
 use std::fs::File;
 use std::io::Write;
 use std::iter::FromIterator;
 use std::path::PathBuf;
 use std::process::Command;
+
+const DRIVERLIB_PATH: &str = "DRIVERLIB_PATH";
 
 const LIB_ROM_ORIGINAL: &str = "libROM_driverlib.elf";
 const LIB_ROM_FILTERED: &str = "libROM_driverlib_filtered.elf";
@@ -44,9 +46,11 @@ struct DriverlibBuilder {
 
 impl DriverlibBuilder {
     fn new(out: PathBuf) -> Self {
-        let driverlib_path = PathBuf::from(env::var_os("DRIVERLIB_PATH").unwrap_or_else(|| {
-            OsString::from("/home/xps15/Studia/Sem8/Tock/driverlib/cc26x0/driverlib")
-        }));
+        let driverlib_path = PathBuf::from(env::var_os(DRIVERLIB_PATH).expect(concat!(
+            "<",
+            stringify!(DRIVERLIB_PATH),
+            "> env variable must be provided. Check out your board's Makefile for that variable definition."
+        )));
 
         let cc2650_crate_root = PathBuf::from(std::env::var_os("CARGO_MANIFEST_DIR").unwrap());
         let cc2650_crate_driverlib = cc2650_crate_root.join("src/driverlib");
