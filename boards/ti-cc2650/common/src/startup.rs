@@ -56,6 +56,10 @@ pub struct Platform<const NUM_LEDS: usize> {
     console: &'static capsules_core::console::Console<'static>,
     #[cfg(feature = "uart_lite")]
     console_lite: &'static capsules_core::console_lite::ConsoleLite<'static>,
+    ieee802154: &'static capsules_extra::ieee802154::phy_driver::RadioDriver<
+        'static,
+        cc2650_chip::ieee802154_radio::Radio<'static>,
+    >,
 }
 
 impl<const NUM_LEDS: usize> SyscallDriverLookup for Platform<NUM_LEDS> {
@@ -69,6 +73,7 @@ impl<const NUM_LEDS: usize> SyscallDriverLookup for Platform<NUM_LEDS> {
             capsules_core::console::DRIVER_NUM => f(Some(self.console)),
             #[cfg(feature = "uart_lite")]
             console_lite::DRIVER_NUM => f(Some(self.console_lite)),
+            capsules_extra::ieee802154::DRIVER_NUM => f(Some(self.ieee802154)),
             _ => f(None),
         }
     }
@@ -237,6 +242,21 @@ pub unsafe fn start<const NUM_LEDS: usize>(
         }
     }
 
+    //--------------------------------------------------------------------------
+    // IEEE 802.15.4 and UDP
+    //--------------------------------------------------------------------------
+
+    kernel::deferred_call::DeferredCallClient::register(&chip.radio);
+
+    let ieee802154 = components::ieee802154::Ieee802154RawComponent::new(
+        board_kernel,
+        capsules_extra::ieee802154::DRIVER_NUM,
+        &chip.radio,
+    )
+    .finalize(components::ieee802154_raw_component_static!(
+        cc2650_chip::ieee802154_radio::Radio,
+    ));
+
     /* END CAPSULES CONFIGURATION */
 
     /* PLATFORM CONFIGURATION */
@@ -255,6 +275,7 @@ pub unsafe fn start<const NUM_LEDS: usize>(
         console,
         #[cfg(feature = "uart_lite")]
         console_lite,
+        ieee802154,
     };
     /* END PLATFORM CONFIGURATION */
 
