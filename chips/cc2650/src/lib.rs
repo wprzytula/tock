@@ -14,7 +14,7 @@ pub mod gpt;
 pub mod ieee802154_radio;
 mod peripheral_interrupts;
 pub mod prcm;
-mod rtc;
+pub mod rtc;
 #[cfg(feature = "uart_lite")]
 mod scif;
 pub mod uart;

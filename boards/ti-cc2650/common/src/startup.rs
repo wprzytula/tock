@@ -50,7 +50,7 @@ pub struct Platform<const NUM_LEDS: usize> {
         'static,
         capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<
             'static,
-            cc2650_chip::gpt::Gpt<'static>,
+            cc2650_chip::rtc::Rtc<'static>,
         >,
     >,
     console: &'static capsules_core::console::Console<'static>,
@@ -141,8 +141,8 @@ pub unsafe fn start<const NUM_LEDS: usize>(
     let leds = LedDriver::new(&leds);
 
     // Alarm
-    let alarm_mux = components::alarm::AlarmMuxComponent::new(&chip.gpt).finalize(
-        components::alarm_mux_component_static!(cc2650_chip::gpt::Gpt),
+    let alarm_mux = components::alarm::AlarmMuxComponent::new(&chip.rtc).finalize(
+        components::alarm_mux_component_static!(cc2650_chip::rtc::Rtc),
     );
 
     let alarm = components::alarm::AlarmDriverComponent::new(
@@ -150,7 +150,7 @@ pub unsafe fn start<const NUM_LEDS: usize>(
         capsules_core::alarm::DRIVER_NUM,
         &alarm_mux,
     )
-    .finalize(components::alarm_component_static!(cc2650_chip::gpt::Gpt));
+    .finalize(components::alarm_component_static!(cc2650_chip::rtc::Rtc));
 
     // UART I/O
     let uart_full_mux =
