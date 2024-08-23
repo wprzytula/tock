@@ -20704,7 +20704,7 @@ extern "C" {
     ) -> cty::c_int;
 }
 extern "C" {
-    pub fn bcopy(arg1: *const cty::c_void, arg2: *mut cty::c_void, arg3: usize);
+    pub fn bcopy(arg1: *const cty::c_void, arg2: *mut cty::c_void, arg3: cty::c_uint);
 }
 extern "C" {
     pub fn bzero(arg1: *mut cty::c_void, arg2: cty::c_uint);

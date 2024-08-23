@@ -24,7 +24,7 @@ impl<T> PinConfig for T where T: UartPinConfig + Copy {}
 
 pub struct Cc2650<'a> {
     userspace_kernel_boundary: cortexm3::syscall::SysCall,
-    pub rtc: Rtc,
+    pub rtc: Rtc<'a>,
     pub gpt: Gpt<'a>,
     pub uart_full: UartFull<'a>,
     #[cfg(feature = "uart_lite")]
@@ -157,7 +157,7 @@ impl kernel::platform::chip::InterruptService for Cc2650<'_> {
             irq::GPIO => todo!(),
             irq::I2C => todo!(),
             irq::RF_CPE1 => self.radio.handle_interrupt_cpe1(),
-            irq::AON_RTC => todo!(),
+            irq::AON_RTC => self.rtc.handle_interrupt(),
             irq::UART0 => self.uart_full.handle_interrupt(),
             irq::AUX_SWEV0 => (),
             irq::SSI0 => todo!(),
