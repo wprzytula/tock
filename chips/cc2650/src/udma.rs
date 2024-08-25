@@ -1,15 +1,14 @@
 //! UDMA support.
 //!
-//! Notki z TRM:
-//! - każdy kanał ma 2 priorytety: normalny i wysoki
-//! - `arbitration size` oznacza ile elementów zostanie wysłanych, zanim nastąpi ponowny wybór kanału
-//! - `burst` vs `single` transfer: burst wysyła wiele naraz, nie da się go przerwać
-//!     - w przypadku UART należy skonfigurować burst threshold (np. 1/2 * 32)  taki sam jak arbitration size (16)
-//!     - da się wyłączyć `single` za pomocą UDMA:SETBURST.
-//! - oprócz włączania zasilania i zegarów, trzeba włączać kontroler
-//! - DMA generuje przerwania konkretnych peryferiów, dlatego należy wyłączyć
-//!   ich własne źródła przerwań, jeśli używa się DMA.
-//! -
+//! Notes from TRM:
+//! - each channel has 2 priorities: high and low.
+//! - `arbitration size` means how many elements are sent before a new channel selection occurs
+//! - `burst` vs `single` transfer: burst sends multiple in a batch, it is not interruptible
+//!     - in case of UART burst threshold should be configured (e.g. 1/2 * 32) as the same as arbitration size (16)
+//!     - `single` can be turned off using UDMA:SETBURST.
+//! - apart from powering on and turning on clock gating, the controller must be turned on
+//! - DMA generates interrupts for peripherals, so their own interrupt triggers should be turned off
+//!   if DMA is in use.
 
 use core::{ffi::c_void, marker::PhantomData, ptr::addr_of};
 
