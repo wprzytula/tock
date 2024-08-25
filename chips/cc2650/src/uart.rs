@@ -27,7 +27,7 @@ mod full {
     // selected for the receive FIFO, the UART generates a receive interrupt after 4 data bytes are received. Out
     // of reset, both FIFOs are configured to trigger an interrupt at the ½ mark.
 
-    use core::{arch::asm, cell::Cell};
+    use core::cell::Cell;
 
     use kernel::{hil, ErrorCode};
     use tock_cells::{map_cell::MapCell, optional_cell::OptionalCell};
@@ -267,33 +267,33 @@ mod full {
             }
 
             // FIXME: debug prints
-            let ris = self.uart.ris.read();
-            if ris.txris().bit_is_set() {
-                unsafe {
-                    asm!("nop");
-                }
-                // kernel::debug!("TXRIS set");
-            }
-            if ris.oeris().bit_is_set() {
-                unsafe {
-                    asm!("nop");
-                }
-                kernel::debug!("OERIS set");
-            }
+            // let ris = self.uart.ris.read();
+            // if ris.txris().bit_is_set() {
+            //     unsafe {
+            //         asm!("nop");
+            //     }
+            //     // kernel::debug!("TXRIS set");
+            // }
+            // if ris.oeris().bit_is_set() {
+            //     unsafe {
+            //         asm!("nop");
+            //     }
+            //     kernel::debug!("OERIS set");
+            // }
 
-            let mis = self.uart.mis.read();
-            if mis.txmis().bit_is_set() {
-                unsafe {
-                    asm!("nop");
-                }
-                // kernel::debug!("TXMIS set");
-            }
-            if mis.oemis().bit_is_set() {
-                unsafe {
-                    asm!("nop");
-                }
-                // kernel::debug!("OEMIS set");
-            }
+            // let mis = self.uart.mis.read();
+            // if mis.txmis().bit_is_set() {
+            //     unsafe {
+            //         asm!("nop");
+            //     }
+            //     kernel::debug!("TXMIS set");
+            // }
+            // if mis.oemis().bit_is_set() {
+            //     unsafe {
+            //         asm!("nop");
+            //     }
+            //     kernel::debug!("OEMIS set");
+            // }
             // FIXME END: debug prints
 
             // clear interrupt flags
@@ -422,7 +422,6 @@ mod full {
             self.uart.fr.read().rxff().bit_is_clear()
         }
 
-        // FIXME: transmit_word unused
         // Helper function used by both transmit_word and transmit_buffer
         fn setup_buffer_transmit(&self, buf: &'static mut [u8], tx_len: usize) {
             // truncate tx_len if necessary
@@ -442,7 +441,6 @@ mod full {
             self.tx_transaction.put(tx);
         }
 
-        // FIXME: receive_word unused
         // Helper function used by both receive_word and receive_buffer
         fn setup_buffer_receive(&self, rx_buf: &'static mut [u8], rx_len: usize) {
             // truncate rx_len if necessary
