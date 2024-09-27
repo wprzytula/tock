@@ -7,20 +7,18 @@
 //! Setup
 //! -----
 //!
-//! You need a device that provides the `hil::uart::UART` trait.
+//! You need a device that provides the `hil::uart::UartLite` trait.
 //!
 //! ```rust
 //! # use kernel::static_init;
-//! # use capsules::console::Console;
+//! # use capsules::console_lite::ConsoleLite;
 //!
-//! let console = static_init!(
-//!     Console<usart::USART>,
-//!     Console::new(&usart::USART0,
-//!                  115200,
-//!                  &mut console::WRITE_BUF,
-//!                  &mut console::READ_BUF,
-//!                  board_kernel.create_grant(&grant_cap)));
-//! hil::uart::UART::set_client(&usart::USART0, console);
+//! let console_lite = static_init!(
+//!     ConsoleLite<uart::UartLite>,
+//!     Console::new(
+//!         &uart_lite,
+//!         board_kernel.create_grant(&grant_cap))
+//!     );
 //! ```
 //!
 //! Usage
