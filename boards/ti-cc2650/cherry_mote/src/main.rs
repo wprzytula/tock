@@ -1,7 +1,7 @@
 #![no_std]
 #![cfg_attr(not(doc), no_main)]
 
-use cc2650_chip::uart::UartPinConfig;
+use cc2650_chip::{i2c::I2CPinConfig, uart::UartPinConfig};
 use kernel::{create_capability, hil::led::LedHigh, static_init};
 use ti_cc2650_common::NUM_PROCS;
 
@@ -26,6 +26,15 @@ impl UartPinConfig for PinConfig {
 
     fn cts() -> u32 {
         cc2650_chip::driverlib::IOID_4
+    }
+}
+impl I2CPinConfig for PinConfig {
+    fn sda() -> u32 {
+        cc2650_chip::driverlib::IOID_18
+    }
+
+    fn scl() -> u32 {
+        cc2650_chip::driverlib::IOID_19
     }
 }
 

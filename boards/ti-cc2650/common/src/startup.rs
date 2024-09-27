@@ -133,6 +133,8 @@ pub unsafe fn start<const NUM_LEDS: usize>(
 
     /* PERIPHERALS CONFIGURATION */
     let chip = static_init!(Cc2650, Cc2650::new(pin_config));
+    chip.i2c.initialize(&chip.rtc, pin_config);
+    kernel::deferred_call::DeferredCallClient::register(&chip.i2c);
 
     let board_kernel = static_init!(kernel::Kernel, kernel::Kernel::new(&*addr_of!(PROCESSES)));
 
