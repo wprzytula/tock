@@ -1,20 +1,30 @@
-use core::ptr::{addr_of, addr_of_mut};
+use core::{
+    mem::MaybeUninit,
+    ptr::{addr_of, addr_of_mut},
+};
 
-use capsules_core::{console, led::LedDriver};
+use capsules_core::{console, led::LedDriver, virtualizers::virtual_alarm::VirtualMuxAlarm};
+use capsules_extra::tmp431::Tmp431SMBus;
 use capsules_system::{process_policies::PanicFaultPolicy, process_printer::ProcessPrinterText};
 use cc2650_chip::{
     chip::{Cc2650, PinConfig},
+    i2c::I2C,
     uart,
 };
 
+use components::tmp431::SetThermometerClient;
 use kernel::{
     capabilities,
     component::Component as _,
     create_capability, debug,
-    hil::uart::Configure as _,
+    hil::{
+        i2c::{I2CClient, I2CDevice, I2CHwMasterClient, SMBusDevice},
+        uart::Configure as _,
+    },
     platform::{KernelResources, SyscallDriverLookup},
     scheduler::round_robin::RoundRobinSched,
     static_init,
+    syscall::SyscallDriver,
 };
 
 #[cfg(feature = "uart_lite")]
@@ -38,7 +48,79 @@ pub static mut PROCESSES: [Option<&'static dyn kernel::process::Process>; NUM_PR
 pub static mut CHIP: Option<&'static Cc2650> = None;
 pub static mut PROCESS_PRINTER: Option<&'static ProcessPrinterText> = None;
 
-pub struct Platform<const NUM_LEDS: usize> {
+type TemperatureDriver<Thermometer, A> =
+    components::temperature::TemperatureComponentType<Tmp431SMBus<'static, Thermometer, A>>;
+
+pub struct NoThermometer;
+impl I2CDevice for NoThermometer {
+    fn enable(&self) {}
+
+    fn disable(&self) {}
+
+    fn write_read(
+        &self,
+        _data: &'static mut [u8],
+        _write_len: usize,
+        _read_len: usize,
+    ) -> Result<(), (kernel::hil::i2c::Error, &'static mut [u8])> {
+        Ok(())
+    }
+
+    fn write(
+        &self,
+        _data: &'static mut [u8],
+        _len: usize,
+    ) -> Result<(), (kernel::hil::i2c::Error, &'static mut [u8])> {
+        Ok(())
+    }
+
+    fn read(
+        &self,
+        _buffer: &'static mut [u8],
+        _len: usize,
+    ) -> Result<(), (kernel::hil::i2c::Error, &'static mut [u8])> {
+        Ok(())
+    }
+}
+impl SMBusDevice for NoThermometer {
+    fn smbus_write_read(
+        &self,
+        _data: &'static mut [u8],
+        _write_len: usize,
+        _read_len: usize,
+    ) -> Result<(), (kernel::hil::i2c::Error, &'static mut [u8])> {
+        Ok(())
+    }
+
+    fn smbus_write(
+        &self,
+        _data: &'static mut [u8],
+        _len: usize,
+    ) -> Result<(), (kernel::hil::i2c::Error, &'static mut [u8])> {
+        Ok(())
+    }
+
+    fn smbus_read(
+        &self,
+        _buffer: &'static mut [u8],
+        _len: usize,
+    ) -> Result<(), (kernel::hil::i2c::Error, &'static mut [u8])> {
+        todo!()
+    }
+}
+impl I2CHwMasterClient for NoThermometer {
+    fn command_complete(
+        &self,
+        _buffer: &'static mut [u8],
+        _status: Result<(), kernel::hil::i2c::Error>,
+    ) {
+    }
+}
+impl SetThermometerClient<'_> for NoThermometer {
+    fn set_client(&self, _thermometer_client: &dyn I2CClient) {}
+}
+
+pub struct Platform<const NUM_LEDS: usize, Thermometer: SMBusDevice + 'static> {
     scheduler: &'static RoundRobinSched<'static>,
     systick: cortexm3::systick::SysTick,
     leds: capsules_core::led::LedDriver<
@@ -48,10 +130,7 @@ pub struct Platform<const NUM_LEDS: usize> {
     >,
     alarm: &'static capsules_core::alarm::AlarmDriver<
         'static,
-        capsules_core::virtualizers::virtual_alarm::VirtualMuxAlarm<
-            'static,
-            cc2650_chip::rtc::Rtc<'static>,
-        >,
+        VirtualMuxAlarm<'static, cc2650_chip::rtc::Rtc<'static>>,
     >,
     console: &'static capsules_core::console::Console<'static>,
     #[cfg(feature = "uart_lite")]
@@ -60,9 +139,17 @@ pub struct Platform<const NUM_LEDS: usize> {
         'static,
         cc2650_chip::ieee802154_radio::Radio<'static>,
     >,
+    temperature: Option<
+        &'static TemperatureDriver<
+            Thermometer,
+            VirtualMuxAlarm<'static, cc2650_chip::rtc::Rtc<'static>>,
+        >,
+    >,
 }
 
-impl<const NUM_LEDS: usize> SyscallDriverLookup for Platform<NUM_LEDS> {
+impl<const NUM_LEDS: usize, Thermometer: SMBusDevice + 'static> SyscallDriverLookup
+    for Platform<NUM_LEDS, Thermometer>
+{
     fn with_driver<F, R>(&self, driver_num: usize, f: F) -> R
     where
         F: FnOnce(Option<&dyn kernel::syscall::SyscallDriver>) -> R,
@@ -74,12 +161,17 @@ impl<const NUM_LEDS: usize> SyscallDriverLookup for Platform<NUM_LEDS> {
             #[cfg(feature = "uart_lite")]
             console_lite::DRIVER_NUM => f(Some(self.console_lite)),
             capsules_extra::ieee802154::DRIVER_NUM => f(Some(self.ieee802154)),
+            capsules_extra::temperature::DRIVER_NUM => {
+                f(self.temperature.map(|driver| driver as &dyn SyscallDriver))
+            }
             _ => f(None),
         }
     }
 }
 
-impl<'a, const NUM_LEDS: usize> KernelResources<Cc2650<'a>> for Platform<NUM_LEDS> {
+impl<'a, const NUM_LEDS: usize, Thermometer: SMBusDevice + 'static> KernelResources<Cc2650<'a>>
+    for Platform<NUM_LEDS, Thermometer>
+{
     type SyscallDriverLookup = Self;
     type SyscallFilter = ();
     type ProcessFault = ();
@@ -115,13 +207,17 @@ impl<'a, const NUM_LEDS: usize> KernelResources<Cc2650<'a>> for Platform<NUM_LED
 /// removed when this function returns. Otherwise, the stack space used for
 /// these static_inits is wasted.
 #[inline(never)]
-pub unsafe fn start<const NUM_LEDS: usize>(
+pub unsafe fn start<
+    const NUM_LEDS: usize,
+    Thermometer: SMBusDevice + I2CHwMasterClient + SetThermometerClient<'static>,
+>(
     pin_config: impl PinConfig,
     leds: &'static [&'static kernel::hil::led::LedHigh<'static, cc2650_chip::gpio::GPIOPin>;
                  NUM_LEDS],
+    thermometer: impl FnOnce(&'static I2C<'static>) -> Option<&'static Thermometer>,
 ) -> (
     &'static kernel::Kernel,
-    Platform<NUM_LEDS>,
+    Platform<NUM_LEDS, Thermometer>,
     &'static Cc2650<'static>,
 ) {
     cc2650_chip::init();
@@ -215,7 +311,7 @@ pub unsafe fn start<const NUM_LEDS: usize>(
     {
         let debugger_uart = &chip.uart_lite;
 
-        const INTERNAL_BUF_SIZE: usize = 128;
+        const INTERNAL_BUF_SIZE: usize = 256;
         const OUTPUT_BUF_SIZE: usize = 128;
         const BUF_SIZE: usize = INTERNAL_BUF_SIZE + OUTPUT_BUF_SIZE;
         let buf = static_init!([u8; BUF_SIZE], [0_u8; BUF_SIZE]);
@@ -243,6 +339,102 @@ pub unsafe fn start<const NUM_LEDS: usize>(
             kernel::debug::set_debug_writer_wrapper(debug_wrapper);
         }
     }
+
+    // Temperature sensor
+    let temperature_driver = thermometer(&chip.i2c).map(|thermometer| {
+        // This hack is quite dirty, but needed.
+        // As Thermometer is a generic parameter, it cannot be used in `static_buf!`, because `static`s can't be generic.
+        // SAFETY: as the allocated struct contains Thermometer only behind a reference, the particular Thermometer type
+        // does not influence the struct's size, hence allocation is valid (WRT size) for any Thermometer.
+        struct HackMockSMBusDevice;
+        impl I2CDevice for HackMockSMBusDevice {
+            fn enable(&self) {}
+
+            fn disable(&self) {}
+
+            fn write_read(
+                &self,
+                _data: &'static mut [u8],
+                _write_len: usize,
+                _read_len: usize,
+            ) -> Result<(), (kernel::hil::i2c::Error, &'static mut [u8])> {
+                Ok(())
+            }
+
+            fn write(
+                &self,
+                _data: &'static mut [u8],
+                _len: usize,
+            ) -> Result<(), (kernel::hil::i2c::Error, &'static mut [u8])> {
+                Ok(())
+            }
+
+            fn read(
+                &self,
+                _buffer: &'static mut [u8],
+                _len: usize,
+            ) -> Result<(), (kernel::hil::i2c::Error, &'static mut [u8])> {
+                Ok(())
+            }
+        }
+        impl SMBusDevice for HackMockSMBusDevice {
+            fn smbus_write_read(
+                &self,
+                _data: &'static mut [u8],
+                _write_len: usize,
+                _read_len: usize,
+            ) -> Result<(), (kernel::hil::i2c::Error, &'static mut [u8])> {
+                Ok(())
+            }
+
+            fn smbus_write(
+                &self,
+                _data: &'static mut [u8],
+                _len: usize,
+            ) -> Result<(), (kernel::hil::i2c::Error, &'static mut [u8])> {
+                Ok(())
+            }
+
+            fn smbus_read(
+                &self,
+                _buffer: &'static mut [u8],
+                _len: usize,
+            ) -> Result<(), (kernel::hil::i2c::Error, &'static mut [u8])> {
+                todo!()
+            }
+        }
+
+        let tmp431 = components::tmp431::Tmp431SMBusComponent::new(
+            thermometer, alarm_mux, board_kernel, capsules_extra::temperature::DRIVER_NUM
+        )
+        .finalize({
+            let (alarm, i2c_buf, tmp431) =
+                components::tmp431_component_static!(cc2650_chip::rtc::Rtc, HackMockSMBusDevice);
+
+            let tmp431: &mut MaybeUninit<
+                capsules_extra::tmp431::Tmp431SMBus<Thermometer, VirtualMuxAlarm<cc2650_chip::rtc::Rtc>>,
+            > = core::mem::transmute(tmp431);
+            (alarm, i2c_buf, tmp431)
+        }  );
+
+        components::temperature::TemperatureComponent::new(
+            board_kernel,
+            capsules_extra::temperature::DRIVER_NUM,
+            tmp431,
+        )
+        .finalize({
+            let buf = components::temperature_component_static!(
+                capsules_extra::tmp431::Tmp431SMBus<HackMockSMBusDevice, VirtualMuxAlarm<cc2650_chip::rtc::Rtc>>
+            );
+
+            let buf: &mut MaybeUninit<capsules_extra::temperature::TemperatureSensor<
+                'static,
+                capsules_extra::tmp431::Tmp431SMBus<Thermometer, VirtualMuxAlarm<cc2650_chip::rtc::Rtc>>,
+            >> = core::mem::transmute(buf);
+
+            buf
+        })
+    });
 
     //--------------------------------------------------------------------------
     // IEEE 802.15.4 and UDP
@@ -278,6 +470,7 @@ pub unsafe fn start<const NUM_LEDS: usize>(
         #[cfg(feature = "uart_lite")]
         console_lite,
         ieee802154,
+        temperature: temperature_driver,
     };
     /* END PLATFORM CONFIGURATION */
 

@@ -3,7 +3,7 @@
 
 use cc2650_chip::{i2c::I2CPinConfig, uart::UartPinConfig};
 use kernel::{create_capability, hil::led::LedHigh, static_init};
-use ti_cc2650_common::NUM_PROCS;
+use ti_cc2650_common::{NoThermometer, NUM_PROCS};
 
 const LED_PIN_RED: u32 = io::LED_PANIC_PIN;
 
@@ -54,7 +54,8 @@ pub unsafe fn main() {
         [red_led]
     );
 
-    let (board_kernel, smartrf, chip) = ti_cc2650_common::start(PinConfig, leds);
+    let (board_kernel, smartrf, chip) =
+        ti_cc2650_common::start(PinConfig, leds, |_| None::<&NoThermometer>);
 
     kernel::debug!("Hello world from board with loaded processes!");
     kernel::debug!("Proceeding to main kernel loop...!");
