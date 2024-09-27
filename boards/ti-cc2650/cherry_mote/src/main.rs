@@ -2,12 +2,20 @@
 #![cfg_attr(not(doc), no_main)]
 
 use cc2650_chip::{i2c::I2CPinConfig, uart::UartPinConfig};
-use kernel::{create_capability, hil::led::LedHigh, static_init};
+use kernel::{
+    create_capability,
+    hil::{
+        i2c::{I2CDevice as _, I2CMaster as _},
+        led::LedHigh,
+    },
+    static_init,
+};
 use ti_cc2650_common::NUM_PROCS;
 
 const LED_PIN_RED: u32 = io::LED_PANIC_PIN;
 
 mod io;
+mod thermometer;
 
 #[derive(Clone, Copy)]
 struct PinConfig;
@@ -38,6 +46,8 @@ impl I2CPinConfig for PinConfig {
     }
 }
 
+const TMP431_POWER_PIN_NUM: u32 = cc2650_chip::driverlib::IOID_6;
+
 /// Main function called after RAM initialized.
 #[no_mangle]
 pub unsafe fn main() {
@@ -53,7 +63,15 @@ pub unsafe fn main() {
         [red_led]
     );
 
-    let (board_kernel, smartrf, chip) = ti_cc2650_common::start(PinConfig, leds);
+    let (board_kernel, smartrf, chip) = ti_cc2650_common::start(PinConfig, leds, |i2c| {
+        let thermometer = static_init!(
+            thermometer::Tmp431,
+            thermometer::Tmp431::new(i2c, &cc2650_chip::gpio::PORT[TMP431_POWER_PIN_NUM])
+        );
+        thermometer.enable();
+        i2c.set_master_client(thermometer);
+        Some(thermometer)
+    });
 
     println!("Hello world from board with loaded processes!");
     println!("Proceeding to main kernel loop...!");
