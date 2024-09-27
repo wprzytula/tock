@@ -6,6 +6,7 @@ use kernel::{hil::radio::RadioConfig as _, platform::chip::InterruptService as _
 use crate::{
     fcfg::Fcfg,
     gpt::Gpt,
+    i2c::{I2CPinConfig, I2C},
     ieee802154_radio::Radio,
     peripheral_interrupts as irq,
     prcm::{self, Prcm},
@@ -19,8 +20,8 @@ use crate::uart::UartLite;
 
 /// This trait should require all pin config traits,
 /// as this forces board crates to provide all needed pins.
-pub trait PinConfig: UartPinConfig + Copy {}
-impl<T> PinConfig for T where T: UartPinConfig + Copy {}
+pub trait PinConfig: UartPinConfig + I2CPinConfig + Copy {}
+impl<T> PinConfig for T where T: UartPinConfig + I2CPinConfig + Copy {}
 
 pub struct Cc2650<'a> {
     userspace_kernel_boundary: cortexm3::syscall::SysCall,
@@ -32,6 +33,7 @@ pub struct Cc2650<'a> {
     pub prcm: Prcm,
     pub fcfg: Fcfg,
     pub radio: Radio<'a>,
+    pub i2c: I2C<'a>,
 }
 const MASK_AON_PROG_RFC_CMD_ACK: (u128, u128) =
     cortexm3::interrupt_mask!(irq::AON_PROG, irq::RF_CMD_ACK);
@@ -95,6 +97,8 @@ impl<'a> Cc2650<'a> {
         );
         radio.initialize().unwrap();
 
+        let i2c = I2C::new(peripherals.I2C0);
+
         Self {
             userspace_kernel_boundary: cortexm3::syscall::SysCall::new(),
             rtc,
@@ -105,6 +109,7 @@ impl<'a> Cc2650<'a> {
             prcm,
             fcfg,
             radio,
+            i2c,
         }
     }
 }
@@ -163,7 +168,7 @@ impl kernel::platform::chip::InterruptService for Cc2650<'_> {
     unsafe fn service_interrupt(&self, interrupt: u32) -> bool {
         match interrupt {
             irq::GPIO => todo!(),
-            irq::I2C => todo!(),
+            irq::I2C => self.i2c.handle_interrupt(),
             irq::RF_CPE1 => self.radio.handle_interrupt_cpe1(),
             irq::AON_RTC => self.rtc.handle_interrupt(),
             irq::UART0 => self.uart_full.handle_interrupt(),
