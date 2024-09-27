@@ -123,6 +123,7 @@ pub struct Clocks {
     dma: bool,
     crypto: bool,
     rfc: bool,
+    i2c: bool,
 }
 
 impl Clocks {
@@ -134,6 +135,7 @@ impl Clocks {
             dma: false,
             crypto: false,
             rfc: false,
+            i2c: false,
         }
     }
 
@@ -162,6 +164,10 @@ impl Clocks {
 
     pub const fn rfc(self) -> Self {
         Self { rfc: true, ..self }
+    }
+
+    pub const fn i2c(self) -> Self {
+        Self { i2c: true, ..self }
     }
 }
 
@@ -222,6 +228,12 @@ impl Clock {
         if clocks.rfc {
             prcm.rfcclkg.write(|w| w.clk_en().set_bit());
         }
+        if clocks.i2c {
+            prcm.i2cclkgr.write(|w| w.clk_en().set_bit());
+            // prcm.i2cclkgs.write(|w| w.clk_en().set_bit());
+            // prcm.i2cclkgds.write(|w| w.clk_en().set_bit());
+        }
+
         Self::reload_clock_controller(&prcm.clkloadctl);
     }
 
@@ -264,6 +276,11 @@ impl Clock {
 
         if clocks.rfc {
             prcm.rfcclkg.write(|w| w.clk_en().clear_bit());
+        }
+        if clocks.i2c {
+            prcm.i2cclkgr.write(|w| w.clk_en().clear_bit());
+            // prcm.i2cclkgs.write(|w| w.clk_en().clear_bit());
+            // prcm.i2cclkgds.write(|w| w.clk_en().clear_bit());
         }
         Self::reload_clock_controller(&prcm.clkloadctl);
     }

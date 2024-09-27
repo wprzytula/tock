@@ -50,7 +50,15 @@ impl<'a> Cc2650<'a> {
 
         prcm.enable_domains(prcm::PowerDomains::empty().peripherals().serial());
 
-        prcm.enable_clocks(prcm::Clocks::empty().gpio().uart().gpt().dma().crypto());
+        prcm.enable_clocks(
+            prcm::Clocks::empty()
+                .gpio()
+                .uart()
+                .gpt()
+                .dma()
+                .crypto()
+                .i2c(),
+        );
 
         let udma = Udma::new(peripherals.UDMA0);
         udma.enable();
