@@ -81,12 +81,6 @@ impl hil::gpio::Output for GPIOPin {
 /// Pinmux implementation (IOC)
 impl GPIOPin {
     pub fn enable_gpio(&self) {
-        // let ioc = unsafe { cc2650::Peripherals::steal().IOC };
-        // let modifier = |_r, w| w.port_id().gpio().ie().clear_bit().iostr().max();
-        // let ioc_register_block: *const cc2650::ioc::RegisterBlock = ioc.deref();
-        // let pin_block = unsafe { &*ioc_register_block.add(self.pin as usize) };
-        // pin_block.
-
         // Driverlib is better here: cc2650 crate requires either matching over 32 options or a lot of unsafe.
         // OTOH both IOCPortConfigure{G,S}et are present in ROM.
         let pin_config = unsafe { driverlib::IOCPortConfigureGet(self.pin) };
@@ -156,7 +150,7 @@ impl hil::gpio::Configure for GPIOPin {
 
     fn disable_output(&self) -> hil::gpio::Configuration {
         unsafe { driverlib::GPIO_setOutputEnableDio(self.pin, 0) };
-        self.configuration()
+        hil::gpio::Configuration::LowPower
     }
 
     fn is_input(&self) -> bool {
@@ -173,7 +167,7 @@ impl hil::gpio::Configure for GPIOPin {
         let mut pin_config = unsafe { driverlib::IOCPortConfigureGet(self.pin) };
         pin_config &= !driverlib::IOC_INPUT_ENABLE;
         unsafe { driverlib::IOCPortConfigureSet(self.pin, driverlib::IOC_PORT_GPIO, pin_config) };
-        self.configuration()
+        hil::gpio::Configuration::LowPower
     }
 
     fn configuration(&self) -> hil::gpio::Configuration {
