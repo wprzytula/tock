@@ -1170,6 +1170,10 @@ pub mod lite {
             fn new(buf: &'a mut [u8]) -> Self {
                 LostBytesWriter { buf, offset: 0 }
             }
+
+            fn written_so_far(&self) -> usize {
+                self.offset
+            }
         }
 
         impl<'a> fmt::Write for LostBytesWriter<'a> {
@@ -1211,15 +1215,11 @@ pub mod lite {
 
                 let message_size = {
                     let lost_buffer = &mut lost_buffer;
-                    let len_before = lost_buffer.len();
                     // Safety: number of bytes written won't ever exceed size of the buffer (16).
-                    unsafe {
-                        write!(LostBytesWriter::new(lost_buffer), "\nLOST:{}\n", bytes_lost)
-                            .unwrap_unchecked()
-                    };
-                    let len_after = lost_buffer.len();
+                    let mut writer = LostBytesWriter::new(lost_buffer);
+                    unsafe { write!(&mut writer, "\nLOST:{}\n", bytes_lost).unwrap_unchecked() };
 
-                    len + len_before - len_after
+                    writer.written_so_far()
                 };
 
                 if free_bytes < message_size {
