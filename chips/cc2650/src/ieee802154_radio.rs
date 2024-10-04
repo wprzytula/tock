@@ -1172,6 +1172,8 @@ impl<'a> Radio<'a> {
         // Save buf before sending the CMD to prevent races.
         self.tx_buf.put(Some(buf));
 
+        // self.write_pwr();
+
         cmd.send().unwrap();
 
         // Don't do it unless synchronous TX is desired.
@@ -1358,9 +1360,42 @@ impl<'a> Radio<'a> {
             .map(|client| client.receive(buf, frame_len, lqi, true, Ok(())));
     }
 
+    fn write_pwr(&self) {
+        let pwr = self.rfc_pwr.pwmclken.read();
+        kernel::debug!(
+            " PWR:
+        cpe: {},
+        cperam: {},
+        fsca: {},
+        mdm: {},
+        mdmram: {},
+        pha: {},
+        rat: {},
+        rfc: {},
+        rfctrc: {},
+        rfe: {},
+        rferam: {},
+        bits: {:#x},
+        ",
+            pwr.cpe().bit(),
+            pwr.cperam().bit(),
+            pwr.fsca().bit(),
+            pwr.mdm().bit(),
+            pwr.mdmram().bit(),
+            pwr.pha().bit(),
+            pwr.rat().bit(),
+            pwr.rfc().bit(),
+            pwr.rfctrc().bit(),
+            pwr.rfe().bit(),
+            pwr.rferam().bit(),
+            pwr.bits(),
+        );
+    }
+
     pub(crate) fn handle_interrupt_cpe0(&self) {
         self.disable_interrupts();
         kernel::debug!("handling interrupt cpe0");
+        // self.write_pwr();
 
         let interrupts = self.rfc_dbell.rfcpeifg.read();
         let tx_done = interrupts.tx_done().bit_is_set();
