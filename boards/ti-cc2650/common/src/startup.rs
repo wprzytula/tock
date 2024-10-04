@@ -298,8 +298,7 @@ pub unsafe fn start<
         let uart = kernel::static_buf!(capsules_core::virtualizers::virtual_uart::UartDevice);
         let ring = kernel::static_buf!(kernel::collections::ring_buffer::RingBuffer<'static, u8>);
         // 256B buffer to save RAM (2kB is the default). This means 64B for output buffer (the one passed to uart::transmit_buffer)
-        // and 192B for internal buffer (the one storing debug prints to be yet done). With UART-lite, internal buffer can be
-        // as small as the biggest debug message issued and everything should still work correctly.
+        // and 192B for internal buffer (the one storing debug prints to be yet done).
         let buffer = kernel::static_buf!([u8; /* 256 */ 1024 * 2]);
         let debug = kernel::static_buf!(kernel::debug::DebugWriter);
         let debug_wrapper = kernel::static_buf!(kernel::debug::DebugWriterWrapper);
@@ -311,25 +310,10 @@ pub unsafe fn start<
     {
         let debugger_uart = &chip.uart_lite;
 
-        const INTERNAL_BUF_SIZE: usize = 256;
-        const OUTPUT_BUF_SIZE: usize = 128;
-        const BUF_SIZE: usize = INTERNAL_BUF_SIZE + OUTPUT_BUF_SIZE;
-        let buf = static_init!([u8; BUF_SIZE], [0_u8; BUF_SIZE]);
-
-        let (output_buf, internal_buf) = buf.split_at_mut(OUTPUT_BUF_SIZE);
-
-        // Create virtual device for kernel debug.
-        let ring_buffer = kernel::static_init!(
-            kernel::collections::ring_buffer::RingBuffer<'static, u8>,
-            kernel::collections::ring_buffer::RingBuffer::new(internal_buf,)
-        );
         let debugger = kernel::static_init!(
             kernel::debug::DebugWriter,
-            kernel::debug::DebugWriter::new(debugger_uart, output_buf, ring_buffer,)
+            kernel::debug::DebugWriter::new_sync(debugger_uart)
         );
-
-        // Debugger is the exclusive callback client of UART-Lite. ConsoleLite uses it synchronously.
-        kernel::hil::uart::Transmit::set_transmit_client(debugger_uart, debugger);
 
         let debug_wrapper = static_init!(
             kernel::debug::DebugWriterWrapper,
