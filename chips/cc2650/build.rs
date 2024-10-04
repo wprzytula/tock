@@ -87,6 +87,9 @@ impl DriverlibBuilder {
     }
 
     fn build(&self) {
+        // Create driverlib_full.h, a single entrypoint to all driverlib headers.
+        self.generate_driverlib_full_h();
+
         // Generate bindings from C driverlib to Rust code using bindgen.
         // Create a file containing the FFI code.
         self.generate_bindings();
@@ -112,6 +115,57 @@ impl DriverlibBuilder {
 
         // Instruct cargo to link against libdriverlib.a.
         self.link_driverlib();
+    }
+
+    fn generate_driverlib_full_h(&self) {
+        let driverlib_full_h_path = self.driverlib_path.join("driverlib_full.h");
+        let mut driverlib_full_h = std::fs::File::create(&driverlib_full_h_path)
+            .expect("Failed to create driverlib_full.h");
+
+        let mut driverlib_headers = std::fs::read_dir(&self.driverlib_path)
+            .expect("Failed to iterate through driverlib directory")
+            .filter_map(|driverlib_file_res| {
+                driverlib_file_res
+                    .map(|driverlib_file| {
+                        let driverlib_file_name = driverlib_file.file_name();
+                        // For all *.h files...
+                        (driverlib_file_name.as_encoded_bytes().ends_with(b".h")
+                            && driverlib_file_name.as_encoded_bytes() != b"driverlib_full.h")
+                            .then_some(driverlib_file_name)
+                    })
+                    .transpose()
+            })
+            .collect::<Result<Vec<_>, _>>()
+            .unwrap_or_else(|err| panic!("Failed to read file in driverlib_directory: {}", err,));
+
+        driverlib_headers.sort_unstable();
+
+        // Fix for sw_poly1305-donna-32.h (C is retarded and it requires sw_poly1305-donna.h included
+        // before sw_poly1305-donna-32.h, even though the latter comes first in the alphanumeric order):
+        let sw_poly1305_donna_32_h_idx =
+            driverlib_headers.iter().enumerate().find_map(|(idx, s)| {
+                (s.as_encoded_bytes() == b"sw_poly1305-donna-32.h").then_some(idx)
+            });
+        let sw_poly1305_donna_h_idx = driverlib_headers
+            .iter()
+            .enumerate()
+            .find_map(|(idx, s)| (s.as_encoded_bytes() == b"sw_poly1305-donna.h").then_some(idx));
+        if let (Some(sw_poly1305_donna_32_h_idx), Some(sw_poly1305_donna_h_idx)) =
+            (sw_poly1305_donna_32_h_idx, sw_poly1305_donna_h_idx)
+        {
+            driverlib_headers.swap(sw_poly1305_donna_32_h_idx, sw_poly1305_donna_h_idx);
+        }
+
+        for driverlib_header in driverlib_headers {
+            // Put #include "$file" into driverlib_full.h.
+            driverlib_full_h
+                .write_all(
+                    [b"#include \"", driverlib_header.as_encoded_bytes(), b"\"\n"]
+                        .join(&b""[..])
+                        .as_slice(),
+                )
+                .expect("Failed to write into driverlib_full.h");
+        }
     }
 
     fn generate_bindings(&self) {
