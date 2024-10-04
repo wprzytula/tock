@@ -1325,19 +1325,21 @@ impl<'a> Radio<'a> {
     }
 
     fn clear_and_enable_tx_interrupt(&self) {
-        self.rfc_dbell
-            .rfcpeifg
-            .write(|w| unsafe { w.bits(-1_i32 as u32) }.tx_done().clear_bit());
+        self.rfc_dbell.rfcpeifg.write(|w| {
+            unsafe { w.bits(-1_i32 as u32) }
+                .last_fg_command_done()
+                .clear_bit()
+        });
 
         self.rfc_dbell
             .rfcpeien
-            .modify(|_r, w| w.tx_done().set_bit());
+            .modify(|_r, w| w.last_fg_command_done().set_bit());
     }
 
     fn disable_tx_interrupt(&self) {
         self.rfc_dbell
             .rfcpeien
-            .modify(|_r, w| w.tx_done().clear_bit());
+            .modify(|_r, w| w.last_fg_command_done().clear_bit());
     }
 
     fn handle_received_frame(
@@ -1398,7 +1400,7 @@ impl<'a> Radio<'a> {
         // self.write_pwr();
 
         let interrupts = self.rfc_dbell.rfcpeifg.read();
-        let tx_done = interrupts.tx_done().bit_is_set();
+        let last_fg_command_done = interrupts.last_fg_command_done().bit_is_set();
         let rx_entry_done = interrupts.rx_entry_done().bit_is_set();
         // kernel::debug!(
         //     "interrupts: tx_done={}, rx_entry_done={}",
@@ -1418,19 +1420,11 @@ impl<'a> Radio<'a> {
                 .clear_bit()
         });
 
-        // This delay is needed, because the radio hasn't yet finished working with the TX command
-        // when the interrupt fires. After the delay, the command is DONE_OK.
-        unsafe {
-            // 15 is too little - still ACTIVE.
-            // 20 is enough.
-            driverlib::CPUdelay(20);
-        }
-
         // The interrupt means that we received or transmitted a frame. Let's determine
         // whether it's RX or TX that has triggered the interrupt.
 
         if let Some(tx_buf) = self.tx_buf.take() {
-            assert!(tx_done);
+            assert!(last_fg_command_done);
             let raw_status = self.tx_cmd.borrow().status;
             let status: Result<cmd::RadioOpStatus, u16> = raw_status.try_into();
             // kernel::debug!("TX status: {} = {:?}", raw_status, status);
