@@ -1394,17 +1394,17 @@ impl<'a> Radio<'a> {
 
     pub(crate) fn handle_interrupt_cpe0(&self) {
         self.disable_interrupts();
-        kernel::debug!("handling interrupt cpe0");
+        // kernel::debug!("handling interrupt cpe0");
         // self.write_pwr();
 
         let interrupts = self.rfc_dbell.rfcpeifg.read();
         let tx_done = interrupts.tx_done().bit_is_set();
         let rx_entry_done = interrupts.rx_entry_done().bit_is_set();
-        kernel::debug!(
-            "interrupts: tx_done={}, rx_entry_done={}",
-            tx_done,
-            rx_entry_done
-        );
+        // kernel::debug!(
+        //     "interrupts: tx_done={}, rx_entry_done={}",
+        //     tx_done,
+        //     rx_entry_done
+        // );
 
         self.disable_tx_interrupt();
 
@@ -1418,6 +1418,14 @@ impl<'a> Radio<'a> {
                 .clear_bit()
         });
 
+        // This delay is needed, because the radio hasn't yet finished working with the TX command
+        // when the interrupt fires. After the delay, the command is DONE_OK.
+        unsafe {
+            // 15 is too little - still ACTIVE.
+            // 20 is enough.
+            driverlib::CPUdelay(20);
+        }
+
         // The interrupt means that we received or transmitted a frame. Let's determine
         // whether it's RX or TX that has triggered the interrupt.
 
@@ -1425,9 +1433,10 @@ impl<'a> Radio<'a> {
             assert!(tx_done);
             let raw_status = self.tx_cmd.borrow().status;
             let status: Result<cmd::RadioOpStatus, u16> = raw_status.try_into();
-            kernel::debug!("TX status: {} = {:?}", raw_status, status);
-            assert!(status.unwrap().finished());
-            status.unwrap().to_result().unwrap();
+            // kernel::debug!("TX status: {} = {:?}", raw_status, status);
+            let status = status.unwrap();
+            assert!(status.finished(), "Nonfinished status: {:?}", status);
+            status.to_result().unwrap();
 
             // TX completed
             self.tx_client.map(|client| {
