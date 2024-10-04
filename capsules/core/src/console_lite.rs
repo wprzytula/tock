@@ -146,7 +146,7 @@ impl<'a> ConsoleLite<'a> {
                         // behavior in this case is documented as
                         // undefined; the simplest thing we can do
                         // that doesn't panic is to abort the write.
-                        return 0;
+                        return;
                     }
                 };
 
@@ -166,8 +166,6 @@ impl<'a> ConsoleLite<'a> {
                 let lite_input = kernel::hil::uart::UartLiteInput::new(&mut iter, write_len);
 
                 self.uart.transmit_iterator(lite_input);
-
-                0 // This is just to type check; it bears no meaning.
             });
         }
     }
