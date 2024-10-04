@@ -8,7 +8,8 @@
     "rust-analyzer.check.allTargets": false,
     "rust-analyzer.check.workspace": false,
     "rust-analyzer.cargo.extraEnv": {
-        "DRIVERLIB_PATH": "/home/xps15/Studia/Sem8/Tock/driverlib/cc26x0/driverlib"
+        "DRIVERLIB_PATH": "/home/xps15/Studia/Sem8/Tock/driverlib/cc26x0/driverlib",
+        "NEWLIB_INC_PATH": "/usr/arm-none-eabi/include",
     },
     "rust-analyzer.cargo.target": "thumbv7m-none-eabi",
     "[toml]": {

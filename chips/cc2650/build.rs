@@ -9,6 +9,7 @@ use std::path::PathBuf;
 use std::process::Command;
 
 const DRIVERLIB_PATH: &str = "DRIVERLIB_PATH";
+const NEWLIB_INC_PATH: &str = "NEWLIB_INC_PATH";
 
 const LIB_ROM_ORIGINAL: &str = "libROM_driverlib.elf";
 const LIB_ROM_FILTERED: &str = "libROM_driverlib_filtered.elf";
@@ -32,6 +33,7 @@ fn main() {
 struct DriverlibBuilder {
     out: PathBuf,
     driverlib_path: PathBuf,
+    newlib_inc_path: String,
     _cc2650_crate_root: PathBuf,
     _cc2650_crate_driverlib: PathBuf,
     lib_norom_original_path: PathBuf,
@@ -51,6 +53,12 @@ impl DriverlibBuilder {
             stringify!(DRIVERLIB_PATH),
             "> env variable must be provided. Check out your board's Makefile for that variable definition."
         )));
+        let newlib_inc_path = env::var(NEWLIB_INC_PATH).expect(
+            concat!(
+                "<",
+                stringify!(NEWLIB_INC_PATH),
+                "> env variable must be provided. Check out your board's Makefile for that variable definition."
+            ));
 
         let cc2650_crate_root = PathBuf::from(std::env::var_os("CARGO_MANIFEST_DIR").unwrap());
         let cc2650_crate_driverlib = cc2650_crate_root.join("src/driverlib");
@@ -65,6 +73,7 @@ impl DriverlibBuilder {
         Self {
             out,
             driverlib_path,
+            newlib_inc_path,
             _cc2650_crate_root: cc2650_crate_root,
             _cc2650_crate_driverlib: cc2650_crate_driverlib,
             lib_norom_noprefix_path,
@@ -132,7 +141,7 @@ impl DriverlibBuilder {
             // Required in rust-analyzer to succeed in building.
             .clang_arg("-D__GLIBC_USE(...)")
             // Add newlib headers. E.g. <string.h> is required.
-            .clang_arg("-I/usr/arm-none-eabi/include")
+            .clang_arg(String::from("-I") + self.newlib_inc_path.as_str())
             // Don't extract doc comments.
             .generate_comments(false)
             // Don't create layout tests - trust bindgen.
@@ -160,7 +169,7 @@ impl DriverlibBuilder {
             .file(&self.extern_c_path)
             .warnings(false)
             .define("DOXYGEN", None)
-            .include("/usr/arm-none-eabi/include")
+            .include(self.newlib_inc_path.as_str())
             .flag("-flto=thin")
             .cargo_metadata(false) // We want to first merge everything into one big library, only then link.
             .compile_intermediates()
