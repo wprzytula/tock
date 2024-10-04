@@ -1,7 +1,8 @@
 # Makefile for building the tock kernel for the CC2650-CherryMote
 
 # Provide your path to cc26x0 driverlib sources:
-export DRIVERLIB_PATH := /home/xps15/Studia/Sem8/Tock/driverlib/cc26x0/driverlib
+export DRIVERLIB_PATH ?= /home/xps15/Studia/Sem8/Tock/driverlib/cc26x0/driverlib
+export NEWLIB_INC_PATH ?= /usr/arm-none-eabi/include
 
 TOCK_BOARD=ti-cc2650-cherry_mote
 TARGET=thumbv7m-none-eabi
