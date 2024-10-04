@@ -16026,6 +16026,59 @@ pub const BLE_ERROR_NO_FS: u32 = 6147;
 pub const BLE_ERROR_SYNTH_PROG: u32 = 6148;
 pub const BLE_ERROR_RXOVF: u32 = 6149;
 pub const BLE_ERROR_TXUNF: u32 = 6150;
+pub const CMD_IEEE_RX: u32 = 10241;
+pub const CMD_IEEE_ED_SCAN: u32 = 10242;
+pub const CMD_IEEE_TX: u32 = 11265;
+pub const CMD_IEEE_CSMA: u32 = 11266;
+pub const CMD_IEEE_RX_ACK: u32 = 11267;
+pub const CMD_IEEE_ABORT_BG: u32 = 11268;
+pub const CMD_IEEE_MOD_CCA: u32 = 8193;
+pub const CMD_IEEE_MOD_FILT: u32 = 8194;
+pub const CMD_IEEE_MOD_SRC_MATCH: u32 = 8195;
+pub const CMD_IEEE_ABORT_FG: u32 = 9217;
+pub const CMD_IEEE_STOP_FG: u32 = 9218;
+pub const CMD_IEEE_CCA_REQ: u32 = 9219;
+pub const IEEE_SUSPENDED: u32 = 8193;
+pub const IEEE_DONE_OK: u32 = 9216;
+pub const IEEE_DONE_BUSY: u32 = 9217;
+pub const IEEE_DONE_STOPPED: u32 = 9218;
+pub const IEEE_DONE_ACK: u32 = 9219;
+pub const IEEE_DONE_ACKPEND: u32 = 9220;
+pub const IEEE_DONE_TIMEOUT: u32 = 9221;
+pub const IEEE_DONE_BGEND: u32 = 9222;
+pub const IEEE_DONE_ABORT: u32 = 9223;
+pub const IEEE_ERROR_PAR: u32 = 10240;
+pub const IEEE_ERROR_NO_SETUP: u32 = 10241;
+pub const IEEE_ERROR_NO_FS: u32 = 10242;
+pub const IEEE_ERROR_SYNTH_PROG: u32 = 10243;
+pub const IEEE_ERROR_RXOVF: u32 = 10244;
+pub const IEEE_ERROR_TXUNF: u32 = 10245;
+pub const CMD_PROP_TX: u32 = 14337;
+pub const CMD_PROP_RX: u32 = 14338;
+pub const CMD_PROP_TX_ADV: u32 = 14339;
+pub const CMD_PROP_RX_ADV: u32 = 14340;
+pub const CMD_PROP_RADIO_SETUP: u32 = 14342;
+pub const CMD_PROP_RADIO_DIV_SETUP: u32 = 14343;
+pub const CMD_PROP_SET_LEN: u32 = 13313;
+pub const CMD_PROP_RESTART_RX: u32 = 13314;
+pub const PROP_DONE_OK: u32 = 13312;
+pub const PROP_DONE_RXTIMEOUT: u32 = 13313;
+pub const PROP_DONE_BREAK: u32 = 13314;
+pub const PROP_DONE_ENDED: u32 = 13315;
+pub const PROP_DONE_STOPPED: u32 = 13316;
+pub const PROP_DONE_ABORT: u32 = 13317;
+pub const PROP_DONE_RXERR: u32 = 13318;
+pub const PROP_DONE_IDLE: u32 = 13319;
+pub const PROP_DONE_BUSY: u32 = 13320;
+pub const PROP_DONE_IDLETIMEOUT: u32 = 13321;
+pub const PROP_DONE_BUSYTIMEOUT: u32 = 13322;
+pub const PROP_ERROR_PAR: u32 = 14336;
+pub const PROP_ERROR_RXBUF: u32 = 14337;
+pub const PROP_ERROR_RXFULL: u32 = 14338;
+pub const PROP_ERROR_NO_SETUP: u32 = 14339;
+pub const PROP_ERROR_NO_FS: u32 = 14340;
+pub const PROP_ERROR_RXOVF: u32 = 14341;
+pub const PROP_ERROR_TXUNF: u32 = 14342;
 pub const RFC_PWR_O_PWMCLKEN: u32 = 0;
 pub const RFC_PWR_PWMCLKEN_RFCTRC: u32 = 1024;
 pub const RFC_PWR_PWMCLKEN_RFCTRC_BITN: u32 = 10;
@@ -16758,14 +16811,6 @@ pub const RFC_DBELL_SYSGPOCTL_GPOCTL0_CPEGPO3: u32 = 3;
 pub const RFC_DBELL_SYSGPOCTL_GPOCTL0_CPEGPO2: u32 = 2;
 pub const RFC_DBELL_SYSGPOCTL_GPOCTL0_CPEGPO1: u32 = 1;
 pub const RFC_DBELL_SYSGPOCTL_GPOCTL0_CPEGPO0: u32 = 0;
-pub const CMD_PROP_TX: u32 = 14337;
-pub const CMD_PROP_RX: u32 = 14338;
-pub const CMD_PROP_TX_ADV: u32 = 14339;
-pub const CMD_PROP_RX_ADV: u32 = 14340;
-pub const CMD_PROP_RADIO_SETUP: u32 = 14342;
-pub const CMD_PROP_RADIO_DIV_SETUP: u32 = 14343;
-pub const CMD_PROP_SET_LEN: u32 = 13313;
-pub const CMD_PROP_RESTART_RX: u32 = 13314;
 pub const ADI_3_REFSYS_O_SPARE0: u32 = 1;
 pub const ADI_3_REFSYS_O_REFSYSCTL0: u32 = 2;
 pub const ADI_3_REFSYS_O_REFSYSCTL1: u32 = 3;
@@ -16911,51 +16956,6 @@ pub const ADI_3_REFSYS_DCDCCTL5_IPEAK_W: u32 = 3;
 pub const ADI_3_REFSYS_DCDCCTL5_IPEAK_M: u32 = 7;
 pub const ADI_3_REFSYS_DCDCCTL5_IPEAK_S: u32 = 0;
 pub const RFC_MAX_SEARCH_DEPTH: u32 = 5;
-pub const CMD_IEEE_RX: u32 = 10241;
-pub const CMD_IEEE_ED_SCAN: u32 = 10242;
-pub const CMD_IEEE_TX: u32 = 11265;
-pub const CMD_IEEE_CSMA: u32 = 11266;
-pub const CMD_IEEE_RX_ACK: u32 = 11267;
-pub const CMD_IEEE_ABORT_BG: u32 = 11268;
-pub const CMD_IEEE_MOD_CCA: u32 = 8193;
-pub const CMD_IEEE_MOD_FILT: u32 = 8194;
-pub const CMD_IEEE_MOD_SRC_MATCH: u32 = 8195;
-pub const CMD_IEEE_ABORT_FG: u32 = 9217;
-pub const CMD_IEEE_STOP_FG: u32 = 9218;
-pub const CMD_IEEE_CCA_REQ: u32 = 9219;
-pub const IEEE_SUSPENDED: u32 = 8193;
-pub const IEEE_DONE_OK: u32 = 9216;
-pub const IEEE_DONE_BUSY: u32 = 9217;
-pub const IEEE_DONE_STOPPED: u32 = 9218;
-pub const IEEE_DONE_ACK: u32 = 9219;
-pub const IEEE_DONE_ACKPEND: u32 = 9220;
-pub const IEEE_DONE_TIMEOUT: u32 = 9221;
-pub const IEEE_DONE_BGEND: u32 = 9222;
-pub const IEEE_DONE_ABORT: u32 = 9223;
-pub const IEEE_ERROR_PAR: u32 = 10240;
-pub const IEEE_ERROR_NO_SETUP: u32 = 10241;
-pub const IEEE_ERROR_NO_FS: u32 = 10242;
-pub const IEEE_ERROR_SYNTH_PROG: u32 = 10243;
-pub const IEEE_ERROR_RXOVF: u32 = 10244;
-pub const IEEE_ERROR_TXUNF: u32 = 10245;
-pub const PROP_DONE_OK: u32 = 13312;
-pub const PROP_DONE_RXTIMEOUT: u32 = 13313;
-pub const PROP_DONE_BREAK: u32 = 13314;
-pub const PROP_DONE_ENDED: u32 = 13315;
-pub const PROP_DONE_STOPPED: u32 = 13316;
-pub const PROP_DONE_ABORT: u32 = 13317;
-pub const PROP_DONE_RXERR: u32 = 13318;
-pub const PROP_DONE_IDLE: u32 = 13319;
-pub const PROP_DONE_BUSY: u32 = 13320;
-pub const PROP_DONE_IDLETIMEOUT: u32 = 13321;
-pub const PROP_DONE_BUSYTIMEOUT: u32 = 13322;
-pub const PROP_ERROR_PAR: u32 = 14336;
-pub const PROP_ERROR_RXBUF: u32 = 14337;
-pub const PROP_ERROR_RXFULL: u32 = 14338;
-pub const PROP_ERROR_NO_SETUP: u32 = 14339;
-pub const PROP_ERROR_NO_FS: u32 = 14340;
-pub const PROP_ERROR_RXOVF: u32 = 14341;
-pub const PROP_ERROR_TXUNF: u32 = 14342;
 pub const ECC_WINDOW_SIZE: u32 = 3;
 pub const ECC_MODULUS_EVEN: u32 = 220;
 pub const ECC_MODULUS_LARGER_THAN_255_WORDS: u32 = 210;
@@ -29456,2431 +29456,6 @@ impl rfc_bleRxStatus_s__bindgen_ty_1 {
         __bindgen_bitfield_unit
     }
 }
-pub type rfc_CMD_PROP_TX_t = rfc_CMD_PROP_TX_s;
-pub type rfc_CMD_PROP_RX_t = rfc_CMD_PROP_RX_s;
-pub type rfc_CMD_PROP_TX_ADV_t = rfc_CMD_PROP_TX_ADV_s;
-pub type rfc_CMD_PROP_RX_ADV_t = rfc_CMD_PROP_RX_ADV_s;
-pub type rfc_CMD_PROP_RADIO_SETUP_t = rfc_CMD_PROP_RADIO_SETUP_s;
-pub type rfc_CMD_PROP_RADIO_DIV_SETUP_t = rfc_CMD_PROP_RADIO_DIV_SETUP_s;
-pub type rfc_CMD_PROP_SET_LEN_t = rfc_CMD_PROP_SET_LEN_s;
-pub type rfc_CMD_PROP_RESTART_RX_t = rfc_CMD_PROP_RESTART_RX_s;
-pub type rfc_propRxOutput_t = rfc_propRxOutput_s;
-pub type rfc_propRxStatus_t = rfc_propRxStatus_s;
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-#[must_use]
-pub struct rfc_CMD_PROP_TX_s {
-    pub commandNo: u16,
-    pub status: u16,
-    pub pNextOp: *mut rfc_radioOp_t,
-    pub startTime: ratmr_t,
-    pub startTrigger: rfc_CMD_PROP_TX_s__bindgen_ty_1,
-    pub condition: rfc_CMD_PROP_TX_s__bindgen_ty_2,
-    pub pktConf: rfc_CMD_PROP_TX_s__bindgen_ty_3,
-    pub pktLen: u8,
-    pub syncWord: u32,
-    pub pPkt: *mut u8,
-}
-#[repr(C)]
-#[derive(Debug, Default, Copy, Clone)]
-#[must_use]
-pub struct rfc_CMD_PROP_TX_s__bindgen_ty_1 {
-    pub _bitfield_align_1: [u8; 0],
-    pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
-}
-impl rfc_CMD_PROP_TX_s__bindgen_ty_1 {
-    #[inline]
-    pub fn triggerType(&self) -> u8 {
-        unsafe { ::core::mem::transmute(self._bitfield_1.get(0usize, 4u8) as u8) }
-    }
-    #[inline]
-    pub fn set_triggerType(&mut self, val: u8) {
-        unsafe {
-            let val: u8 = ::core::mem::transmute(val);
-            self._bitfield_1.set(0usize, 4u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn bEnaCmd(&self) -> u8 {
-        unsafe { ::core::mem::transmute(self._bitfield_1.get(4usize, 1u8) as u8) }
-    }
-    #[inline]
-    pub fn set_bEnaCmd(&mut self, val: u8) {
-        unsafe {
-            let val: u8 = ::core::mem::transmute(val);
-            self._bitfield_1.set(4usize, 1u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn triggerNo(&self) -> u8 {
-        unsafe { ::core::mem::transmute(self._bitfield_1.get(5usize, 2u8) as u8) }
-    }
-    #[inline]
-    pub fn set_triggerNo(&mut self, val: u8) {
-        unsafe {
-            let val: u8 = ::core::mem::transmute(val);
-            self._bitfield_1.set(5usize, 2u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn pastTrig(&self) -> u8 {
-        unsafe { ::core::mem::transmute(self._bitfield_1.get(7usize, 1u8) as u8) }
-    }
-    #[inline]
-    pub fn set_pastTrig(&mut self, val: u8) {
-        unsafe {
-            let val: u8 = ::core::mem::transmute(val);
-            self._bitfield_1.set(7usize, 1u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn new_bitfield_1(
-        triggerType: u8,
-        bEnaCmd: u8,
-        triggerNo: u8,
-        pastTrig: u8,
-    ) -> __BindgenBitfieldUnit<[u8; 1usize]> {
-        let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 1usize]> = Default::default();
-        __bindgen_bitfield_unit.set(0usize, 4u8, {
-            let triggerType: u8 = unsafe { ::core::mem::transmute(triggerType) };
-            triggerType as u64
-        });
-        __bindgen_bitfield_unit.set(4usize, 1u8, {
-            let bEnaCmd: u8 = unsafe { ::core::mem::transmute(bEnaCmd) };
-            bEnaCmd as u64
-        });
-        __bindgen_bitfield_unit.set(5usize, 2u8, {
-            let triggerNo: u8 = unsafe { ::core::mem::transmute(triggerNo) };
-            triggerNo as u64
-        });
-        __bindgen_bitfield_unit.set(7usize, 1u8, {
-            let pastTrig: u8 = unsafe { ::core::mem::transmute(pastTrig) };
-            pastTrig as u64
-        });
-        __bindgen_bitfield_unit
-    }
-}
-#[repr(C)]
-#[derive(Debug, Default, Copy, Clone)]
-#[must_use]
-pub struct rfc_CMD_PROP_TX_s__bindgen_ty_2 {
-    pub _bitfield_align_1: [u8; 0],
-    pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
-}
-impl rfc_CMD_PROP_TX_s__bindgen_ty_2 {
-    #[inline]
-    pub fn rule(&self) -> u8 {
-        unsafe { ::core::mem::transmute(self._bitfield_1.get(0usize, 4u8) as u8) }
-    }
-    #[inline]
-    pub fn set_rule(&mut self, val: u8) {
-        unsafe {
-            let val: u8 = ::core::mem::transmute(val);
-            self._bitfield_1.set(0usize, 4u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn nSkip(&self) -> u8 {
-        unsafe { ::core::mem::transmute(self._bitfield_1.get(4usize, 4u8) as u8) }
-    }
-    #[inline]
-    pub fn set_nSkip(&mut self, val: u8) {
-        unsafe {
-            let val: u8 = ::core::mem::transmute(val);
-            self._bitfield_1.set(4usize, 4u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn new_bitfield_1(rule: u8, nSkip: u8) -> __BindgenBitfieldUnit<[u8; 1usize]> {
-        let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 1usize]> = Default::default();
-        __bindgen_bitfield_unit.set(0usize, 4u8, {
-            let rule: u8 = unsafe { ::core::mem::transmute(rule) };
-            rule as u64
-        });
-        __bindgen_bitfield_unit.set(4usize, 4u8, {
-            let nSkip: u8 = unsafe { ::core::mem::transmute(nSkip) };
-            nSkip as u64
-        });
-        __bindgen_bitfield_unit
-    }
-}
-#[repr(C)]
-#[derive(Debug, Default, Copy, Clone)]
-#[must_use]
-pub struct rfc_CMD_PROP_TX_s__bindgen_ty_3 {
-    pub _bitfield_align_1: [u8; 0],
-    pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
-}
-impl rfc_CMD_PROP_TX_s__bindgen_ty_3 {
-    #[inline]
-    pub fn bFsOff(&self) -> u8 {
-        unsafe { ::core::mem::transmute(self._bitfield_1.get(0usize, 1u8) as u8) }
-    }
-    #[inline]
-    pub fn set_bFsOff(&mut self, val: u8) {
-        unsafe {
-            let val: u8 = ::core::mem::transmute(val);
-            self._bitfield_1.set(0usize, 1u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn bUseCrc(&self) -> u8 {
-        unsafe { ::core::mem::transmute(self._bitfield_1.get(3usize, 1u8) as u8) }
-    }
-    #[inline]
-    pub fn set_bUseCrc(&mut self, val: u8) {
-        unsafe {
-            let val: u8 = ::core::mem::transmute(val);
-            self._bitfield_1.set(3usize, 1u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn bVarLen(&self) -> u8 {
-        unsafe { ::core::mem::transmute(self._bitfield_1.get(4usize, 1u8) as u8) }
-    }
-    #[inline]
-    pub fn set_bVarLen(&mut self, val: u8) {
-        unsafe {
-            let val: u8 = ::core::mem::transmute(val);
-            self._bitfield_1.set(4usize, 1u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn new_bitfield_1(
-        bFsOff: u8,
-        bUseCrc: u8,
-        bVarLen: u8,
-    ) -> __BindgenBitfieldUnit<[u8; 1usize]> {
-        let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 1usize]> = Default::default();
-        __bindgen_bitfield_unit.set(0usize, 1u8, {
-            let bFsOff: u8 = unsafe { ::core::mem::transmute(bFsOff) };
-            bFsOff as u64
-        });
-        __bindgen_bitfield_unit.set(3usize, 1u8, {
-            let bUseCrc: u8 = unsafe { ::core::mem::transmute(bUseCrc) };
-            bUseCrc as u64
-        });
-        __bindgen_bitfield_unit.set(4usize, 1u8, {
-            let bVarLen: u8 = unsafe { ::core::mem::transmute(bVarLen) };
-            bVarLen as u64
-        });
-        __bindgen_bitfield_unit
-    }
-}
-impl Default for rfc_CMD_PROP_TX_s {
-    fn default() -> Self {
-        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
-        unsafe {
-            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
-            s.assume_init()
-        }
-    }
-}
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-#[must_use]
-pub struct rfc_CMD_PROP_RX_s {
-    pub commandNo: u16,
-    pub status: u16,
-    pub pNextOp: *mut rfc_radioOp_t,
-    pub startTime: ratmr_t,
-    pub startTrigger: rfc_CMD_PROP_RX_s__bindgen_ty_1,
-    pub condition: rfc_CMD_PROP_RX_s__bindgen_ty_2,
-    pub pktConf: rfc_CMD_PROP_RX_s__bindgen_ty_3,
-    pub rxConf: rfc_CMD_PROP_RX_s__bindgen_ty_4,
-    pub syncWord: u32,
-    pub maxPktLen: u8,
-    pub address0: u8,
-    pub address1: u8,
-    pub endTrigger: rfc_CMD_PROP_RX_s__bindgen_ty_5,
-    pub endTime: ratmr_t,
-    pub pQueue: *mut dataQueue_t,
-    pub pOutput: *mut u8,
-}
-#[repr(C)]
-#[derive(Debug, Default, Copy, Clone)]
-#[must_use]
-pub struct rfc_CMD_PROP_RX_s__bindgen_ty_1 {
-    pub _bitfield_align_1: [u8; 0],
-    pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
-}
-impl rfc_CMD_PROP_RX_s__bindgen_ty_1 {
-    #[inline]
-    pub fn triggerType(&self) -> u8 {
-        unsafe { ::core::mem::transmute(self._bitfield_1.get(0usize, 4u8) as u8) }
-    }
-    #[inline]
-    pub fn set_triggerType(&mut self, val: u8) {
-        unsafe {
-            let val: u8 = ::core::mem::transmute(val);
-            self._bitfield_1.set(0usize, 4u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn bEnaCmd(&self) -> u8 {
-        unsafe { ::core::mem::transmute(self._bitfield_1.get(4usize, 1u8) as u8) }
-    }
-    #[inline]
-    pub fn set_bEnaCmd(&mut self, val: u8) {
-        unsafe {
-            let val: u8 = ::core::mem::transmute(val);
-            self._bitfield_1.set(4usize, 1u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn triggerNo(&self) -> u8 {
-        unsafe { ::core::mem::transmute(self._bitfield_1.get(5usize, 2u8) as u8) }
-    }
-    #[inline]
-    pub fn set_triggerNo(&mut self, val: u8) {
-        unsafe {
-            let val: u8 = ::core::mem::transmute(val);
-            self._bitfield_1.set(5usize, 2u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn pastTrig(&self) -> u8 {
-        unsafe { ::core::mem::transmute(self._bitfield_1.get(7usize, 1u8) as u8) }
-    }
-    #[inline]
-    pub fn set_pastTrig(&mut self, val: u8) {
-        unsafe {
-            let val: u8 = ::core::mem::transmute(val);
-            self._bitfield_1.set(7usize, 1u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn new_bitfield_1(
-        triggerType: u8,
-        bEnaCmd: u8,
-        triggerNo: u8,
-        pastTrig: u8,
-    ) -> __BindgenBitfieldUnit<[u8; 1usize]> {
-        let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 1usize]> = Default::default();
-        __bindgen_bitfield_unit.set(0usize, 4u8, {
-            let triggerType: u8 = unsafe { ::core::mem::transmute(triggerType) };
-            triggerType as u64
-        });
-        __bindgen_bitfield_unit.set(4usize, 1u8, {
-            let bEnaCmd: u8 = unsafe { ::core::mem::transmute(bEnaCmd) };
-            bEnaCmd as u64
-        });
-        __bindgen_bitfield_unit.set(5usize, 2u8, {
-            let triggerNo: u8 = unsafe { ::core::mem::transmute(triggerNo) };
-            triggerNo as u64
-        });
-        __bindgen_bitfield_unit.set(7usize, 1u8, {
-            let pastTrig: u8 = unsafe { ::core::mem::transmute(pastTrig) };
-            pastTrig as u64
-        });
-        __bindgen_bitfield_unit
-    }
-}
-#[repr(C)]
-#[derive(Debug, Default, Copy, Clone)]
-#[must_use]
-pub struct rfc_CMD_PROP_RX_s__bindgen_ty_2 {
-    pub _bitfield_align_1: [u8; 0],
-    pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
-}
-impl rfc_CMD_PROP_RX_s__bindgen_ty_2 {
-    #[inline]
-    pub fn rule(&self) -> u8 {
-        unsafe { ::core::mem::transmute(self._bitfield_1.get(0usize, 4u8) as u8) }
-    }
-    #[inline]
-    pub fn set_rule(&mut self, val: u8) {
-        unsafe {
-            let val: u8 = ::core::mem::transmute(val);
-            self._bitfield_1.set(0usize, 4u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn nSkip(&self) -> u8 {
-        unsafe { ::core::mem::transmute(self._bitfield_1.get(4usize, 4u8) as u8) }
-    }
-    #[inline]
-    pub fn set_nSkip(&mut self, val: u8) {
-        unsafe {
-            let val: u8 = ::core::mem::transmute(val);
-            self._bitfield_1.set(4usize, 4u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn new_bitfield_1(rule: u8, nSkip: u8) -> __BindgenBitfieldUnit<[u8; 1usize]> {
-        let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 1usize]> = Default::default();
-        __bindgen_bitfield_unit.set(0usize, 4u8, {
-            let rule: u8 = unsafe { ::core::mem::transmute(rule) };
-            rule as u64
-        });
-        __bindgen_bitfield_unit.set(4usize, 4u8, {
-            let nSkip: u8 = unsafe { ::core::mem::transmute(nSkip) };
-            nSkip as u64
-        });
-        __bindgen_bitfield_unit
-    }
-}
-#[repr(C)]
-#[derive(Debug, Default, Copy, Clone)]
-#[must_use]
-pub struct rfc_CMD_PROP_RX_s__bindgen_ty_3 {
-    pub _bitfield_align_1: [u8; 0],
-    pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
-}
-impl rfc_CMD_PROP_RX_s__bindgen_ty_3 {
-    #[inline]
-    pub fn bFsOff(&self) -> u8 {
-        unsafe { ::core::mem::transmute(self._bitfield_1.get(0usize, 1u8) as u8) }
-    }
-    #[inline]
-    pub fn set_bFsOff(&mut self, val: u8) {
-        unsafe {
-            let val: u8 = ::core::mem::transmute(val);
-            self._bitfield_1.set(0usize, 1u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn bRepeatOk(&self) -> u8 {
-        unsafe { ::core::mem::transmute(self._bitfield_1.get(1usize, 1u8) as u8) }
-    }
-    #[inline]
-    pub fn set_bRepeatOk(&mut self, val: u8) {
-        unsafe {
-            let val: u8 = ::core::mem::transmute(val);
-            self._bitfield_1.set(1usize, 1u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn bRepeatNok(&self) -> u8 {
-        unsafe { ::core::mem::transmute(self._bitfield_1.get(2usize, 1u8) as u8) }
-    }
-    #[inline]
-    pub fn set_bRepeatNok(&mut self, val: u8) {
-        unsafe {
-            let val: u8 = ::core::mem::transmute(val);
-            self._bitfield_1.set(2usize, 1u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn bUseCrc(&self) -> u8 {
-        unsafe { ::core::mem::transmute(self._bitfield_1.get(3usize, 1u8) as u8) }
-    }
-    #[inline]
-    pub fn set_bUseCrc(&mut self, val: u8) {
-        unsafe {
-            let val: u8 = ::core::mem::transmute(val);
-            self._bitfield_1.set(3usize, 1u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn bVarLen(&self) -> u8 {
-        unsafe { ::core::mem::transmute(self._bitfield_1.get(4usize, 1u8) as u8) }
-    }
-    #[inline]
-    pub fn set_bVarLen(&mut self, val: u8) {
-        unsafe {
-            let val: u8 = ::core::mem::transmute(val);
-            self._bitfield_1.set(4usize, 1u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn bChkAddress(&self) -> u8 {
-        unsafe { ::core::mem::transmute(self._bitfield_1.get(5usize, 1u8) as u8) }
-    }
-    #[inline]
-    pub fn set_bChkAddress(&mut self, val: u8) {
-        unsafe {
-            let val: u8 = ::core::mem::transmute(val);
-            self._bitfield_1.set(5usize, 1u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn endType(&self) -> u8 {
-        unsafe { ::core::mem::transmute(self._bitfield_1.get(6usize, 1u8) as u8) }
-    }
-    #[inline]
-    pub fn set_endType(&mut self, val: u8) {
-        unsafe {
-            let val: u8 = ::core::mem::transmute(val);
-            self._bitfield_1.set(6usize, 1u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn filterOp(&self) -> u8 {
-        unsafe { ::core::mem::transmute(self._bitfield_1.get(7usize, 1u8) as u8) }
-    }
-    #[inline]
-    pub fn set_filterOp(&mut self, val: u8) {
-        unsafe {
-            let val: u8 = ::core::mem::transmute(val);
-            self._bitfield_1.set(7usize, 1u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn new_bitfield_1(
-        bFsOff: u8,
-        bRepeatOk: u8,
-        bRepeatNok: u8,
-        bUseCrc: u8,
-        bVarLen: u8,
-        bChkAddress: u8,
-        endType: u8,
-        filterOp: u8,
-    ) -> __BindgenBitfieldUnit<[u8; 1usize]> {
-        let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 1usize]> = Default::default();
-        __bindgen_bitfield_unit.set(0usize, 1u8, {
-            let bFsOff: u8 = unsafe { ::core::mem::transmute(bFsOff) };
-            bFsOff as u64
-        });
-        __bindgen_bitfield_unit.set(1usize, 1u8, {
-            let bRepeatOk: u8 = unsafe { ::core::mem::transmute(bRepeatOk) };
-            bRepeatOk as u64
-        });
-        __bindgen_bitfield_unit.set(2usize, 1u8, {
-            let bRepeatNok: u8 = unsafe { ::core::mem::transmute(bRepeatNok) };
-            bRepeatNok as u64
-        });
-        __bindgen_bitfield_unit.set(3usize, 1u8, {
-            let bUseCrc: u8 = unsafe { ::core::mem::transmute(bUseCrc) };
-            bUseCrc as u64
-        });
-        __bindgen_bitfield_unit.set(4usize, 1u8, {
-            let bVarLen: u8 = unsafe { ::core::mem::transmute(bVarLen) };
-            bVarLen as u64
-        });
-        __bindgen_bitfield_unit.set(5usize, 1u8, {
-            let bChkAddress: u8 = unsafe { ::core::mem::transmute(bChkAddress) };
-            bChkAddress as u64
-        });
-        __bindgen_bitfield_unit.set(6usize, 1u8, {
-            let endType: u8 = unsafe { ::core::mem::transmute(endType) };
-            endType as u64
-        });
-        __bindgen_bitfield_unit.set(7usize, 1u8, {
-            let filterOp: u8 = unsafe { ::core::mem::transmute(filterOp) };
-            filterOp as u64
-        });
-        __bindgen_bitfield_unit
-    }
-}
-#[repr(C)]
-#[derive(Debug, Default, Copy, Clone)]
-#[must_use]
-pub struct rfc_CMD_PROP_RX_s__bindgen_ty_4 {
-    pub _bitfield_align_1: [u8; 0],
-    pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
-}
-impl rfc_CMD_PROP_RX_s__bindgen_ty_4 {
-    #[inline]
-    pub fn bAutoFlushIgnored(&self) -> u8 {
-        unsafe { ::core::mem::transmute(self._bitfield_1.get(0usize, 1u8) as u8) }
-    }
-    #[inline]
-    pub fn set_bAutoFlushIgnored(&mut self, val: u8) {
-        unsafe {
-            let val: u8 = ::core::mem::transmute(val);
-            self._bitfield_1.set(0usize, 1u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn bAutoFlushCrcErr(&self) -> u8 {
-        unsafe { ::core::mem::transmute(self._bitfield_1.get(1usize, 1u8) as u8) }
-    }
-    #[inline]
-    pub fn set_bAutoFlushCrcErr(&mut self, val: u8) {
-        unsafe {
-            let val: u8 = ::core::mem::transmute(val);
-            self._bitfield_1.set(1usize, 1u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn bIncludeHdr(&self) -> u8 {
-        unsafe { ::core::mem::transmute(self._bitfield_1.get(3usize, 1u8) as u8) }
-    }
-    #[inline]
-    pub fn set_bIncludeHdr(&mut self, val: u8) {
-        unsafe {
-            let val: u8 = ::core::mem::transmute(val);
-            self._bitfield_1.set(3usize, 1u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn bIncludeCrc(&self) -> u8 {
-        unsafe { ::core::mem::transmute(self._bitfield_1.get(4usize, 1u8) as u8) }
-    }
-    #[inline]
-    pub fn set_bIncludeCrc(&mut self, val: u8) {
-        unsafe {
-            let val: u8 = ::core::mem::transmute(val);
-            self._bitfield_1.set(4usize, 1u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn bAppendRssi(&self) -> u8 {
-        unsafe { ::core::mem::transmute(self._bitfield_1.get(5usize, 1u8) as u8) }
-    }
-    #[inline]
-    pub fn set_bAppendRssi(&mut self, val: u8) {
-        unsafe {
-            let val: u8 = ::core::mem::transmute(val);
-            self._bitfield_1.set(5usize, 1u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn bAppendTimestamp(&self) -> u8 {
-        unsafe { ::core::mem::transmute(self._bitfield_1.get(6usize, 1u8) as u8) }
-    }
-    #[inline]
-    pub fn set_bAppendTimestamp(&mut self, val: u8) {
-        unsafe {
-            let val: u8 = ::core::mem::transmute(val);
-            self._bitfield_1.set(6usize, 1u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn bAppendStatus(&self) -> u8 {
-        unsafe { ::core::mem::transmute(self._bitfield_1.get(7usize, 1u8) as u8) }
-    }
-    #[inline]
-    pub fn set_bAppendStatus(&mut self, val: u8) {
-        unsafe {
-            let val: u8 = ::core::mem::transmute(val);
-            self._bitfield_1.set(7usize, 1u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn new_bitfield_1(
-        bAutoFlushIgnored: u8,
-        bAutoFlushCrcErr: u8,
-        bIncludeHdr: u8,
-        bIncludeCrc: u8,
-        bAppendRssi: u8,
-        bAppendTimestamp: u8,
-        bAppendStatus: u8,
-    ) -> __BindgenBitfieldUnit<[u8; 1usize]> {
-        let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 1usize]> = Default::default();
-        __bindgen_bitfield_unit.set(0usize, 1u8, {
-            let bAutoFlushIgnored: u8 = unsafe { ::core::mem::transmute(bAutoFlushIgnored) };
-            bAutoFlushIgnored as u64
-        });
-        __bindgen_bitfield_unit.set(1usize, 1u8, {
-            let bAutoFlushCrcErr: u8 = unsafe { ::core::mem::transmute(bAutoFlushCrcErr) };
-            bAutoFlushCrcErr as u64
-        });
-        __bindgen_bitfield_unit.set(3usize, 1u8, {
-            let bIncludeHdr: u8 = unsafe { ::core::mem::transmute(bIncludeHdr) };
-            bIncludeHdr as u64
-        });
-        __bindgen_bitfield_unit.set(4usize, 1u8, {
-            let bIncludeCrc: u8 = unsafe { ::core::mem::transmute(bIncludeCrc) };
-            bIncludeCrc as u64
-        });
-        __bindgen_bitfield_unit.set(5usize, 1u8, {
-            let bAppendRssi: u8 = unsafe { ::core::mem::transmute(bAppendRssi) };
-            bAppendRssi as u64
-        });
-        __bindgen_bitfield_unit.set(6usize, 1u8, {
-            let bAppendTimestamp: u8 = unsafe { ::core::mem::transmute(bAppendTimestamp) };
-            bAppendTimestamp as u64
-        });
-        __bindgen_bitfield_unit.set(7usize, 1u8, {
-            let bAppendStatus: u8 = unsafe { ::core::mem::transmute(bAppendStatus) };
-            bAppendStatus as u64
-        });
-        __bindgen_bitfield_unit
-    }
-}
-#[repr(C)]
-#[derive(Debug, Default, Copy, Clone)]
-#[must_use]
-pub struct rfc_CMD_PROP_RX_s__bindgen_ty_5 {
-    pub _bitfield_align_1: [u8; 0],
-    pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
-}
-impl rfc_CMD_PROP_RX_s__bindgen_ty_5 {
-    #[inline]
-    pub fn triggerType(&self) -> u8 {
-        unsafe { ::core::mem::transmute(self._bitfield_1.get(0usize, 4u8) as u8) }
-    }
-    #[inline]
-    pub fn set_triggerType(&mut self, val: u8) {
-        unsafe {
-            let val: u8 = ::core::mem::transmute(val);
-            self._bitfield_1.set(0usize, 4u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn bEnaCmd(&self) -> u8 {
-        unsafe { ::core::mem::transmute(self._bitfield_1.get(4usize, 1u8) as u8) }
-    }
-    #[inline]
-    pub fn set_bEnaCmd(&mut self, val: u8) {
-        unsafe {
-            let val: u8 = ::core::mem::transmute(val);
-            self._bitfield_1.set(4usize, 1u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn triggerNo(&self) -> u8 {
-        unsafe { ::core::mem::transmute(self._bitfield_1.get(5usize, 2u8) as u8) }
-    }
-    #[inline]
-    pub fn set_triggerNo(&mut self, val: u8) {
-        unsafe {
-            let val: u8 = ::core::mem::transmute(val);
-            self._bitfield_1.set(5usize, 2u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn pastTrig(&self) -> u8 {
-        unsafe { ::core::mem::transmute(self._bitfield_1.get(7usize, 1u8) as u8) }
-    }
-    #[inline]
-    pub fn set_pastTrig(&mut self, val: u8) {
-        unsafe {
-            let val: u8 = ::core::mem::transmute(val);
-            self._bitfield_1.set(7usize, 1u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn new_bitfield_1(
-        triggerType: u8,
-        bEnaCmd: u8,
-        triggerNo: u8,
-        pastTrig: u8,
-    ) -> __BindgenBitfieldUnit<[u8; 1usize]> {
-        let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 1usize]> = Default::default();
-        __bindgen_bitfield_unit.set(0usize, 4u8, {
-            let triggerType: u8 = unsafe { ::core::mem::transmute(triggerType) };
-            triggerType as u64
-        });
-        __bindgen_bitfield_unit.set(4usize, 1u8, {
-            let bEnaCmd: u8 = unsafe { ::core::mem::transmute(bEnaCmd) };
-            bEnaCmd as u64
-        });
-        __bindgen_bitfield_unit.set(5usize, 2u8, {
-            let triggerNo: u8 = unsafe { ::core::mem::transmute(triggerNo) };
-            triggerNo as u64
-        });
-        __bindgen_bitfield_unit.set(7usize, 1u8, {
-            let pastTrig: u8 = unsafe { ::core::mem::transmute(pastTrig) };
-            pastTrig as u64
-        });
-        __bindgen_bitfield_unit
-    }
-}
-impl Default for rfc_CMD_PROP_RX_s {
-    fn default() -> Self {
-        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
-        unsafe {
-            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
-            s.assume_init()
-        }
-    }
-}
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-#[must_use]
-pub struct rfc_CMD_PROP_TX_ADV_s {
-    pub commandNo: u16,
-    pub status: u16,
-    pub pNextOp: *mut rfc_radioOp_t,
-    pub startTime: ratmr_t,
-    pub startTrigger: rfc_CMD_PROP_TX_ADV_s__bindgen_ty_1,
-    pub condition: rfc_CMD_PROP_TX_ADV_s__bindgen_ty_2,
-    pub pktConf: rfc_CMD_PROP_TX_ADV_s__bindgen_ty_3,
-    pub numHdrBits: u8,
-    pub pktLen: u16,
-    pub startConf: rfc_CMD_PROP_TX_ADV_s__bindgen_ty_4,
-    pub preTrigger: rfc_CMD_PROP_TX_ADV_s__bindgen_ty_5,
-    pub preTime: ratmr_t,
-    pub syncWord: u32,
-    pub pPkt: *mut u8,
-}
-#[repr(C)]
-#[derive(Debug, Default, Copy, Clone)]
-#[must_use]
-pub struct rfc_CMD_PROP_TX_ADV_s__bindgen_ty_1 {
-    pub _bitfield_align_1: [u8; 0],
-    pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
-}
-impl rfc_CMD_PROP_TX_ADV_s__bindgen_ty_1 {
-    #[inline]
-    pub fn triggerType(&self) -> u8 {
-        unsafe { ::core::mem::transmute(self._bitfield_1.get(0usize, 4u8) as u8) }
-    }
-    #[inline]
-    pub fn set_triggerType(&mut self, val: u8) {
-        unsafe {
-            let val: u8 = ::core::mem::transmute(val);
-            self._bitfield_1.set(0usize, 4u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn bEnaCmd(&self) -> u8 {
-        unsafe { ::core::mem::transmute(self._bitfield_1.get(4usize, 1u8) as u8) }
-    }
-    #[inline]
-    pub fn set_bEnaCmd(&mut self, val: u8) {
-        unsafe {
-            let val: u8 = ::core::mem::transmute(val);
-            self._bitfield_1.set(4usize, 1u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn triggerNo(&self) -> u8 {
-        unsafe { ::core::mem::transmute(self._bitfield_1.get(5usize, 2u8) as u8) }
-    }
-    #[inline]
-    pub fn set_triggerNo(&mut self, val: u8) {
-        unsafe {
-            let val: u8 = ::core::mem::transmute(val);
-            self._bitfield_1.set(5usize, 2u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn pastTrig(&self) -> u8 {
-        unsafe { ::core::mem::transmute(self._bitfield_1.get(7usize, 1u8) as u8) }
-    }
-    #[inline]
-    pub fn set_pastTrig(&mut self, val: u8) {
-        unsafe {
-            let val: u8 = ::core::mem::transmute(val);
-            self._bitfield_1.set(7usize, 1u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn new_bitfield_1(
-        triggerType: u8,
-        bEnaCmd: u8,
-        triggerNo: u8,
-        pastTrig: u8,
-    ) -> __BindgenBitfieldUnit<[u8; 1usize]> {
-        let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 1usize]> = Default::default();
-        __bindgen_bitfield_unit.set(0usize, 4u8, {
-            let triggerType: u8 = unsafe { ::core::mem::transmute(triggerType) };
-            triggerType as u64
-        });
-        __bindgen_bitfield_unit.set(4usize, 1u8, {
-            let bEnaCmd: u8 = unsafe { ::core::mem::transmute(bEnaCmd) };
-            bEnaCmd as u64
-        });
-        __bindgen_bitfield_unit.set(5usize, 2u8, {
-            let triggerNo: u8 = unsafe { ::core::mem::transmute(triggerNo) };
-            triggerNo as u64
-        });
-        __bindgen_bitfield_unit.set(7usize, 1u8, {
-            let pastTrig: u8 = unsafe { ::core::mem::transmute(pastTrig) };
-            pastTrig as u64
-        });
-        __bindgen_bitfield_unit
-    }
-}
-#[repr(C)]
-#[derive(Debug, Default, Copy, Clone)]
-#[must_use]
-pub struct rfc_CMD_PROP_TX_ADV_s__bindgen_ty_2 {
-    pub _bitfield_align_1: [u8; 0],
-    pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
-}
-impl rfc_CMD_PROP_TX_ADV_s__bindgen_ty_2 {
-    #[inline]
-    pub fn rule(&self) -> u8 {
-        unsafe { ::core::mem::transmute(self._bitfield_1.get(0usize, 4u8) as u8) }
-    }
-    #[inline]
-    pub fn set_rule(&mut self, val: u8) {
-        unsafe {
-            let val: u8 = ::core::mem::transmute(val);
-            self._bitfield_1.set(0usize, 4u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn nSkip(&self) -> u8 {
-        unsafe { ::core::mem::transmute(self._bitfield_1.get(4usize, 4u8) as u8) }
-    }
-    #[inline]
-    pub fn set_nSkip(&mut self, val: u8) {
-        unsafe {
-            let val: u8 = ::core::mem::transmute(val);
-            self._bitfield_1.set(4usize, 4u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn new_bitfield_1(rule: u8, nSkip: u8) -> __BindgenBitfieldUnit<[u8; 1usize]> {
-        let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 1usize]> = Default::default();
-        __bindgen_bitfield_unit.set(0usize, 4u8, {
-            let rule: u8 = unsafe { ::core::mem::transmute(rule) };
-            rule as u64
-        });
-        __bindgen_bitfield_unit.set(4usize, 4u8, {
-            let nSkip: u8 = unsafe { ::core::mem::transmute(nSkip) };
-            nSkip as u64
-        });
-        __bindgen_bitfield_unit
-    }
-}
-#[repr(C)]
-#[derive(Debug, Default, Copy, Clone)]
-#[must_use]
-pub struct rfc_CMD_PROP_TX_ADV_s__bindgen_ty_3 {
-    pub _bitfield_align_1: [u8; 0],
-    pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
-}
-impl rfc_CMD_PROP_TX_ADV_s__bindgen_ty_3 {
-    #[inline]
-    pub fn bFsOff(&self) -> u8 {
-        unsafe { ::core::mem::transmute(self._bitfield_1.get(0usize, 1u8) as u8) }
-    }
-    #[inline]
-    pub fn set_bFsOff(&mut self, val: u8) {
-        unsafe {
-            let val: u8 = ::core::mem::transmute(val);
-            self._bitfield_1.set(0usize, 1u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn bUseCrc(&self) -> u8 {
-        unsafe { ::core::mem::transmute(self._bitfield_1.get(3usize, 1u8) as u8) }
-    }
-    #[inline]
-    pub fn set_bUseCrc(&mut self, val: u8) {
-        unsafe {
-            let val: u8 = ::core::mem::transmute(val);
-            self._bitfield_1.set(3usize, 1u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn bCrcIncSw(&self) -> u8 {
-        unsafe { ::core::mem::transmute(self._bitfield_1.get(4usize, 1u8) as u8) }
-    }
-    #[inline]
-    pub fn set_bCrcIncSw(&mut self, val: u8) {
-        unsafe {
-            let val: u8 = ::core::mem::transmute(val);
-            self._bitfield_1.set(4usize, 1u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn bCrcIncHdr(&self) -> u8 {
-        unsafe { ::core::mem::transmute(self._bitfield_1.get(5usize, 1u8) as u8) }
-    }
-    #[inline]
-    pub fn set_bCrcIncHdr(&mut self, val: u8) {
-        unsafe {
-            let val: u8 = ::core::mem::transmute(val);
-            self._bitfield_1.set(5usize, 1u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn new_bitfield_1(
-        bFsOff: u8,
-        bUseCrc: u8,
-        bCrcIncSw: u8,
-        bCrcIncHdr: u8,
-    ) -> __BindgenBitfieldUnit<[u8; 1usize]> {
-        let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 1usize]> = Default::default();
-        __bindgen_bitfield_unit.set(0usize, 1u8, {
-            let bFsOff: u8 = unsafe { ::core::mem::transmute(bFsOff) };
-            bFsOff as u64
-        });
-        __bindgen_bitfield_unit.set(3usize, 1u8, {
-            let bUseCrc: u8 = unsafe { ::core::mem::transmute(bUseCrc) };
-            bUseCrc as u64
-        });
-        __bindgen_bitfield_unit.set(4usize, 1u8, {
-            let bCrcIncSw: u8 = unsafe { ::core::mem::transmute(bCrcIncSw) };
-            bCrcIncSw as u64
-        });
-        __bindgen_bitfield_unit.set(5usize, 1u8, {
-            let bCrcIncHdr: u8 = unsafe { ::core::mem::transmute(bCrcIncHdr) };
-            bCrcIncHdr as u64
-        });
-        __bindgen_bitfield_unit
-    }
-}
-#[repr(C)]
-#[derive(Debug, Default, Copy, Clone)]
-#[must_use]
-pub struct rfc_CMD_PROP_TX_ADV_s__bindgen_ty_4 {
-    pub _bitfield_align_1: [u8; 0],
-    pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
-}
-impl rfc_CMD_PROP_TX_ADV_s__bindgen_ty_4 {
-    #[inline]
-    pub fn bExtTxTrig(&self) -> u8 {
-        unsafe { ::core::mem::transmute(self._bitfield_1.get(0usize, 1u8) as u8) }
-    }
-    #[inline]
-    pub fn set_bExtTxTrig(&mut self, val: u8) {
-        unsafe {
-            let val: u8 = ::core::mem::transmute(val);
-            self._bitfield_1.set(0usize, 1u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn inputMode(&self) -> u8 {
-        unsafe { ::core::mem::transmute(self._bitfield_1.get(1usize, 2u8) as u8) }
-    }
-    #[inline]
-    pub fn set_inputMode(&mut self, val: u8) {
-        unsafe {
-            let val: u8 = ::core::mem::transmute(val);
-            self._bitfield_1.set(1usize, 2u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn source(&self) -> u8 {
-        unsafe { ::core::mem::transmute(self._bitfield_1.get(3usize, 5u8) as u8) }
-    }
-    #[inline]
-    pub fn set_source(&mut self, val: u8) {
-        unsafe {
-            let val: u8 = ::core::mem::transmute(val);
-            self._bitfield_1.set(3usize, 5u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn new_bitfield_1(
-        bExtTxTrig: u8,
-        inputMode: u8,
-        source: u8,
-    ) -> __BindgenBitfieldUnit<[u8; 1usize]> {
-        let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 1usize]> = Default::default();
-        __bindgen_bitfield_unit.set(0usize, 1u8, {
-            let bExtTxTrig: u8 = unsafe { ::core::mem::transmute(bExtTxTrig) };
-            bExtTxTrig as u64
-        });
-        __bindgen_bitfield_unit.set(1usize, 2u8, {
-            let inputMode: u8 = unsafe { ::core::mem::transmute(inputMode) };
-            inputMode as u64
-        });
-        __bindgen_bitfield_unit.set(3usize, 5u8, {
-            let source: u8 = unsafe { ::core::mem::transmute(source) };
-            source as u64
-        });
-        __bindgen_bitfield_unit
-    }
-}
-#[repr(C)]
-#[derive(Debug, Default, Copy, Clone)]
-#[must_use]
-pub struct rfc_CMD_PROP_TX_ADV_s__bindgen_ty_5 {
-    pub _bitfield_align_1: [u8; 0],
-    pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
-}
-impl rfc_CMD_PROP_TX_ADV_s__bindgen_ty_5 {
-    #[inline]
-    pub fn triggerType(&self) -> u8 {
-        unsafe { ::core::mem::transmute(self._bitfield_1.get(0usize, 4u8) as u8) }
-    }
-    #[inline]
-    pub fn set_triggerType(&mut self, val: u8) {
-        unsafe {
-            let val: u8 = ::core::mem::transmute(val);
-            self._bitfield_1.set(0usize, 4u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn bEnaCmd(&self) -> u8 {
-        unsafe { ::core::mem::transmute(self._bitfield_1.get(4usize, 1u8) as u8) }
-    }
-    #[inline]
-    pub fn set_bEnaCmd(&mut self, val: u8) {
-        unsafe {
-            let val: u8 = ::core::mem::transmute(val);
-            self._bitfield_1.set(4usize, 1u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn triggerNo(&self) -> u8 {
-        unsafe { ::core::mem::transmute(self._bitfield_1.get(5usize, 2u8) as u8) }
-    }
-    #[inline]
-    pub fn set_triggerNo(&mut self, val: u8) {
-        unsafe {
-            let val: u8 = ::core::mem::transmute(val);
-            self._bitfield_1.set(5usize, 2u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn pastTrig(&self) -> u8 {
-        unsafe { ::core::mem::transmute(self._bitfield_1.get(7usize, 1u8) as u8) }
-    }
-    #[inline]
-    pub fn set_pastTrig(&mut self, val: u8) {
-        unsafe {
-            let val: u8 = ::core::mem::transmute(val);
-            self._bitfield_1.set(7usize, 1u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn new_bitfield_1(
-        triggerType: u8,
-        bEnaCmd: u8,
-        triggerNo: u8,
-        pastTrig: u8,
-    ) -> __BindgenBitfieldUnit<[u8; 1usize]> {
-        let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 1usize]> = Default::default();
-        __bindgen_bitfield_unit.set(0usize, 4u8, {
-            let triggerType: u8 = unsafe { ::core::mem::transmute(triggerType) };
-            triggerType as u64
-        });
-        __bindgen_bitfield_unit.set(4usize, 1u8, {
-            let bEnaCmd: u8 = unsafe { ::core::mem::transmute(bEnaCmd) };
-            bEnaCmd as u64
-        });
-        __bindgen_bitfield_unit.set(5usize, 2u8, {
-            let triggerNo: u8 = unsafe { ::core::mem::transmute(triggerNo) };
-            triggerNo as u64
-        });
-        __bindgen_bitfield_unit.set(7usize, 1u8, {
-            let pastTrig: u8 = unsafe { ::core::mem::transmute(pastTrig) };
-            pastTrig as u64
-        });
-        __bindgen_bitfield_unit
-    }
-}
-impl Default for rfc_CMD_PROP_TX_ADV_s {
-    fn default() -> Self {
-        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
-        unsafe {
-            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
-            s.assume_init()
-        }
-    }
-}
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-#[must_use]
-pub struct rfc_CMD_PROP_RX_ADV_s {
-    pub commandNo: u16,
-    pub status: u16,
-    pub pNextOp: *mut rfc_radioOp_t,
-    pub startTime: ratmr_t,
-    pub startTrigger: rfc_CMD_PROP_RX_ADV_s__bindgen_ty_1,
-    pub condition: rfc_CMD_PROP_RX_ADV_s__bindgen_ty_2,
-    pub pktConf: rfc_CMD_PROP_RX_ADV_s__bindgen_ty_3,
-    pub rxConf: rfc_CMD_PROP_RX_ADV_s__bindgen_ty_4,
-    pub syncWord0: u32,
-    pub syncWord1: u32,
-    pub maxPktLen: u16,
-    pub hdrConf: rfc_CMD_PROP_RX_ADV_s__bindgen_ty_5,
-    pub addrConf: rfc_CMD_PROP_RX_ADV_s__bindgen_ty_6,
-    pub lenOffset: i8,
-    pub endTrigger: rfc_CMD_PROP_RX_ADV_s__bindgen_ty_7,
-    pub endTime: ratmr_t,
-    pub pAddr: *mut u8,
-    pub pQueue: *mut dataQueue_t,
-    pub pOutput: *mut u8,
-}
-#[repr(C)]
-#[derive(Debug, Default, Copy, Clone)]
-#[must_use]
-pub struct rfc_CMD_PROP_RX_ADV_s__bindgen_ty_1 {
-    pub _bitfield_align_1: [u8; 0],
-    pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
-}
-impl rfc_CMD_PROP_RX_ADV_s__bindgen_ty_1 {
-    #[inline]
-    pub fn triggerType(&self) -> u8 {
-        unsafe { ::core::mem::transmute(self._bitfield_1.get(0usize, 4u8) as u8) }
-    }
-    #[inline]
-    pub fn set_triggerType(&mut self, val: u8) {
-        unsafe {
-            let val: u8 = ::core::mem::transmute(val);
-            self._bitfield_1.set(0usize, 4u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn bEnaCmd(&self) -> u8 {
-        unsafe { ::core::mem::transmute(self._bitfield_1.get(4usize, 1u8) as u8) }
-    }
-    #[inline]
-    pub fn set_bEnaCmd(&mut self, val: u8) {
-        unsafe {
-            let val: u8 = ::core::mem::transmute(val);
-            self._bitfield_1.set(4usize, 1u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn triggerNo(&self) -> u8 {
-        unsafe { ::core::mem::transmute(self._bitfield_1.get(5usize, 2u8) as u8) }
-    }
-    #[inline]
-    pub fn set_triggerNo(&mut self, val: u8) {
-        unsafe {
-            let val: u8 = ::core::mem::transmute(val);
-            self._bitfield_1.set(5usize, 2u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn pastTrig(&self) -> u8 {
-        unsafe { ::core::mem::transmute(self._bitfield_1.get(7usize, 1u8) as u8) }
-    }
-    #[inline]
-    pub fn set_pastTrig(&mut self, val: u8) {
-        unsafe {
-            let val: u8 = ::core::mem::transmute(val);
-            self._bitfield_1.set(7usize, 1u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn new_bitfield_1(
-        triggerType: u8,
-        bEnaCmd: u8,
-        triggerNo: u8,
-        pastTrig: u8,
-    ) -> __BindgenBitfieldUnit<[u8; 1usize]> {
-        let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 1usize]> = Default::default();
-        __bindgen_bitfield_unit.set(0usize, 4u8, {
-            let triggerType: u8 = unsafe { ::core::mem::transmute(triggerType) };
-            triggerType as u64
-        });
-        __bindgen_bitfield_unit.set(4usize, 1u8, {
-            let bEnaCmd: u8 = unsafe { ::core::mem::transmute(bEnaCmd) };
-            bEnaCmd as u64
-        });
-        __bindgen_bitfield_unit.set(5usize, 2u8, {
-            let triggerNo: u8 = unsafe { ::core::mem::transmute(triggerNo) };
-            triggerNo as u64
-        });
-        __bindgen_bitfield_unit.set(7usize, 1u8, {
-            let pastTrig: u8 = unsafe { ::core::mem::transmute(pastTrig) };
-            pastTrig as u64
-        });
-        __bindgen_bitfield_unit
-    }
-}
-#[repr(C)]
-#[derive(Debug, Default, Copy, Clone)]
-#[must_use]
-pub struct rfc_CMD_PROP_RX_ADV_s__bindgen_ty_2 {
-    pub _bitfield_align_1: [u8; 0],
-    pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
-}
-impl rfc_CMD_PROP_RX_ADV_s__bindgen_ty_2 {
-    #[inline]
-    pub fn rule(&self) -> u8 {
-        unsafe { ::core::mem::transmute(self._bitfield_1.get(0usize, 4u8) as u8) }
-    }
-    #[inline]
-    pub fn set_rule(&mut self, val: u8) {
-        unsafe {
-            let val: u8 = ::core::mem::transmute(val);
-            self._bitfield_1.set(0usize, 4u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn nSkip(&self) -> u8 {
-        unsafe { ::core::mem::transmute(self._bitfield_1.get(4usize, 4u8) as u8) }
-    }
-    #[inline]
-    pub fn set_nSkip(&mut self, val: u8) {
-        unsafe {
-            let val: u8 = ::core::mem::transmute(val);
-            self._bitfield_1.set(4usize, 4u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn new_bitfield_1(rule: u8, nSkip: u8) -> __BindgenBitfieldUnit<[u8; 1usize]> {
-        let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 1usize]> = Default::default();
-        __bindgen_bitfield_unit.set(0usize, 4u8, {
-            let rule: u8 = unsafe { ::core::mem::transmute(rule) };
-            rule as u64
-        });
-        __bindgen_bitfield_unit.set(4usize, 4u8, {
-            let nSkip: u8 = unsafe { ::core::mem::transmute(nSkip) };
-            nSkip as u64
-        });
-        __bindgen_bitfield_unit
-    }
-}
-#[repr(C)]
-#[derive(Debug, Default, Copy, Clone)]
-#[must_use]
-pub struct rfc_CMD_PROP_RX_ADV_s__bindgen_ty_3 {
-    pub _bitfield_align_1: [u8; 0],
-    pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
-}
-impl rfc_CMD_PROP_RX_ADV_s__bindgen_ty_3 {
-    #[inline]
-    pub fn bFsOff(&self) -> u8 {
-        unsafe { ::core::mem::transmute(self._bitfield_1.get(0usize, 1u8) as u8) }
-    }
-    #[inline]
-    pub fn set_bFsOff(&mut self, val: u8) {
-        unsafe {
-            let val: u8 = ::core::mem::transmute(val);
-            self._bitfield_1.set(0usize, 1u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn bRepeatOk(&self) -> u8 {
-        unsafe { ::core::mem::transmute(self._bitfield_1.get(1usize, 1u8) as u8) }
-    }
-    #[inline]
-    pub fn set_bRepeatOk(&mut self, val: u8) {
-        unsafe {
-            let val: u8 = ::core::mem::transmute(val);
-            self._bitfield_1.set(1usize, 1u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn bRepeatNok(&self) -> u8 {
-        unsafe { ::core::mem::transmute(self._bitfield_1.get(2usize, 1u8) as u8) }
-    }
-    #[inline]
-    pub fn set_bRepeatNok(&mut self, val: u8) {
-        unsafe {
-            let val: u8 = ::core::mem::transmute(val);
-            self._bitfield_1.set(2usize, 1u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn bUseCrc(&self) -> u8 {
-        unsafe { ::core::mem::transmute(self._bitfield_1.get(3usize, 1u8) as u8) }
-    }
-    #[inline]
-    pub fn set_bUseCrc(&mut self, val: u8) {
-        unsafe {
-            let val: u8 = ::core::mem::transmute(val);
-            self._bitfield_1.set(3usize, 1u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn bCrcIncSw(&self) -> u8 {
-        unsafe { ::core::mem::transmute(self._bitfield_1.get(4usize, 1u8) as u8) }
-    }
-    #[inline]
-    pub fn set_bCrcIncSw(&mut self, val: u8) {
-        unsafe {
-            let val: u8 = ::core::mem::transmute(val);
-            self._bitfield_1.set(4usize, 1u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn bCrcIncHdr(&self) -> u8 {
-        unsafe { ::core::mem::transmute(self._bitfield_1.get(5usize, 1u8) as u8) }
-    }
-    #[inline]
-    pub fn set_bCrcIncHdr(&mut self, val: u8) {
-        unsafe {
-            let val: u8 = ::core::mem::transmute(val);
-            self._bitfield_1.set(5usize, 1u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn endType(&self) -> u8 {
-        unsafe { ::core::mem::transmute(self._bitfield_1.get(6usize, 1u8) as u8) }
-    }
-    #[inline]
-    pub fn set_endType(&mut self, val: u8) {
-        unsafe {
-            let val: u8 = ::core::mem::transmute(val);
-            self._bitfield_1.set(6usize, 1u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn filterOp(&self) -> u8 {
-        unsafe { ::core::mem::transmute(self._bitfield_1.get(7usize, 1u8) as u8) }
-    }
-    #[inline]
-    pub fn set_filterOp(&mut self, val: u8) {
-        unsafe {
-            let val: u8 = ::core::mem::transmute(val);
-            self._bitfield_1.set(7usize, 1u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn new_bitfield_1(
-        bFsOff: u8,
-        bRepeatOk: u8,
-        bRepeatNok: u8,
-        bUseCrc: u8,
-        bCrcIncSw: u8,
-        bCrcIncHdr: u8,
-        endType: u8,
-        filterOp: u8,
-    ) -> __BindgenBitfieldUnit<[u8; 1usize]> {
-        let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 1usize]> = Default::default();
-        __bindgen_bitfield_unit.set(0usize, 1u8, {
-            let bFsOff: u8 = unsafe { ::core::mem::transmute(bFsOff) };
-            bFsOff as u64
-        });
-        __bindgen_bitfield_unit.set(1usize, 1u8, {
-            let bRepeatOk: u8 = unsafe { ::core::mem::transmute(bRepeatOk) };
-            bRepeatOk as u64
-        });
-        __bindgen_bitfield_unit.set(2usize, 1u8, {
-            let bRepeatNok: u8 = unsafe { ::core::mem::transmute(bRepeatNok) };
-            bRepeatNok as u64
-        });
-        __bindgen_bitfield_unit.set(3usize, 1u8, {
-            let bUseCrc: u8 = unsafe { ::core::mem::transmute(bUseCrc) };
-            bUseCrc as u64
-        });
-        __bindgen_bitfield_unit.set(4usize, 1u8, {
-            let bCrcIncSw: u8 = unsafe { ::core::mem::transmute(bCrcIncSw) };
-            bCrcIncSw as u64
-        });
-        __bindgen_bitfield_unit.set(5usize, 1u8, {
-            let bCrcIncHdr: u8 = unsafe { ::core::mem::transmute(bCrcIncHdr) };
-            bCrcIncHdr as u64
-        });
-        __bindgen_bitfield_unit.set(6usize, 1u8, {
-            let endType: u8 = unsafe { ::core::mem::transmute(endType) };
-            endType as u64
-        });
-        __bindgen_bitfield_unit.set(7usize, 1u8, {
-            let filterOp: u8 = unsafe { ::core::mem::transmute(filterOp) };
-            filterOp as u64
-        });
-        __bindgen_bitfield_unit
-    }
-}
-#[repr(C)]
-#[derive(Debug, Default, Copy, Clone)]
-#[must_use]
-pub struct rfc_CMD_PROP_RX_ADV_s__bindgen_ty_4 {
-    pub _bitfield_align_1: [u8; 0],
-    pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
-}
-impl rfc_CMD_PROP_RX_ADV_s__bindgen_ty_4 {
-    #[inline]
-    pub fn bAutoFlushIgnored(&self) -> u8 {
-        unsafe { ::core::mem::transmute(self._bitfield_1.get(0usize, 1u8) as u8) }
-    }
-    #[inline]
-    pub fn set_bAutoFlushIgnored(&mut self, val: u8) {
-        unsafe {
-            let val: u8 = ::core::mem::transmute(val);
-            self._bitfield_1.set(0usize, 1u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn bAutoFlushCrcErr(&self) -> u8 {
-        unsafe { ::core::mem::transmute(self._bitfield_1.get(1usize, 1u8) as u8) }
-    }
-    #[inline]
-    pub fn set_bAutoFlushCrcErr(&mut self, val: u8) {
-        unsafe {
-            let val: u8 = ::core::mem::transmute(val);
-            self._bitfield_1.set(1usize, 1u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn bIncludeHdr(&self) -> u8 {
-        unsafe { ::core::mem::transmute(self._bitfield_1.get(3usize, 1u8) as u8) }
-    }
-    #[inline]
-    pub fn set_bIncludeHdr(&mut self, val: u8) {
-        unsafe {
-            let val: u8 = ::core::mem::transmute(val);
-            self._bitfield_1.set(3usize, 1u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn bIncludeCrc(&self) -> u8 {
-        unsafe { ::core::mem::transmute(self._bitfield_1.get(4usize, 1u8) as u8) }
-    }
-    #[inline]
-    pub fn set_bIncludeCrc(&mut self, val: u8) {
-        unsafe {
-            let val: u8 = ::core::mem::transmute(val);
-            self._bitfield_1.set(4usize, 1u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn bAppendRssi(&self) -> u8 {
-        unsafe { ::core::mem::transmute(self._bitfield_1.get(5usize, 1u8) as u8) }
-    }
-    #[inline]
-    pub fn set_bAppendRssi(&mut self, val: u8) {
-        unsafe {
-            let val: u8 = ::core::mem::transmute(val);
-            self._bitfield_1.set(5usize, 1u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn bAppendTimestamp(&self) -> u8 {
-        unsafe { ::core::mem::transmute(self._bitfield_1.get(6usize, 1u8) as u8) }
-    }
-    #[inline]
-    pub fn set_bAppendTimestamp(&mut self, val: u8) {
-        unsafe {
-            let val: u8 = ::core::mem::transmute(val);
-            self._bitfield_1.set(6usize, 1u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn bAppendStatus(&self) -> u8 {
-        unsafe { ::core::mem::transmute(self._bitfield_1.get(7usize, 1u8) as u8) }
-    }
-    #[inline]
-    pub fn set_bAppendStatus(&mut self, val: u8) {
-        unsafe {
-            let val: u8 = ::core::mem::transmute(val);
-            self._bitfield_1.set(7usize, 1u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn new_bitfield_1(
-        bAutoFlushIgnored: u8,
-        bAutoFlushCrcErr: u8,
-        bIncludeHdr: u8,
-        bIncludeCrc: u8,
-        bAppendRssi: u8,
-        bAppendTimestamp: u8,
-        bAppendStatus: u8,
-    ) -> __BindgenBitfieldUnit<[u8; 1usize]> {
-        let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 1usize]> = Default::default();
-        __bindgen_bitfield_unit.set(0usize, 1u8, {
-            let bAutoFlushIgnored: u8 = unsafe { ::core::mem::transmute(bAutoFlushIgnored) };
-            bAutoFlushIgnored as u64
-        });
-        __bindgen_bitfield_unit.set(1usize, 1u8, {
-            let bAutoFlushCrcErr: u8 = unsafe { ::core::mem::transmute(bAutoFlushCrcErr) };
-            bAutoFlushCrcErr as u64
-        });
-        __bindgen_bitfield_unit.set(3usize, 1u8, {
-            let bIncludeHdr: u8 = unsafe { ::core::mem::transmute(bIncludeHdr) };
-            bIncludeHdr as u64
-        });
-        __bindgen_bitfield_unit.set(4usize, 1u8, {
-            let bIncludeCrc: u8 = unsafe { ::core::mem::transmute(bIncludeCrc) };
-            bIncludeCrc as u64
-        });
-        __bindgen_bitfield_unit.set(5usize, 1u8, {
-            let bAppendRssi: u8 = unsafe { ::core::mem::transmute(bAppendRssi) };
-            bAppendRssi as u64
-        });
-        __bindgen_bitfield_unit.set(6usize, 1u8, {
-            let bAppendTimestamp: u8 = unsafe { ::core::mem::transmute(bAppendTimestamp) };
-            bAppendTimestamp as u64
-        });
-        __bindgen_bitfield_unit.set(7usize, 1u8, {
-            let bAppendStatus: u8 = unsafe { ::core::mem::transmute(bAppendStatus) };
-            bAppendStatus as u64
-        });
-        __bindgen_bitfield_unit
-    }
-}
-#[repr(C)]
-#[repr(align(2))]
-#[derive(Debug, Default, Copy, Clone)]
-#[must_use]
-pub struct rfc_CMD_PROP_RX_ADV_s__bindgen_ty_5 {
-    pub _bitfield_align_1: [u8; 0],
-    pub _bitfield_1: __BindgenBitfieldUnit<[u8; 2usize]>,
-}
-impl rfc_CMD_PROP_RX_ADV_s__bindgen_ty_5 {
-    #[inline]
-    pub fn numHdrBits(&self) -> u16 {
-        unsafe { ::core::mem::transmute(self._bitfield_1.get(0usize, 6u8) as u16) }
-    }
-    #[inline]
-    pub fn set_numHdrBits(&mut self, val: u16) {
-        unsafe {
-            let val: u16 = ::core::mem::transmute(val);
-            self._bitfield_1.set(0usize, 6u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn lenPos(&self) -> u16 {
-        unsafe { ::core::mem::transmute(self._bitfield_1.get(6usize, 5u8) as u16) }
-    }
-    #[inline]
-    pub fn set_lenPos(&mut self, val: u16) {
-        unsafe {
-            let val: u16 = ::core::mem::transmute(val);
-            self._bitfield_1.set(6usize, 5u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn numLenBits(&self) -> u16 {
-        unsafe { ::core::mem::transmute(self._bitfield_1.get(11usize, 5u8) as u16) }
-    }
-    #[inline]
-    pub fn set_numLenBits(&mut self, val: u16) {
-        unsafe {
-            let val: u16 = ::core::mem::transmute(val);
-            self._bitfield_1.set(11usize, 5u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn new_bitfield_1(
-        numHdrBits: u16,
-        lenPos: u16,
-        numLenBits: u16,
-    ) -> __BindgenBitfieldUnit<[u8; 2usize]> {
-        let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 2usize]> = Default::default();
-        __bindgen_bitfield_unit.set(0usize, 6u8, {
-            let numHdrBits: u16 = unsafe { ::core::mem::transmute(numHdrBits) };
-            numHdrBits as u64
-        });
-        __bindgen_bitfield_unit.set(6usize, 5u8, {
-            let lenPos: u16 = unsafe { ::core::mem::transmute(lenPos) };
-            lenPos as u64
-        });
-        __bindgen_bitfield_unit.set(11usize, 5u8, {
-            let numLenBits: u16 = unsafe { ::core::mem::transmute(numLenBits) };
-            numLenBits as u64
-        });
-        __bindgen_bitfield_unit
-    }
-}
-#[repr(C)]
-#[repr(align(2))]
-#[derive(Debug, Default, Copy, Clone)]
-#[must_use]
-pub struct rfc_CMD_PROP_RX_ADV_s__bindgen_ty_6 {
-    pub _bitfield_align_1: [u8; 0],
-    pub _bitfield_1: __BindgenBitfieldUnit<[u8; 2usize]>,
-}
-impl rfc_CMD_PROP_RX_ADV_s__bindgen_ty_6 {
-    #[inline]
-    pub fn addrType(&self) -> u16 {
-        unsafe { ::core::mem::transmute(self._bitfield_1.get(0usize, 1u8) as u16) }
-    }
-    #[inline]
-    pub fn set_addrType(&mut self, val: u16) {
-        unsafe {
-            let val: u16 = ::core::mem::transmute(val);
-            self._bitfield_1.set(0usize, 1u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn addrSize(&self) -> u16 {
-        unsafe { ::core::mem::transmute(self._bitfield_1.get(1usize, 5u8) as u16) }
-    }
-    #[inline]
-    pub fn set_addrSize(&mut self, val: u16) {
-        unsafe {
-            let val: u16 = ::core::mem::transmute(val);
-            self._bitfield_1.set(1usize, 5u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn addrPos(&self) -> u16 {
-        unsafe { ::core::mem::transmute(self._bitfield_1.get(6usize, 5u8) as u16) }
-    }
-    #[inline]
-    pub fn set_addrPos(&mut self, val: u16) {
-        unsafe {
-            let val: u16 = ::core::mem::transmute(val);
-            self._bitfield_1.set(6usize, 5u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn numAddr(&self) -> u16 {
-        unsafe { ::core::mem::transmute(self._bitfield_1.get(11usize, 5u8) as u16) }
-    }
-    #[inline]
-    pub fn set_numAddr(&mut self, val: u16) {
-        unsafe {
-            let val: u16 = ::core::mem::transmute(val);
-            self._bitfield_1.set(11usize, 5u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn new_bitfield_1(
-        addrType: u16,
-        addrSize: u16,
-        addrPos: u16,
-        numAddr: u16,
-    ) -> __BindgenBitfieldUnit<[u8; 2usize]> {
-        let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 2usize]> = Default::default();
-        __bindgen_bitfield_unit.set(0usize, 1u8, {
-            let addrType: u16 = unsafe { ::core::mem::transmute(addrType) };
-            addrType as u64
-        });
-        __bindgen_bitfield_unit.set(1usize, 5u8, {
-            let addrSize: u16 = unsafe { ::core::mem::transmute(addrSize) };
-            addrSize as u64
-        });
-        __bindgen_bitfield_unit.set(6usize, 5u8, {
-            let addrPos: u16 = unsafe { ::core::mem::transmute(addrPos) };
-            addrPos as u64
-        });
-        __bindgen_bitfield_unit.set(11usize, 5u8, {
-            let numAddr: u16 = unsafe { ::core::mem::transmute(numAddr) };
-            numAddr as u64
-        });
-        __bindgen_bitfield_unit
-    }
-}
-#[repr(C)]
-#[derive(Debug, Default, Copy, Clone)]
-#[must_use]
-pub struct rfc_CMD_PROP_RX_ADV_s__bindgen_ty_7 {
-    pub _bitfield_align_1: [u8; 0],
-    pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
-}
-impl rfc_CMD_PROP_RX_ADV_s__bindgen_ty_7 {
-    #[inline]
-    pub fn triggerType(&self) -> u8 {
-        unsafe { ::core::mem::transmute(self._bitfield_1.get(0usize, 4u8) as u8) }
-    }
-    #[inline]
-    pub fn set_triggerType(&mut self, val: u8) {
-        unsafe {
-            let val: u8 = ::core::mem::transmute(val);
-            self._bitfield_1.set(0usize, 4u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn bEnaCmd(&self) -> u8 {
-        unsafe { ::core::mem::transmute(self._bitfield_1.get(4usize, 1u8) as u8) }
-    }
-    #[inline]
-    pub fn set_bEnaCmd(&mut self, val: u8) {
-        unsafe {
-            let val: u8 = ::core::mem::transmute(val);
-            self._bitfield_1.set(4usize, 1u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn triggerNo(&self) -> u8 {
-        unsafe { ::core::mem::transmute(self._bitfield_1.get(5usize, 2u8) as u8) }
-    }
-    #[inline]
-    pub fn set_triggerNo(&mut self, val: u8) {
-        unsafe {
-            let val: u8 = ::core::mem::transmute(val);
-            self._bitfield_1.set(5usize, 2u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn pastTrig(&self) -> u8 {
-        unsafe { ::core::mem::transmute(self._bitfield_1.get(7usize, 1u8) as u8) }
-    }
-    #[inline]
-    pub fn set_pastTrig(&mut self, val: u8) {
-        unsafe {
-            let val: u8 = ::core::mem::transmute(val);
-            self._bitfield_1.set(7usize, 1u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn new_bitfield_1(
-        triggerType: u8,
-        bEnaCmd: u8,
-        triggerNo: u8,
-        pastTrig: u8,
-    ) -> __BindgenBitfieldUnit<[u8; 1usize]> {
-        let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 1usize]> = Default::default();
-        __bindgen_bitfield_unit.set(0usize, 4u8, {
-            let triggerType: u8 = unsafe { ::core::mem::transmute(triggerType) };
-            triggerType as u64
-        });
-        __bindgen_bitfield_unit.set(4usize, 1u8, {
-            let bEnaCmd: u8 = unsafe { ::core::mem::transmute(bEnaCmd) };
-            bEnaCmd as u64
-        });
-        __bindgen_bitfield_unit.set(5usize, 2u8, {
-            let triggerNo: u8 = unsafe { ::core::mem::transmute(triggerNo) };
-            triggerNo as u64
-        });
-        __bindgen_bitfield_unit.set(7usize, 1u8, {
-            let pastTrig: u8 = unsafe { ::core::mem::transmute(pastTrig) };
-            pastTrig as u64
-        });
-        __bindgen_bitfield_unit
-    }
-}
-impl Default for rfc_CMD_PROP_RX_ADV_s {
-    fn default() -> Self {
-        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
-        unsafe {
-            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
-            s.assume_init()
-        }
-    }
-}
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-#[must_use]
-pub struct rfc_CMD_PROP_RADIO_SETUP_s {
-    pub commandNo: u16,
-    pub status: u16,
-    pub pNextOp: *mut rfc_radioOp_t,
-    pub startTime: ratmr_t,
-    pub startTrigger: rfc_CMD_PROP_RADIO_SETUP_s__bindgen_ty_1,
-    pub condition: rfc_CMD_PROP_RADIO_SETUP_s__bindgen_ty_2,
-    pub modulation: rfc_CMD_PROP_RADIO_SETUP_s__bindgen_ty_3,
-    pub symbolRate: rfc_CMD_PROP_RADIO_SETUP_s__bindgen_ty_4,
-    pub rxBw: u8,
-    pub preamConf: rfc_CMD_PROP_RADIO_SETUP_s__bindgen_ty_5,
-    pub formatConf: rfc_CMD_PROP_RADIO_SETUP_s__bindgen_ty_6,
-    pub config: rfc_CMD_PROP_RADIO_SETUP_s__bindgen_ty_7,
-    pub txPower: u16,
-    pub pRegOverride: *mut u32,
-}
-#[repr(C)]
-#[derive(Debug, Default, Copy, Clone)]
-#[must_use]
-pub struct rfc_CMD_PROP_RADIO_SETUP_s__bindgen_ty_1 {
-    pub _bitfield_align_1: [u8; 0],
-    pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
-}
-impl rfc_CMD_PROP_RADIO_SETUP_s__bindgen_ty_1 {
-    #[inline]
-    pub fn triggerType(&self) -> u8 {
-        unsafe { ::core::mem::transmute(self._bitfield_1.get(0usize, 4u8) as u8) }
-    }
-    #[inline]
-    pub fn set_triggerType(&mut self, val: u8) {
-        unsafe {
-            let val: u8 = ::core::mem::transmute(val);
-            self._bitfield_1.set(0usize, 4u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn bEnaCmd(&self) -> u8 {
-        unsafe { ::core::mem::transmute(self._bitfield_1.get(4usize, 1u8) as u8) }
-    }
-    #[inline]
-    pub fn set_bEnaCmd(&mut self, val: u8) {
-        unsafe {
-            let val: u8 = ::core::mem::transmute(val);
-            self._bitfield_1.set(4usize, 1u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn triggerNo(&self) -> u8 {
-        unsafe { ::core::mem::transmute(self._bitfield_1.get(5usize, 2u8) as u8) }
-    }
-    #[inline]
-    pub fn set_triggerNo(&mut self, val: u8) {
-        unsafe {
-            let val: u8 = ::core::mem::transmute(val);
-            self._bitfield_1.set(5usize, 2u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn pastTrig(&self) -> u8 {
-        unsafe { ::core::mem::transmute(self._bitfield_1.get(7usize, 1u8) as u8) }
-    }
-    #[inline]
-    pub fn set_pastTrig(&mut self, val: u8) {
-        unsafe {
-            let val: u8 = ::core::mem::transmute(val);
-            self._bitfield_1.set(7usize, 1u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn new_bitfield_1(
-        triggerType: u8,
-        bEnaCmd: u8,
-        triggerNo: u8,
-        pastTrig: u8,
-    ) -> __BindgenBitfieldUnit<[u8; 1usize]> {
-        let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 1usize]> = Default::default();
-        __bindgen_bitfield_unit.set(0usize, 4u8, {
-            let triggerType: u8 = unsafe { ::core::mem::transmute(triggerType) };
-            triggerType as u64
-        });
-        __bindgen_bitfield_unit.set(4usize, 1u8, {
-            let bEnaCmd: u8 = unsafe { ::core::mem::transmute(bEnaCmd) };
-            bEnaCmd as u64
-        });
-        __bindgen_bitfield_unit.set(5usize, 2u8, {
-            let triggerNo: u8 = unsafe { ::core::mem::transmute(triggerNo) };
-            triggerNo as u64
-        });
-        __bindgen_bitfield_unit.set(7usize, 1u8, {
-            let pastTrig: u8 = unsafe { ::core::mem::transmute(pastTrig) };
-            pastTrig as u64
-        });
-        __bindgen_bitfield_unit
-    }
-}
-#[repr(C)]
-#[derive(Debug, Default, Copy, Clone)]
-#[must_use]
-pub struct rfc_CMD_PROP_RADIO_SETUP_s__bindgen_ty_2 {
-    pub _bitfield_align_1: [u8; 0],
-    pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
-}
-impl rfc_CMD_PROP_RADIO_SETUP_s__bindgen_ty_2 {
-    #[inline]
-    pub fn rule(&self) -> u8 {
-        unsafe { ::core::mem::transmute(self._bitfield_1.get(0usize, 4u8) as u8) }
-    }
-    #[inline]
-    pub fn set_rule(&mut self, val: u8) {
-        unsafe {
-            let val: u8 = ::core::mem::transmute(val);
-            self._bitfield_1.set(0usize, 4u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn nSkip(&self) -> u8 {
-        unsafe { ::core::mem::transmute(self._bitfield_1.get(4usize, 4u8) as u8) }
-    }
-    #[inline]
-    pub fn set_nSkip(&mut self, val: u8) {
-        unsafe {
-            let val: u8 = ::core::mem::transmute(val);
-            self._bitfield_1.set(4usize, 4u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn new_bitfield_1(rule: u8, nSkip: u8) -> __BindgenBitfieldUnit<[u8; 1usize]> {
-        let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 1usize]> = Default::default();
-        __bindgen_bitfield_unit.set(0usize, 4u8, {
-            let rule: u8 = unsafe { ::core::mem::transmute(rule) };
-            rule as u64
-        });
-        __bindgen_bitfield_unit.set(4usize, 4u8, {
-            let nSkip: u8 = unsafe { ::core::mem::transmute(nSkip) };
-            nSkip as u64
-        });
-        __bindgen_bitfield_unit
-    }
-}
-#[repr(C)]
-#[derive(Debug, Default, Copy, Clone)]
-#[must_use]
-pub struct rfc_CMD_PROP_RADIO_SETUP_s__bindgen_ty_3 {
-    pub _bitfield_align_1: [u16; 0],
-    pub _bitfield_1: __BindgenBitfieldUnit<[u8; 2usize]>,
-}
-impl rfc_CMD_PROP_RADIO_SETUP_s__bindgen_ty_3 {
-    #[inline]
-    pub fn modType(&self) -> u16 {
-        unsafe { ::core::mem::transmute(self._bitfield_1.get(0usize, 3u8) as u16) }
-    }
-    #[inline]
-    pub fn set_modType(&mut self, val: u16) {
-        unsafe {
-            let val: u16 = ::core::mem::transmute(val);
-            self._bitfield_1.set(0usize, 3u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn deviation(&self) -> u16 {
-        unsafe { ::core::mem::transmute(self._bitfield_1.get(3usize, 13u8) as u16) }
-    }
-    #[inline]
-    pub fn set_deviation(&mut self, val: u16) {
-        unsafe {
-            let val: u16 = ::core::mem::transmute(val);
-            self._bitfield_1.set(3usize, 13u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn new_bitfield_1(modType: u16, deviation: u16) -> __BindgenBitfieldUnit<[u8; 2usize]> {
-        let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 2usize]> = Default::default();
-        __bindgen_bitfield_unit.set(0usize, 3u8, {
-            let modType: u16 = unsafe { ::core::mem::transmute(modType) };
-            modType as u64
-        });
-        __bindgen_bitfield_unit.set(3usize, 13u8, {
-            let deviation: u16 = unsafe { ::core::mem::transmute(deviation) };
-            deviation as u64
-        });
-        __bindgen_bitfield_unit
-    }
-}
-#[repr(C)]
-#[derive(Debug, Default, Copy, Clone)]
-#[must_use]
-pub struct rfc_CMD_PROP_RADIO_SETUP_s__bindgen_ty_4 {
-    pub _bitfield_align_1: [u32; 0],
-    pub _bitfield_1: __BindgenBitfieldUnit<[u8; 4usize]>,
-}
-impl rfc_CMD_PROP_RADIO_SETUP_s__bindgen_ty_4 {
-    #[inline]
-    pub fn preScale(&self) -> u32 {
-        unsafe { ::core::mem::transmute(self._bitfield_1.get(0usize, 4u8) as u32) }
-    }
-    #[inline]
-    pub fn set_preScale(&mut self, val: u32) {
-        unsafe {
-            let val: u32 = ::core::mem::transmute(val);
-            self._bitfield_1.set(0usize, 4u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn rateWord(&self) -> u32 {
-        unsafe { ::core::mem::transmute(self._bitfield_1.get(8usize, 21u8) as u32) }
-    }
-    #[inline]
-    pub fn set_rateWord(&mut self, val: u32) {
-        unsafe {
-            let val: u32 = ::core::mem::transmute(val);
-            self._bitfield_1.set(8usize, 21u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn new_bitfield_1(preScale: u32, rateWord: u32) -> __BindgenBitfieldUnit<[u8; 4usize]> {
-        let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 4usize]> = Default::default();
-        __bindgen_bitfield_unit.set(0usize, 4u8, {
-            let preScale: u32 = unsafe { ::core::mem::transmute(preScale) };
-            preScale as u64
-        });
-        __bindgen_bitfield_unit.set(8usize, 21u8, {
-            let rateWord: u32 = unsafe { ::core::mem::transmute(rateWord) };
-            rateWord as u64
-        });
-        __bindgen_bitfield_unit
-    }
-}
-#[repr(C)]
-#[derive(Debug, Default, Copy, Clone)]
-#[must_use]
-pub struct rfc_CMD_PROP_RADIO_SETUP_s__bindgen_ty_5 {
-    pub _bitfield_align_1: [u8; 0],
-    pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
-}
-impl rfc_CMD_PROP_RADIO_SETUP_s__bindgen_ty_5 {
-    #[inline]
-    pub fn nPreamBytes(&self) -> u8 {
-        unsafe { ::core::mem::transmute(self._bitfield_1.get(0usize, 6u8) as u8) }
-    }
-    #[inline]
-    pub fn set_nPreamBytes(&mut self, val: u8) {
-        unsafe {
-            let val: u8 = ::core::mem::transmute(val);
-            self._bitfield_1.set(0usize, 6u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn preamMode(&self) -> u8 {
-        unsafe { ::core::mem::transmute(self._bitfield_1.get(6usize, 2u8) as u8) }
-    }
-    #[inline]
-    pub fn set_preamMode(&mut self, val: u8) {
-        unsafe {
-            let val: u8 = ::core::mem::transmute(val);
-            self._bitfield_1.set(6usize, 2u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn new_bitfield_1(nPreamBytes: u8, preamMode: u8) -> __BindgenBitfieldUnit<[u8; 1usize]> {
-        let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 1usize]> = Default::default();
-        __bindgen_bitfield_unit.set(0usize, 6u8, {
-            let nPreamBytes: u8 = unsafe { ::core::mem::transmute(nPreamBytes) };
-            nPreamBytes as u64
-        });
-        __bindgen_bitfield_unit.set(6usize, 2u8, {
-            let preamMode: u8 = unsafe { ::core::mem::transmute(preamMode) };
-            preamMode as u64
-        });
-        __bindgen_bitfield_unit
-    }
-}
-#[repr(C)]
-#[repr(align(2))]
-#[derive(Debug, Default, Copy, Clone)]
-#[must_use]
-pub struct rfc_CMD_PROP_RADIO_SETUP_s__bindgen_ty_6 {
-    pub _bitfield_align_1: [u8; 0],
-    pub _bitfield_1: __BindgenBitfieldUnit<[u8; 2usize]>,
-}
-impl rfc_CMD_PROP_RADIO_SETUP_s__bindgen_ty_6 {
-    #[inline]
-    pub fn nSwBits(&self) -> u16 {
-        unsafe { ::core::mem::transmute(self._bitfield_1.get(0usize, 6u8) as u16) }
-    }
-    #[inline]
-    pub fn set_nSwBits(&mut self, val: u16) {
-        unsafe {
-            let val: u16 = ::core::mem::transmute(val);
-            self._bitfield_1.set(0usize, 6u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn bBitReversal(&self) -> u16 {
-        unsafe { ::core::mem::transmute(self._bitfield_1.get(6usize, 1u8) as u16) }
-    }
-    #[inline]
-    pub fn set_bBitReversal(&mut self, val: u16) {
-        unsafe {
-            let val: u16 = ::core::mem::transmute(val);
-            self._bitfield_1.set(6usize, 1u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn bMsbFirst(&self) -> u16 {
-        unsafe { ::core::mem::transmute(self._bitfield_1.get(7usize, 1u8) as u16) }
-    }
-    #[inline]
-    pub fn set_bMsbFirst(&mut self, val: u16) {
-        unsafe {
-            let val: u16 = ::core::mem::transmute(val);
-            self._bitfield_1.set(7usize, 1u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn fecMode(&self) -> u16 {
-        unsafe { ::core::mem::transmute(self._bitfield_1.get(8usize, 4u8) as u16) }
-    }
-    #[inline]
-    pub fn set_fecMode(&mut self, val: u16) {
-        unsafe {
-            let val: u16 = ::core::mem::transmute(val);
-            self._bitfield_1.set(8usize, 4u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn bOuterCode(&self) -> u16 {
-        unsafe { ::core::mem::transmute(self._bitfield_1.get(12usize, 1u8) as u16) }
-    }
-    #[inline]
-    pub fn set_bOuterCode(&mut self, val: u16) {
-        unsafe {
-            let val: u16 = ::core::mem::transmute(val);
-            self._bitfield_1.set(12usize, 1u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn whitenMode(&self) -> u16 {
-        unsafe { ::core::mem::transmute(self._bitfield_1.get(13usize, 2u8) as u16) }
-    }
-    #[inline]
-    pub fn set_whitenMode(&mut self, val: u16) {
-        unsafe {
-            let val: u16 = ::core::mem::transmute(val);
-            self._bitfield_1.set(13usize, 2u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn bAgcDisable(&self) -> u16 {
-        unsafe { ::core::mem::transmute(self._bitfield_1.get(15usize, 1u8) as u16) }
-    }
-    #[inline]
-    pub fn set_bAgcDisable(&mut self, val: u16) {
-        unsafe {
-            let val: u16 = ::core::mem::transmute(val);
-            self._bitfield_1.set(15usize, 1u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn new_bitfield_1(
-        nSwBits: u16,
-        bBitReversal: u16,
-        bMsbFirst: u16,
-        fecMode: u16,
-        bOuterCode: u16,
-        whitenMode: u16,
-        bAgcDisable: u16,
-    ) -> __BindgenBitfieldUnit<[u8; 2usize]> {
-        let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 2usize]> = Default::default();
-        __bindgen_bitfield_unit.set(0usize, 6u8, {
-            let nSwBits: u16 = unsafe { ::core::mem::transmute(nSwBits) };
-            nSwBits as u64
-        });
-        __bindgen_bitfield_unit.set(6usize, 1u8, {
-            let bBitReversal: u16 = unsafe { ::core::mem::transmute(bBitReversal) };
-            bBitReversal as u64
-        });
-        __bindgen_bitfield_unit.set(7usize, 1u8, {
-            let bMsbFirst: u16 = unsafe { ::core::mem::transmute(bMsbFirst) };
-            bMsbFirst as u64
-        });
-        __bindgen_bitfield_unit.set(8usize, 4u8, {
-            let fecMode: u16 = unsafe { ::core::mem::transmute(fecMode) };
-            fecMode as u64
-        });
-        __bindgen_bitfield_unit.set(12usize, 1u8, {
-            let bOuterCode: u16 = unsafe { ::core::mem::transmute(bOuterCode) };
-            bOuterCode as u64
-        });
-        __bindgen_bitfield_unit.set(13usize, 2u8, {
-            let whitenMode: u16 = unsafe { ::core::mem::transmute(whitenMode) };
-            whitenMode as u64
-        });
-        __bindgen_bitfield_unit.set(15usize, 1u8, {
-            let bAgcDisable: u16 = unsafe { ::core::mem::transmute(bAgcDisable) };
-            bAgcDisable as u64
-        });
-        __bindgen_bitfield_unit
-    }
-}
-#[repr(C)]
-#[repr(align(2))]
-#[derive(Debug, Default, Copy, Clone)]
-#[must_use]
-pub struct rfc_CMD_PROP_RADIO_SETUP_s__bindgen_ty_7 {
-    pub _bitfield_align_1: [u8; 0],
-    pub _bitfield_1: __BindgenBitfieldUnit<[u8; 2usize]>,
-}
-impl rfc_CMD_PROP_RADIO_SETUP_s__bindgen_ty_7 {
-    #[inline]
-    pub fn frontEndMode(&self) -> u16 {
-        unsafe { ::core::mem::transmute(self._bitfield_1.get(0usize, 3u8) as u16) }
-    }
-    #[inline]
-    pub fn set_frontEndMode(&mut self, val: u16) {
-        unsafe {
-            let val: u16 = ::core::mem::transmute(val);
-            self._bitfield_1.set(0usize, 3u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn biasMode(&self) -> u16 {
-        unsafe { ::core::mem::transmute(self._bitfield_1.get(3usize, 1u8) as u16) }
-    }
-    #[inline]
-    pub fn set_biasMode(&mut self, val: u16) {
-        unsafe {
-            let val: u16 = ::core::mem::transmute(val);
-            self._bitfield_1.set(3usize, 1u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn analogCfgMode(&self) -> u16 {
-        unsafe { ::core::mem::transmute(self._bitfield_1.get(4usize, 6u8) as u16) }
-    }
-    #[inline]
-    pub fn set_analogCfgMode(&mut self, val: u16) {
-        unsafe {
-            let val: u16 = ::core::mem::transmute(val);
-            self._bitfield_1.set(4usize, 6u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn bNoFsPowerUp(&self) -> u16 {
-        unsafe { ::core::mem::transmute(self._bitfield_1.get(10usize, 1u8) as u16) }
-    }
-    #[inline]
-    pub fn set_bNoFsPowerUp(&mut self, val: u16) {
-        unsafe {
-            let val: u16 = ::core::mem::transmute(val);
-            self._bitfield_1.set(10usize, 1u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn new_bitfield_1(
-        frontEndMode: u16,
-        biasMode: u16,
-        analogCfgMode: u16,
-        bNoFsPowerUp: u16,
-    ) -> __BindgenBitfieldUnit<[u8; 2usize]> {
-        let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 2usize]> = Default::default();
-        __bindgen_bitfield_unit.set(0usize, 3u8, {
-            let frontEndMode: u16 = unsafe { ::core::mem::transmute(frontEndMode) };
-            frontEndMode as u64
-        });
-        __bindgen_bitfield_unit.set(3usize, 1u8, {
-            let biasMode: u16 = unsafe { ::core::mem::transmute(biasMode) };
-            biasMode as u64
-        });
-        __bindgen_bitfield_unit.set(4usize, 6u8, {
-            let analogCfgMode: u16 = unsafe { ::core::mem::transmute(analogCfgMode) };
-            analogCfgMode as u64
-        });
-        __bindgen_bitfield_unit.set(10usize, 1u8, {
-            let bNoFsPowerUp: u16 = unsafe { ::core::mem::transmute(bNoFsPowerUp) };
-            bNoFsPowerUp as u64
-        });
-        __bindgen_bitfield_unit
-    }
-}
-impl Default for rfc_CMD_PROP_RADIO_SETUP_s {
-    fn default() -> Self {
-        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
-        unsafe {
-            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
-            s.assume_init()
-        }
-    }
-}
-#[repr(C)]
-#[repr(align(4))]
-#[derive(Debug, Default, Copy, Clone)]
-#[must_use]
-pub struct rfc_CMD_PROP_RADIO_DIV_SETUP_s {
-    pub dummy0: u8,
-}
-#[repr(C)]
-#[repr(align(4))]
-#[derive(Debug, Default, Copy, Clone)]
-#[must_use]
-pub struct rfc_CMD_PROP_SET_LEN_s {
-    pub commandNo: u16,
-    pub rxLen: u16,
-}
-#[repr(C)]
-#[repr(align(4))]
-#[derive(Debug, Default, Copy, Clone)]
-#[must_use]
-pub struct rfc_CMD_PROP_RESTART_RX_s {
-    pub commandNo: u16,
-}
-#[repr(C)]
-#[derive(Debug, Default, Copy, Clone)]
-pub struct rfc_propRxOutput_s {
-    pub nRxOk: u16,
-    pub nRxNok: u16,
-    pub nRxIgnored: u8,
-    pub nRxStopped: u8,
-    pub nRxBufFull: u8,
-    pub lastRssi: i8,
-    pub timeStamp: ratmr_t,
-}
-#[repr(C)]
-#[repr(align(4))]
-#[derive(Debug, Default, Copy, Clone)]
-pub struct rfc_propRxStatus_s {
-    pub status: rfc_propRxStatus_s__bindgen_ty_1,
-}
-#[repr(C)]
-#[derive(Debug, Default, Copy, Clone)]
-pub struct rfc_propRxStatus_s__bindgen_ty_1 {
-    pub _bitfield_align_1: [u8; 0],
-    pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
-}
-impl rfc_propRxStatus_s__bindgen_ty_1 {
-    #[inline]
-    pub fn addressInd(&self) -> u8 {
-        unsafe { ::core::mem::transmute(self._bitfield_1.get(0usize, 5u8) as u8) }
-    }
-    #[inline]
-    pub fn set_addressInd(&mut self, val: u8) {
-        unsafe {
-            let val: u8 = ::core::mem::transmute(val);
-            self._bitfield_1.set(0usize, 5u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn syncWordId(&self) -> u8 {
-        unsafe { ::core::mem::transmute(self._bitfield_1.get(5usize, 1u8) as u8) }
-    }
-    #[inline]
-    pub fn set_syncWordId(&mut self, val: u8) {
-        unsafe {
-            let val: u8 = ::core::mem::transmute(val);
-            self._bitfield_1.set(5usize, 1u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn result(&self) -> u8 {
-        unsafe { ::core::mem::transmute(self._bitfield_1.get(6usize, 2u8) as u8) }
-    }
-    #[inline]
-    pub fn set_result(&mut self, val: u8) {
-        unsafe {
-            let val: u8 = ::core::mem::transmute(val);
-            self._bitfield_1.set(6usize, 2u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn new_bitfield_1(
-        addressInd: u8,
-        syncWordId: u8,
-        result: u8,
-    ) -> __BindgenBitfieldUnit<[u8; 1usize]> {
-        let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 1usize]> = Default::default();
-        __bindgen_bitfield_unit.set(0usize, 5u8, {
-            let addressInd: u8 = unsafe { ::core::mem::transmute(addressInd) };
-            addressInd as u64
-        });
-        __bindgen_bitfield_unit.set(5usize, 1u8, {
-            let syncWordId: u8 = unsafe { ::core::mem::transmute(syncWordId) };
-            syncWordId as u64
-        });
-        __bindgen_bitfield_unit.set(6usize, 2u8, {
-            let result: u8 = unsafe { ::core::mem::transmute(result) };
-            result as u64
-        });
-        __bindgen_bitfield_unit
-    }
-}
-#[repr(C)]
-#[derive(Debug, Default, Copy, Clone)]
-pub struct rfTrim_t {
-    pub configIfAdc: u32,
-    pub configRfFrontend: u32,
-    pub configSynth: u32,
-    pub configMiscAdc: u32,
-}
-extern "C" {
-    #[link_name = "RFCClockEnable__extern"]
-    pub fn RFCClockEnable();
-}
-extern "C" {
-    #[link_name = "RFCClockDisable__extern"]
-    pub fn RFCClockDisable();
-}
-extern "C" {
-    #[link_name = "RFCClockSet__extern"]
-    pub fn RFCClockSet(ui32Mask: u32);
-}
-extern "C" {
-    #[link_name = "RFCClockClear__extern"]
-    pub fn RFCClockClear(ui32Mask: u32);
-}
-extern "C" {
-    #[link_name = "RFCCpe0IntEnable__extern"]
-    pub fn RFCCpe0IntEnable(ui32Mask: u32);
-}
-extern "C" {
-    #[link_name = "RFCCpe1IntEnable__extern"]
-    pub fn RFCCpe1IntEnable(ui32Mask: u32);
-}
-extern "C" {
-    #[link_name = "RFCHwIntEnable__extern"]
-    pub fn RFCHwIntEnable(ui32Mask: u32);
-}
-extern "C" {
-    #[link_name = "RFCCpeIntDisable__extern"]
-    pub fn RFCCpeIntDisable(ui32Mask: u32);
-}
-extern "C" {
-    #[link_name = "RFCHwIntDisable__extern"]
-    pub fn RFCHwIntDisable(ui32Mask: u32);
-}
-extern "C" {
-    pub fn RFCCpeIntGetAndClear() -> u32;
-}
-extern "C" {
-    #[link_name = "RFCCpeIntClear__extern"]
-    pub fn RFCCpeIntClear(ui32Mask: u32);
-}
-extern "C" {
-    #[link_name = "RFCHwIntClear__extern"]
-    pub fn RFCHwIntClear(ui32Mask: u32);
-}
-extern "C" {
-    #[link_name = "RFCAckIntClear__extern"]
-    pub fn RFCAckIntClear();
-}
-extern "C" {
-    #[link_name = "RFCOverrideSearch__extern"]
-    pub fn RFCOverrideSearch(pOverride: *const u32, pattern: u32, mask: u32) -> u8;
-}
-extern "C" {
-    pub fn RFCDoorbellSendTo(pOp: u32) -> u32;
-}
-extern "C" {
-    pub fn RFCSynthPowerDown();
-}
-extern "C" {
-    pub fn RFCRfTrimRead(pOpSetup: *mut rfc_radioOp_t, rfTrim: *mut rfTrim_t);
-}
-extern "C" {
-    pub fn RFCRfTrimSet(rfTrim: *mut rfTrim_t);
-}
-extern "C" {
-    pub fn RFCRTrim(pOpSetup: *mut rfc_radioOp_t);
-}
-extern "C" {
-    pub fn RFCCPEPatchReset();
-}
-extern "C" {
-    pub fn RFCAdi3VcoLdoVoltageMode(bEnable: bool);
-}
-extern "C" {
-    pub fn RFCOverrideUpdate(pOpSetup: *mut rfc_radioOp_t, pParams: *mut u32) -> u8;
-}
-extern "C" {
-    pub fn RFCHWIntGetAndClear(ui32Mask: u32) -> u32;
-}
 pub type rfc_dataEntry_t = rfc_dataEntry_s;
 pub type rfc_dataEntryGeneral_t = rfc_dataEntryGeneral_s;
 pub type rfc_dataEntryMulti_t = rfc_dataEntryMulti_s;
@@ -35189,6 +32764,2431 @@ impl rfc_ieeeRxCorrCrc_s__bindgen_ty_1 {
         });
         __bindgen_bitfield_unit
     }
+}
+pub type rfc_CMD_PROP_TX_t = rfc_CMD_PROP_TX_s;
+pub type rfc_CMD_PROP_RX_t = rfc_CMD_PROP_RX_s;
+pub type rfc_CMD_PROP_TX_ADV_t = rfc_CMD_PROP_TX_ADV_s;
+pub type rfc_CMD_PROP_RX_ADV_t = rfc_CMD_PROP_RX_ADV_s;
+pub type rfc_CMD_PROP_RADIO_SETUP_t = rfc_CMD_PROP_RADIO_SETUP_s;
+pub type rfc_CMD_PROP_RADIO_DIV_SETUP_t = rfc_CMD_PROP_RADIO_DIV_SETUP_s;
+pub type rfc_CMD_PROP_SET_LEN_t = rfc_CMD_PROP_SET_LEN_s;
+pub type rfc_CMD_PROP_RESTART_RX_t = rfc_CMD_PROP_RESTART_RX_s;
+pub type rfc_propRxOutput_t = rfc_propRxOutput_s;
+pub type rfc_propRxStatus_t = rfc_propRxStatus_s;
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+#[must_use]
+pub struct rfc_CMD_PROP_TX_s {
+    pub commandNo: u16,
+    pub status: u16,
+    pub pNextOp: *mut rfc_radioOp_t,
+    pub startTime: ratmr_t,
+    pub startTrigger: rfc_CMD_PROP_TX_s__bindgen_ty_1,
+    pub condition: rfc_CMD_PROP_TX_s__bindgen_ty_2,
+    pub pktConf: rfc_CMD_PROP_TX_s__bindgen_ty_3,
+    pub pktLen: u8,
+    pub syncWord: u32,
+    pub pPkt: *mut u8,
+}
+#[repr(C)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
+pub struct rfc_CMD_PROP_TX_s__bindgen_ty_1 {
+    pub _bitfield_align_1: [u8; 0],
+    pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
+}
+impl rfc_CMD_PROP_TX_s__bindgen_ty_1 {
+    #[inline]
+    pub fn triggerType(&self) -> u8 {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(0usize, 4u8) as u8) }
+    }
+    #[inline]
+    pub fn set_triggerType(&mut self, val: u8) {
+        unsafe {
+            let val: u8 = ::core::mem::transmute(val);
+            self._bitfield_1.set(0usize, 4u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn bEnaCmd(&self) -> u8 {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(4usize, 1u8) as u8) }
+    }
+    #[inline]
+    pub fn set_bEnaCmd(&mut self, val: u8) {
+        unsafe {
+            let val: u8 = ::core::mem::transmute(val);
+            self._bitfield_1.set(4usize, 1u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn triggerNo(&self) -> u8 {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(5usize, 2u8) as u8) }
+    }
+    #[inline]
+    pub fn set_triggerNo(&mut self, val: u8) {
+        unsafe {
+            let val: u8 = ::core::mem::transmute(val);
+            self._bitfield_1.set(5usize, 2u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn pastTrig(&self) -> u8 {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(7usize, 1u8) as u8) }
+    }
+    #[inline]
+    pub fn set_pastTrig(&mut self, val: u8) {
+        unsafe {
+            let val: u8 = ::core::mem::transmute(val);
+            self._bitfield_1.set(7usize, 1u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn new_bitfield_1(
+        triggerType: u8,
+        bEnaCmd: u8,
+        triggerNo: u8,
+        pastTrig: u8,
+    ) -> __BindgenBitfieldUnit<[u8; 1usize]> {
+        let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 1usize]> = Default::default();
+        __bindgen_bitfield_unit.set(0usize, 4u8, {
+            let triggerType: u8 = unsafe { ::core::mem::transmute(triggerType) };
+            triggerType as u64
+        });
+        __bindgen_bitfield_unit.set(4usize, 1u8, {
+            let bEnaCmd: u8 = unsafe { ::core::mem::transmute(bEnaCmd) };
+            bEnaCmd as u64
+        });
+        __bindgen_bitfield_unit.set(5usize, 2u8, {
+            let triggerNo: u8 = unsafe { ::core::mem::transmute(triggerNo) };
+            triggerNo as u64
+        });
+        __bindgen_bitfield_unit.set(7usize, 1u8, {
+            let pastTrig: u8 = unsafe { ::core::mem::transmute(pastTrig) };
+            pastTrig as u64
+        });
+        __bindgen_bitfield_unit
+    }
+}
+#[repr(C)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
+pub struct rfc_CMD_PROP_TX_s__bindgen_ty_2 {
+    pub _bitfield_align_1: [u8; 0],
+    pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
+}
+impl rfc_CMD_PROP_TX_s__bindgen_ty_2 {
+    #[inline]
+    pub fn rule(&self) -> u8 {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(0usize, 4u8) as u8) }
+    }
+    #[inline]
+    pub fn set_rule(&mut self, val: u8) {
+        unsafe {
+            let val: u8 = ::core::mem::transmute(val);
+            self._bitfield_1.set(0usize, 4u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn nSkip(&self) -> u8 {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(4usize, 4u8) as u8) }
+    }
+    #[inline]
+    pub fn set_nSkip(&mut self, val: u8) {
+        unsafe {
+            let val: u8 = ::core::mem::transmute(val);
+            self._bitfield_1.set(4usize, 4u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn new_bitfield_1(rule: u8, nSkip: u8) -> __BindgenBitfieldUnit<[u8; 1usize]> {
+        let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 1usize]> = Default::default();
+        __bindgen_bitfield_unit.set(0usize, 4u8, {
+            let rule: u8 = unsafe { ::core::mem::transmute(rule) };
+            rule as u64
+        });
+        __bindgen_bitfield_unit.set(4usize, 4u8, {
+            let nSkip: u8 = unsafe { ::core::mem::transmute(nSkip) };
+            nSkip as u64
+        });
+        __bindgen_bitfield_unit
+    }
+}
+#[repr(C)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
+pub struct rfc_CMD_PROP_TX_s__bindgen_ty_3 {
+    pub _bitfield_align_1: [u8; 0],
+    pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
+}
+impl rfc_CMD_PROP_TX_s__bindgen_ty_3 {
+    #[inline]
+    pub fn bFsOff(&self) -> u8 {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(0usize, 1u8) as u8) }
+    }
+    #[inline]
+    pub fn set_bFsOff(&mut self, val: u8) {
+        unsafe {
+            let val: u8 = ::core::mem::transmute(val);
+            self._bitfield_1.set(0usize, 1u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn bUseCrc(&self) -> u8 {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(3usize, 1u8) as u8) }
+    }
+    #[inline]
+    pub fn set_bUseCrc(&mut self, val: u8) {
+        unsafe {
+            let val: u8 = ::core::mem::transmute(val);
+            self._bitfield_1.set(3usize, 1u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn bVarLen(&self) -> u8 {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(4usize, 1u8) as u8) }
+    }
+    #[inline]
+    pub fn set_bVarLen(&mut self, val: u8) {
+        unsafe {
+            let val: u8 = ::core::mem::transmute(val);
+            self._bitfield_1.set(4usize, 1u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn new_bitfield_1(
+        bFsOff: u8,
+        bUseCrc: u8,
+        bVarLen: u8,
+    ) -> __BindgenBitfieldUnit<[u8; 1usize]> {
+        let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 1usize]> = Default::default();
+        __bindgen_bitfield_unit.set(0usize, 1u8, {
+            let bFsOff: u8 = unsafe { ::core::mem::transmute(bFsOff) };
+            bFsOff as u64
+        });
+        __bindgen_bitfield_unit.set(3usize, 1u8, {
+            let bUseCrc: u8 = unsafe { ::core::mem::transmute(bUseCrc) };
+            bUseCrc as u64
+        });
+        __bindgen_bitfield_unit.set(4usize, 1u8, {
+            let bVarLen: u8 = unsafe { ::core::mem::transmute(bVarLen) };
+            bVarLen as u64
+        });
+        __bindgen_bitfield_unit
+    }
+}
+impl Default for rfc_CMD_PROP_TX_s {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+#[must_use]
+pub struct rfc_CMD_PROP_RX_s {
+    pub commandNo: u16,
+    pub status: u16,
+    pub pNextOp: *mut rfc_radioOp_t,
+    pub startTime: ratmr_t,
+    pub startTrigger: rfc_CMD_PROP_RX_s__bindgen_ty_1,
+    pub condition: rfc_CMD_PROP_RX_s__bindgen_ty_2,
+    pub pktConf: rfc_CMD_PROP_RX_s__bindgen_ty_3,
+    pub rxConf: rfc_CMD_PROP_RX_s__bindgen_ty_4,
+    pub syncWord: u32,
+    pub maxPktLen: u8,
+    pub address0: u8,
+    pub address1: u8,
+    pub endTrigger: rfc_CMD_PROP_RX_s__bindgen_ty_5,
+    pub endTime: ratmr_t,
+    pub pQueue: *mut dataQueue_t,
+    pub pOutput: *mut u8,
+}
+#[repr(C)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
+pub struct rfc_CMD_PROP_RX_s__bindgen_ty_1 {
+    pub _bitfield_align_1: [u8; 0],
+    pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
+}
+impl rfc_CMD_PROP_RX_s__bindgen_ty_1 {
+    #[inline]
+    pub fn triggerType(&self) -> u8 {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(0usize, 4u8) as u8) }
+    }
+    #[inline]
+    pub fn set_triggerType(&mut self, val: u8) {
+        unsafe {
+            let val: u8 = ::core::mem::transmute(val);
+            self._bitfield_1.set(0usize, 4u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn bEnaCmd(&self) -> u8 {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(4usize, 1u8) as u8) }
+    }
+    #[inline]
+    pub fn set_bEnaCmd(&mut self, val: u8) {
+        unsafe {
+            let val: u8 = ::core::mem::transmute(val);
+            self._bitfield_1.set(4usize, 1u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn triggerNo(&self) -> u8 {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(5usize, 2u8) as u8) }
+    }
+    #[inline]
+    pub fn set_triggerNo(&mut self, val: u8) {
+        unsafe {
+            let val: u8 = ::core::mem::transmute(val);
+            self._bitfield_1.set(5usize, 2u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn pastTrig(&self) -> u8 {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(7usize, 1u8) as u8) }
+    }
+    #[inline]
+    pub fn set_pastTrig(&mut self, val: u8) {
+        unsafe {
+            let val: u8 = ::core::mem::transmute(val);
+            self._bitfield_1.set(7usize, 1u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn new_bitfield_1(
+        triggerType: u8,
+        bEnaCmd: u8,
+        triggerNo: u8,
+        pastTrig: u8,
+    ) -> __BindgenBitfieldUnit<[u8; 1usize]> {
+        let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 1usize]> = Default::default();
+        __bindgen_bitfield_unit.set(0usize, 4u8, {
+            let triggerType: u8 = unsafe { ::core::mem::transmute(triggerType) };
+            triggerType as u64
+        });
+        __bindgen_bitfield_unit.set(4usize, 1u8, {
+            let bEnaCmd: u8 = unsafe { ::core::mem::transmute(bEnaCmd) };
+            bEnaCmd as u64
+        });
+        __bindgen_bitfield_unit.set(5usize, 2u8, {
+            let triggerNo: u8 = unsafe { ::core::mem::transmute(triggerNo) };
+            triggerNo as u64
+        });
+        __bindgen_bitfield_unit.set(7usize, 1u8, {
+            let pastTrig: u8 = unsafe { ::core::mem::transmute(pastTrig) };
+            pastTrig as u64
+        });
+        __bindgen_bitfield_unit
+    }
+}
+#[repr(C)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
+pub struct rfc_CMD_PROP_RX_s__bindgen_ty_2 {
+    pub _bitfield_align_1: [u8; 0],
+    pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
+}
+impl rfc_CMD_PROP_RX_s__bindgen_ty_2 {
+    #[inline]
+    pub fn rule(&self) -> u8 {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(0usize, 4u8) as u8) }
+    }
+    #[inline]
+    pub fn set_rule(&mut self, val: u8) {
+        unsafe {
+            let val: u8 = ::core::mem::transmute(val);
+            self._bitfield_1.set(0usize, 4u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn nSkip(&self) -> u8 {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(4usize, 4u8) as u8) }
+    }
+    #[inline]
+    pub fn set_nSkip(&mut self, val: u8) {
+        unsafe {
+            let val: u8 = ::core::mem::transmute(val);
+            self._bitfield_1.set(4usize, 4u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn new_bitfield_1(rule: u8, nSkip: u8) -> __BindgenBitfieldUnit<[u8; 1usize]> {
+        let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 1usize]> = Default::default();
+        __bindgen_bitfield_unit.set(0usize, 4u8, {
+            let rule: u8 = unsafe { ::core::mem::transmute(rule) };
+            rule as u64
+        });
+        __bindgen_bitfield_unit.set(4usize, 4u8, {
+            let nSkip: u8 = unsafe { ::core::mem::transmute(nSkip) };
+            nSkip as u64
+        });
+        __bindgen_bitfield_unit
+    }
+}
+#[repr(C)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
+pub struct rfc_CMD_PROP_RX_s__bindgen_ty_3 {
+    pub _bitfield_align_1: [u8; 0],
+    pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
+}
+impl rfc_CMD_PROP_RX_s__bindgen_ty_3 {
+    #[inline]
+    pub fn bFsOff(&self) -> u8 {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(0usize, 1u8) as u8) }
+    }
+    #[inline]
+    pub fn set_bFsOff(&mut self, val: u8) {
+        unsafe {
+            let val: u8 = ::core::mem::transmute(val);
+            self._bitfield_1.set(0usize, 1u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn bRepeatOk(&self) -> u8 {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(1usize, 1u8) as u8) }
+    }
+    #[inline]
+    pub fn set_bRepeatOk(&mut self, val: u8) {
+        unsafe {
+            let val: u8 = ::core::mem::transmute(val);
+            self._bitfield_1.set(1usize, 1u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn bRepeatNok(&self) -> u8 {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(2usize, 1u8) as u8) }
+    }
+    #[inline]
+    pub fn set_bRepeatNok(&mut self, val: u8) {
+        unsafe {
+            let val: u8 = ::core::mem::transmute(val);
+            self._bitfield_1.set(2usize, 1u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn bUseCrc(&self) -> u8 {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(3usize, 1u8) as u8) }
+    }
+    #[inline]
+    pub fn set_bUseCrc(&mut self, val: u8) {
+        unsafe {
+            let val: u8 = ::core::mem::transmute(val);
+            self._bitfield_1.set(3usize, 1u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn bVarLen(&self) -> u8 {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(4usize, 1u8) as u8) }
+    }
+    #[inline]
+    pub fn set_bVarLen(&mut self, val: u8) {
+        unsafe {
+            let val: u8 = ::core::mem::transmute(val);
+            self._bitfield_1.set(4usize, 1u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn bChkAddress(&self) -> u8 {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(5usize, 1u8) as u8) }
+    }
+    #[inline]
+    pub fn set_bChkAddress(&mut self, val: u8) {
+        unsafe {
+            let val: u8 = ::core::mem::transmute(val);
+            self._bitfield_1.set(5usize, 1u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn endType(&self) -> u8 {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(6usize, 1u8) as u8) }
+    }
+    #[inline]
+    pub fn set_endType(&mut self, val: u8) {
+        unsafe {
+            let val: u8 = ::core::mem::transmute(val);
+            self._bitfield_1.set(6usize, 1u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn filterOp(&self) -> u8 {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(7usize, 1u8) as u8) }
+    }
+    #[inline]
+    pub fn set_filterOp(&mut self, val: u8) {
+        unsafe {
+            let val: u8 = ::core::mem::transmute(val);
+            self._bitfield_1.set(7usize, 1u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn new_bitfield_1(
+        bFsOff: u8,
+        bRepeatOk: u8,
+        bRepeatNok: u8,
+        bUseCrc: u8,
+        bVarLen: u8,
+        bChkAddress: u8,
+        endType: u8,
+        filterOp: u8,
+    ) -> __BindgenBitfieldUnit<[u8; 1usize]> {
+        let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 1usize]> = Default::default();
+        __bindgen_bitfield_unit.set(0usize, 1u8, {
+            let bFsOff: u8 = unsafe { ::core::mem::transmute(bFsOff) };
+            bFsOff as u64
+        });
+        __bindgen_bitfield_unit.set(1usize, 1u8, {
+            let bRepeatOk: u8 = unsafe { ::core::mem::transmute(bRepeatOk) };
+            bRepeatOk as u64
+        });
+        __bindgen_bitfield_unit.set(2usize, 1u8, {
+            let bRepeatNok: u8 = unsafe { ::core::mem::transmute(bRepeatNok) };
+            bRepeatNok as u64
+        });
+        __bindgen_bitfield_unit.set(3usize, 1u8, {
+            let bUseCrc: u8 = unsafe { ::core::mem::transmute(bUseCrc) };
+            bUseCrc as u64
+        });
+        __bindgen_bitfield_unit.set(4usize, 1u8, {
+            let bVarLen: u8 = unsafe { ::core::mem::transmute(bVarLen) };
+            bVarLen as u64
+        });
+        __bindgen_bitfield_unit.set(5usize, 1u8, {
+            let bChkAddress: u8 = unsafe { ::core::mem::transmute(bChkAddress) };
+            bChkAddress as u64
+        });
+        __bindgen_bitfield_unit.set(6usize, 1u8, {
+            let endType: u8 = unsafe { ::core::mem::transmute(endType) };
+            endType as u64
+        });
+        __bindgen_bitfield_unit.set(7usize, 1u8, {
+            let filterOp: u8 = unsafe { ::core::mem::transmute(filterOp) };
+            filterOp as u64
+        });
+        __bindgen_bitfield_unit
+    }
+}
+#[repr(C)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
+pub struct rfc_CMD_PROP_RX_s__bindgen_ty_4 {
+    pub _bitfield_align_1: [u8; 0],
+    pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
+}
+impl rfc_CMD_PROP_RX_s__bindgen_ty_4 {
+    #[inline]
+    pub fn bAutoFlushIgnored(&self) -> u8 {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(0usize, 1u8) as u8) }
+    }
+    #[inline]
+    pub fn set_bAutoFlushIgnored(&mut self, val: u8) {
+        unsafe {
+            let val: u8 = ::core::mem::transmute(val);
+            self._bitfield_1.set(0usize, 1u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn bAutoFlushCrcErr(&self) -> u8 {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(1usize, 1u8) as u8) }
+    }
+    #[inline]
+    pub fn set_bAutoFlushCrcErr(&mut self, val: u8) {
+        unsafe {
+            let val: u8 = ::core::mem::transmute(val);
+            self._bitfield_1.set(1usize, 1u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn bIncludeHdr(&self) -> u8 {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(3usize, 1u8) as u8) }
+    }
+    #[inline]
+    pub fn set_bIncludeHdr(&mut self, val: u8) {
+        unsafe {
+            let val: u8 = ::core::mem::transmute(val);
+            self._bitfield_1.set(3usize, 1u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn bIncludeCrc(&self) -> u8 {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(4usize, 1u8) as u8) }
+    }
+    #[inline]
+    pub fn set_bIncludeCrc(&mut self, val: u8) {
+        unsafe {
+            let val: u8 = ::core::mem::transmute(val);
+            self._bitfield_1.set(4usize, 1u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn bAppendRssi(&self) -> u8 {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(5usize, 1u8) as u8) }
+    }
+    #[inline]
+    pub fn set_bAppendRssi(&mut self, val: u8) {
+        unsafe {
+            let val: u8 = ::core::mem::transmute(val);
+            self._bitfield_1.set(5usize, 1u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn bAppendTimestamp(&self) -> u8 {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(6usize, 1u8) as u8) }
+    }
+    #[inline]
+    pub fn set_bAppendTimestamp(&mut self, val: u8) {
+        unsafe {
+            let val: u8 = ::core::mem::transmute(val);
+            self._bitfield_1.set(6usize, 1u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn bAppendStatus(&self) -> u8 {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(7usize, 1u8) as u8) }
+    }
+    #[inline]
+    pub fn set_bAppendStatus(&mut self, val: u8) {
+        unsafe {
+            let val: u8 = ::core::mem::transmute(val);
+            self._bitfield_1.set(7usize, 1u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn new_bitfield_1(
+        bAutoFlushIgnored: u8,
+        bAutoFlushCrcErr: u8,
+        bIncludeHdr: u8,
+        bIncludeCrc: u8,
+        bAppendRssi: u8,
+        bAppendTimestamp: u8,
+        bAppendStatus: u8,
+    ) -> __BindgenBitfieldUnit<[u8; 1usize]> {
+        let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 1usize]> = Default::default();
+        __bindgen_bitfield_unit.set(0usize, 1u8, {
+            let bAutoFlushIgnored: u8 = unsafe { ::core::mem::transmute(bAutoFlushIgnored) };
+            bAutoFlushIgnored as u64
+        });
+        __bindgen_bitfield_unit.set(1usize, 1u8, {
+            let bAutoFlushCrcErr: u8 = unsafe { ::core::mem::transmute(bAutoFlushCrcErr) };
+            bAutoFlushCrcErr as u64
+        });
+        __bindgen_bitfield_unit.set(3usize, 1u8, {
+            let bIncludeHdr: u8 = unsafe { ::core::mem::transmute(bIncludeHdr) };
+            bIncludeHdr as u64
+        });
+        __bindgen_bitfield_unit.set(4usize, 1u8, {
+            let bIncludeCrc: u8 = unsafe { ::core::mem::transmute(bIncludeCrc) };
+            bIncludeCrc as u64
+        });
+        __bindgen_bitfield_unit.set(5usize, 1u8, {
+            let bAppendRssi: u8 = unsafe { ::core::mem::transmute(bAppendRssi) };
+            bAppendRssi as u64
+        });
+        __bindgen_bitfield_unit.set(6usize, 1u8, {
+            let bAppendTimestamp: u8 = unsafe { ::core::mem::transmute(bAppendTimestamp) };
+            bAppendTimestamp as u64
+        });
+        __bindgen_bitfield_unit.set(7usize, 1u8, {
+            let bAppendStatus: u8 = unsafe { ::core::mem::transmute(bAppendStatus) };
+            bAppendStatus as u64
+        });
+        __bindgen_bitfield_unit
+    }
+}
+#[repr(C)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
+pub struct rfc_CMD_PROP_RX_s__bindgen_ty_5 {
+    pub _bitfield_align_1: [u8; 0],
+    pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
+}
+impl rfc_CMD_PROP_RX_s__bindgen_ty_5 {
+    #[inline]
+    pub fn triggerType(&self) -> u8 {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(0usize, 4u8) as u8) }
+    }
+    #[inline]
+    pub fn set_triggerType(&mut self, val: u8) {
+        unsafe {
+            let val: u8 = ::core::mem::transmute(val);
+            self._bitfield_1.set(0usize, 4u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn bEnaCmd(&self) -> u8 {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(4usize, 1u8) as u8) }
+    }
+    #[inline]
+    pub fn set_bEnaCmd(&mut self, val: u8) {
+        unsafe {
+            let val: u8 = ::core::mem::transmute(val);
+            self._bitfield_1.set(4usize, 1u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn triggerNo(&self) -> u8 {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(5usize, 2u8) as u8) }
+    }
+    #[inline]
+    pub fn set_triggerNo(&mut self, val: u8) {
+        unsafe {
+            let val: u8 = ::core::mem::transmute(val);
+            self._bitfield_1.set(5usize, 2u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn pastTrig(&self) -> u8 {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(7usize, 1u8) as u8) }
+    }
+    #[inline]
+    pub fn set_pastTrig(&mut self, val: u8) {
+        unsafe {
+            let val: u8 = ::core::mem::transmute(val);
+            self._bitfield_1.set(7usize, 1u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn new_bitfield_1(
+        triggerType: u8,
+        bEnaCmd: u8,
+        triggerNo: u8,
+        pastTrig: u8,
+    ) -> __BindgenBitfieldUnit<[u8; 1usize]> {
+        let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 1usize]> = Default::default();
+        __bindgen_bitfield_unit.set(0usize, 4u8, {
+            let triggerType: u8 = unsafe { ::core::mem::transmute(triggerType) };
+            triggerType as u64
+        });
+        __bindgen_bitfield_unit.set(4usize, 1u8, {
+            let bEnaCmd: u8 = unsafe { ::core::mem::transmute(bEnaCmd) };
+            bEnaCmd as u64
+        });
+        __bindgen_bitfield_unit.set(5usize, 2u8, {
+            let triggerNo: u8 = unsafe { ::core::mem::transmute(triggerNo) };
+            triggerNo as u64
+        });
+        __bindgen_bitfield_unit.set(7usize, 1u8, {
+            let pastTrig: u8 = unsafe { ::core::mem::transmute(pastTrig) };
+            pastTrig as u64
+        });
+        __bindgen_bitfield_unit
+    }
+}
+impl Default for rfc_CMD_PROP_RX_s {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+#[must_use]
+pub struct rfc_CMD_PROP_TX_ADV_s {
+    pub commandNo: u16,
+    pub status: u16,
+    pub pNextOp: *mut rfc_radioOp_t,
+    pub startTime: ratmr_t,
+    pub startTrigger: rfc_CMD_PROP_TX_ADV_s__bindgen_ty_1,
+    pub condition: rfc_CMD_PROP_TX_ADV_s__bindgen_ty_2,
+    pub pktConf: rfc_CMD_PROP_TX_ADV_s__bindgen_ty_3,
+    pub numHdrBits: u8,
+    pub pktLen: u16,
+    pub startConf: rfc_CMD_PROP_TX_ADV_s__bindgen_ty_4,
+    pub preTrigger: rfc_CMD_PROP_TX_ADV_s__bindgen_ty_5,
+    pub preTime: ratmr_t,
+    pub syncWord: u32,
+    pub pPkt: *mut u8,
+}
+#[repr(C)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
+pub struct rfc_CMD_PROP_TX_ADV_s__bindgen_ty_1 {
+    pub _bitfield_align_1: [u8; 0],
+    pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
+}
+impl rfc_CMD_PROP_TX_ADV_s__bindgen_ty_1 {
+    #[inline]
+    pub fn triggerType(&self) -> u8 {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(0usize, 4u8) as u8) }
+    }
+    #[inline]
+    pub fn set_triggerType(&mut self, val: u8) {
+        unsafe {
+            let val: u8 = ::core::mem::transmute(val);
+            self._bitfield_1.set(0usize, 4u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn bEnaCmd(&self) -> u8 {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(4usize, 1u8) as u8) }
+    }
+    #[inline]
+    pub fn set_bEnaCmd(&mut self, val: u8) {
+        unsafe {
+            let val: u8 = ::core::mem::transmute(val);
+            self._bitfield_1.set(4usize, 1u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn triggerNo(&self) -> u8 {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(5usize, 2u8) as u8) }
+    }
+    #[inline]
+    pub fn set_triggerNo(&mut self, val: u8) {
+        unsafe {
+            let val: u8 = ::core::mem::transmute(val);
+            self._bitfield_1.set(5usize, 2u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn pastTrig(&self) -> u8 {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(7usize, 1u8) as u8) }
+    }
+    #[inline]
+    pub fn set_pastTrig(&mut self, val: u8) {
+        unsafe {
+            let val: u8 = ::core::mem::transmute(val);
+            self._bitfield_1.set(7usize, 1u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn new_bitfield_1(
+        triggerType: u8,
+        bEnaCmd: u8,
+        triggerNo: u8,
+        pastTrig: u8,
+    ) -> __BindgenBitfieldUnit<[u8; 1usize]> {
+        let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 1usize]> = Default::default();
+        __bindgen_bitfield_unit.set(0usize, 4u8, {
+            let triggerType: u8 = unsafe { ::core::mem::transmute(triggerType) };
+            triggerType as u64
+        });
+        __bindgen_bitfield_unit.set(4usize, 1u8, {
+            let bEnaCmd: u8 = unsafe { ::core::mem::transmute(bEnaCmd) };
+            bEnaCmd as u64
+        });
+        __bindgen_bitfield_unit.set(5usize, 2u8, {
+            let triggerNo: u8 = unsafe { ::core::mem::transmute(triggerNo) };
+            triggerNo as u64
+        });
+        __bindgen_bitfield_unit.set(7usize, 1u8, {
+            let pastTrig: u8 = unsafe { ::core::mem::transmute(pastTrig) };
+            pastTrig as u64
+        });
+        __bindgen_bitfield_unit
+    }
+}
+#[repr(C)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
+pub struct rfc_CMD_PROP_TX_ADV_s__bindgen_ty_2 {
+    pub _bitfield_align_1: [u8; 0],
+    pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
+}
+impl rfc_CMD_PROP_TX_ADV_s__bindgen_ty_2 {
+    #[inline]
+    pub fn rule(&self) -> u8 {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(0usize, 4u8) as u8) }
+    }
+    #[inline]
+    pub fn set_rule(&mut self, val: u8) {
+        unsafe {
+            let val: u8 = ::core::mem::transmute(val);
+            self._bitfield_1.set(0usize, 4u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn nSkip(&self) -> u8 {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(4usize, 4u8) as u8) }
+    }
+    #[inline]
+    pub fn set_nSkip(&mut self, val: u8) {
+        unsafe {
+            let val: u8 = ::core::mem::transmute(val);
+            self._bitfield_1.set(4usize, 4u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn new_bitfield_1(rule: u8, nSkip: u8) -> __BindgenBitfieldUnit<[u8; 1usize]> {
+        let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 1usize]> = Default::default();
+        __bindgen_bitfield_unit.set(0usize, 4u8, {
+            let rule: u8 = unsafe { ::core::mem::transmute(rule) };
+            rule as u64
+        });
+        __bindgen_bitfield_unit.set(4usize, 4u8, {
+            let nSkip: u8 = unsafe { ::core::mem::transmute(nSkip) };
+            nSkip as u64
+        });
+        __bindgen_bitfield_unit
+    }
+}
+#[repr(C)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
+pub struct rfc_CMD_PROP_TX_ADV_s__bindgen_ty_3 {
+    pub _bitfield_align_1: [u8; 0],
+    pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
+}
+impl rfc_CMD_PROP_TX_ADV_s__bindgen_ty_3 {
+    #[inline]
+    pub fn bFsOff(&self) -> u8 {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(0usize, 1u8) as u8) }
+    }
+    #[inline]
+    pub fn set_bFsOff(&mut self, val: u8) {
+        unsafe {
+            let val: u8 = ::core::mem::transmute(val);
+            self._bitfield_1.set(0usize, 1u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn bUseCrc(&self) -> u8 {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(3usize, 1u8) as u8) }
+    }
+    #[inline]
+    pub fn set_bUseCrc(&mut self, val: u8) {
+        unsafe {
+            let val: u8 = ::core::mem::transmute(val);
+            self._bitfield_1.set(3usize, 1u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn bCrcIncSw(&self) -> u8 {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(4usize, 1u8) as u8) }
+    }
+    #[inline]
+    pub fn set_bCrcIncSw(&mut self, val: u8) {
+        unsafe {
+            let val: u8 = ::core::mem::transmute(val);
+            self._bitfield_1.set(4usize, 1u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn bCrcIncHdr(&self) -> u8 {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(5usize, 1u8) as u8) }
+    }
+    #[inline]
+    pub fn set_bCrcIncHdr(&mut self, val: u8) {
+        unsafe {
+            let val: u8 = ::core::mem::transmute(val);
+            self._bitfield_1.set(5usize, 1u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn new_bitfield_1(
+        bFsOff: u8,
+        bUseCrc: u8,
+        bCrcIncSw: u8,
+        bCrcIncHdr: u8,
+    ) -> __BindgenBitfieldUnit<[u8; 1usize]> {
+        let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 1usize]> = Default::default();
+        __bindgen_bitfield_unit.set(0usize, 1u8, {
+            let bFsOff: u8 = unsafe { ::core::mem::transmute(bFsOff) };
+            bFsOff as u64
+        });
+        __bindgen_bitfield_unit.set(3usize, 1u8, {
+            let bUseCrc: u8 = unsafe { ::core::mem::transmute(bUseCrc) };
+            bUseCrc as u64
+        });
+        __bindgen_bitfield_unit.set(4usize, 1u8, {
+            let bCrcIncSw: u8 = unsafe { ::core::mem::transmute(bCrcIncSw) };
+            bCrcIncSw as u64
+        });
+        __bindgen_bitfield_unit.set(5usize, 1u8, {
+            let bCrcIncHdr: u8 = unsafe { ::core::mem::transmute(bCrcIncHdr) };
+            bCrcIncHdr as u64
+        });
+        __bindgen_bitfield_unit
+    }
+}
+#[repr(C)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
+pub struct rfc_CMD_PROP_TX_ADV_s__bindgen_ty_4 {
+    pub _bitfield_align_1: [u8; 0],
+    pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
+}
+impl rfc_CMD_PROP_TX_ADV_s__bindgen_ty_4 {
+    #[inline]
+    pub fn bExtTxTrig(&self) -> u8 {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(0usize, 1u8) as u8) }
+    }
+    #[inline]
+    pub fn set_bExtTxTrig(&mut self, val: u8) {
+        unsafe {
+            let val: u8 = ::core::mem::transmute(val);
+            self._bitfield_1.set(0usize, 1u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn inputMode(&self) -> u8 {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(1usize, 2u8) as u8) }
+    }
+    #[inline]
+    pub fn set_inputMode(&mut self, val: u8) {
+        unsafe {
+            let val: u8 = ::core::mem::transmute(val);
+            self._bitfield_1.set(1usize, 2u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn source(&self) -> u8 {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(3usize, 5u8) as u8) }
+    }
+    #[inline]
+    pub fn set_source(&mut self, val: u8) {
+        unsafe {
+            let val: u8 = ::core::mem::transmute(val);
+            self._bitfield_1.set(3usize, 5u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn new_bitfield_1(
+        bExtTxTrig: u8,
+        inputMode: u8,
+        source: u8,
+    ) -> __BindgenBitfieldUnit<[u8; 1usize]> {
+        let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 1usize]> = Default::default();
+        __bindgen_bitfield_unit.set(0usize, 1u8, {
+            let bExtTxTrig: u8 = unsafe { ::core::mem::transmute(bExtTxTrig) };
+            bExtTxTrig as u64
+        });
+        __bindgen_bitfield_unit.set(1usize, 2u8, {
+            let inputMode: u8 = unsafe { ::core::mem::transmute(inputMode) };
+            inputMode as u64
+        });
+        __bindgen_bitfield_unit.set(3usize, 5u8, {
+            let source: u8 = unsafe { ::core::mem::transmute(source) };
+            source as u64
+        });
+        __bindgen_bitfield_unit
+    }
+}
+#[repr(C)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
+pub struct rfc_CMD_PROP_TX_ADV_s__bindgen_ty_5 {
+    pub _bitfield_align_1: [u8; 0],
+    pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
+}
+impl rfc_CMD_PROP_TX_ADV_s__bindgen_ty_5 {
+    #[inline]
+    pub fn triggerType(&self) -> u8 {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(0usize, 4u8) as u8) }
+    }
+    #[inline]
+    pub fn set_triggerType(&mut self, val: u8) {
+        unsafe {
+            let val: u8 = ::core::mem::transmute(val);
+            self._bitfield_1.set(0usize, 4u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn bEnaCmd(&self) -> u8 {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(4usize, 1u8) as u8) }
+    }
+    #[inline]
+    pub fn set_bEnaCmd(&mut self, val: u8) {
+        unsafe {
+            let val: u8 = ::core::mem::transmute(val);
+            self._bitfield_1.set(4usize, 1u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn triggerNo(&self) -> u8 {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(5usize, 2u8) as u8) }
+    }
+    #[inline]
+    pub fn set_triggerNo(&mut self, val: u8) {
+        unsafe {
+            let val: u8 = ::core::mem::transmute(val);
+            self._bitfield_1.set(5usize, 2u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn pastTrig(&self) -> u8 {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(7usize, 1u8) as u8) }
+    }
+    #[inline]
+    pub fn set_pastTrig(&mut self, val: u8) {
+        unsafe {
+            let val: u8 = ::core::mem::transmute(val);
+            self._bitfield_1.set(7usize, 1u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn new_bitfield_1(
+        triggerType: u8,
+        bEnaCmd: u8,
+        triggerNo: u8,
+        pastTrig: u8,
+    ) -> __BindgenBitfieldUnit<[u8; 1usize]> {
+        let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 1usize]> = Default::default();
+        __bindgen_bitfield_unit.set(0usize, 4u8, {
+            let triggerType: u8 = unsafe { ::core::mem::transmute(triggerType) };
+            triggerType as u64
+        });
+        __bindgen_bitfield_unit.set(4usize, 1u8, {
+            let bEnaCmd: u8 = unsafe { ::core::mem::transmute(bEnaCmd) };
+            bEnaCmd as u64
+        });
+        __bindgen_bitfield_unit.set(5usize, 2u8, {
+            let triggerNo: u8 = unsafe { ::core::mem::transmute(triggerNo) };
+            triggerNo as u64
+        });
+        __bindgen_bitfield_unit.set(7usize, 1u8, {
+            let pastTrig: u8 = unsafe { ::core::mem::transmute(pastTrig) };
+            pastTrig as u64
+        });
+        __bindgen_bitfield_unit
+    }
+}
+impl Default for rfc_CMD_PROP_TX_ADV_s {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+#[must_use]
+pub struct rfc_CMD_PROP_RX_ADV_s {
+    pub commandNo: u16,
+    pub status: u16,
+    pub pNextOp: *mut rfc_radioOp_t,
+    pub startTime: ratmr_t,
+    pub startTrigger: rfc_CMD_PROP_RX_ADV_s__bindgen_ty_1,
+    pub condition: rfc_CMD_PROP_RX_ADV_s__bindgen_ty_2,
+    pub pktConf: rfc_CMD_PROP_RX_ADV_s__bindgen_ty_3,
+    pub rxConf: rfc_CMD_PROP_RX_ADV_s__bindgen_ty_4,
+    pub syncWord0: u32,
+    pub syncWord1: u32,
+    pub maxPktLen: u16,
+    pub hdrConf: rfc_CMD_PROP_RX_ADV_s__bindgen_ty_5,
+    pub addrConf: rfc_CMD_PROP_RX_ADV_s__bindgen_ty_6,
+    pub lenOffset: i8,
+    pub endTrigger: rfc_CMD_PROP_RX_ADV_s__bindgen_ty_7,
+    pub endTime: ratmr_t,
+    pub pAddr: *mut u8,
+    pub pQueue: *mut dataQueue_t,
+    pub pOutput: *mut u8,
+}
+#[repr(C)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
+pub struct rfc_CMD_PROP_RX_ADV_s__bindgen_ty_1 {
+    pub _bitfield_align_1: [u8; 0],
+    pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
+}
+impl rfc_CMD_PROP_RX_ADV_s__bindgen_ty_1 {
+    #[inline]
+    pub fn triggerType(&self) -> u8 {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(0usize, 4u8) as u8) }
+    }
+    #[inline]
+    pub fn set_triggerType(&mut self, val: u8) {
+        unsafe {
+            let val: u8 = ::core::mem::transmute(val);
+            self._bitfield_1.set(0usize, 4u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn bEnaCmd(&self) -> u8 {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(4usize, 1u8) as u8) }
+    }
+    #[inline]
+    pub fn set_bEnaCmd(&mut self, val: u8) {
+        unsafe {
+            let val: u8 = ::core::mem::transmute(val);
+            self._bitfield_1.set(4usize, 1u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn triggerNo(&self) -> u8 {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(5usize, 2u8) as u8) }
+    }
+    #[inline]
+    pub fn set_triggerNo(&mut self, val: u8) {
+        unsafe {
+            let val: u8 = ::core::mem::transmute(val);
+            self._bitfield_1.set(5usize, 2u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn pastTrig(&self) -> u8 {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(7usize, 1u8) as u8) }
+    }
+    #[inline]
+    pub fn set_pastTrig(&mut self, val: u8) {
+        unsafe {
+            let val: u8 = ::core::mem::transmute(val);
+            self._bitfield_1.set(7usize, 1u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn new_bitfield_1(
+        triggerType: u8,
+        bEnaCmd: u8,
+        triggerNo: u8,
+        pastTrig: u8,
+    ) -> __BindgenBitfieldUnit<[u8; 1usize]> {
+        let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 1usize]> = Default::default();
+        __bindgen_bitfield_unit.set(0usize, 4u8, {
+            let triggerType: u8 = unsafe { ::core::mem::transmute(triggerType) };
+            triggerType as u64
+        });
+        __bindgen_bitfield_unit.set(4usize, 1u8, {
+            let bEnaCmd: u8 = unsafe { ::core::mem::transmute(bEnaCmd) };
+            bEnaCmd as u64
+        });
+        __bindgen_bitfield_unit.set(5usize, 2u8, {
+            let triggerNo: u8 = unsafe { ::core::mem::transmute(triggerNo) };
+            triggerNo as u64
+        });
+        __bindgen_bitfield_unit.set(7usize, 1u8, {
+            let pastTrig: u8 = unsafe { ::core::mem::transmute(pastTrig) };
+            pastTrig as u64
+        });
+        __bindgen_bitfield_unit
+    }
+}
+#[repr(C)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
+pub struct rfc_CMD_PROP_RX_ADV_s__bindgen_ty_2 {
+    pub _bitfield_align_1: [u8; 0],
+    pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
+}
+impl rfc_CMD_PROP_RX_ADV_s__bindgen_ty_2 {
+    #[inline]
+    pub fn rule(&self) -> u8 {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(0usize, 4u8) as u8) }
+    }
+    #[inline]
+    pub fn set_rule(&mut self, val: u8) {
+        unsafe {
+            let val: u8 = ::core::mem::transmute(val);
+            self._bitfield_1.set(0usize, 4u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn nSkip(&self) -> u8 {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(4usize, 4u8) as u8) }
+    }
+    #[inline]
+    pub fn set_nSkip(&mut self, val: u8) {
+        unsafe {
+            let val: u8 = ::core::mem::transmute(val);
+            self._bitfield_1.set(4usize, 4u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn new_bitfield_1(rule: u8, nSkip: u8) -> __BindgenBitfieldUnit<[u8; 1usize]> {
+        let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 1usize]> = Default::default();
+        __bindgen_bitfield_unit.set(0usize, 4u8, {
+            let rule: u8 = unsafe { ::core::mem::transmute(rule) };
+            rule as u64
+        });
+        __bindgen_bitfield_unit.set(4usize, 4u8, {
+            let nSkip: u8 = unsafe { ::core::mem::transmute(nSkip) };
+            nSkip as u64
+        });
+        __bindgen_bitfield_unit
+    }
+}
+#[repr(C)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
+pub struct rfc_CMD_PROP_RX_ADV_s__bindgen_ty_3 {
+    pub _bitfield_align_1: [u8; 0],
+    pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
+}
+impl rfc_CMD_PROP_RX_ADV_s__bindgen_ty_3 {
+    #[inline]
+    pub fn bFsOff(&self) -> u8 {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(0usize, 1u8) as u8) }
+    }
+    #[inline]
+    pub fn set_bFsOff(&mut self, val: u8) {
+        unsafe {
+            let val: u8 = ::core::mem::transmute(val);
+            self._bitfield_1.set(0usize, 1u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn bRepeatOk(&self) -> u8 {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(1usize, 1u8) as u8) }
+    }
+    #[inline]
+    pub fn set_bRepeatOk(&mut self, val: u8) {
+        unsafe {
+            let val: u8 = ::core::mem::transmute(val);
+            self._bitfield_1.set(1usize, 1u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn bRepeatNok(&self) -> u8 {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(2usize, 1u8) as u8) }
+    }
+    #[inline]
+    pub fn set_bRepeatNok(&mut self, val: u8) {
+        unsafe {
+            let val: u8 = ::core::mem::transmute(val);
+            self._bitfield_1.set(2usize, 1u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn bUseCrc(&self) -> u8 {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(3usize, 1u8) as u8) }
+    }
+    #[inline]
+    pub fn set_bUseCrc(&mut self, val: u8) {
+        unsafe {
+            let val: u8 = ::core::mem::transmute(val);
+            self._bitfield_1.set(3usize, 1u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn bCrcIncSw(&self) -> u8 {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(4usize, 1u8) as u8) }
+    }
+    #[inline]
+    pub fn set_bCrcIncSw(&mut self, val: u8) {
+        unsafe {
+            let val: u8 = ::core::mem::transmute(val);
+            self._bitfield_1.set(4usize, 1u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn bCrcIncHdr(&self) -> u8 {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(5usize, 1u8) as u8) }
+    }
+    #[inline]
+    pub fn set_bCrcIncHdr(&mut self, val: u8) {
+        unsafe {
+            let val: u8 = ::core::mem::transmute(val);
+            self._bitfield_1.set(5usize, 1u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn endType(&self) -> u8 {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(6usize, 1u8) as u8) }
+    }
+    #[inline]
+    pub fn set_endType(&mut self, val: u8) {
+        unsafe {
+            let val: u8 = ::core::mem::transmute(val);
+            self._bitfield_1.set(6usize, 1u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn filterOp(&self) -> u8 {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(7usize, 1u8) as u8) }
+    }
+    #[inline]
+    pub fn set_filterOp(&mut self, val: u8) {
+        unsafe {
+            let val: u8 = ::core::mem::transmute(val);
+            self._bitfield_1.set(7usize, 1u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn new_bitfield_1(
+        bFsOff: u8,
+        bRepeatOk: u8,
+        bRepeatNok: u8,
+        bUseCrc: u8,
+        bCrcIncSw: u8,
+        bCrcIncHdr: u8,
+        endType: u8,
+        filterOp: u8,
+    ) -> __BindgenBitfieldUnit<[u8; 1usize]> {
+        let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 1usize]> = Default::default();
+        __bindgen_bitfield_unit.set(0usize, 1u8, {
+            let bFsOff: u8 = unsafe { ::core::mem::transmute(bFsOff) };
+            bFsOff as u64
+        });
+        __bindgen_bitfield_unit.set(1usize, 1u8, {
+            let bRepeatOk: u8 = unsafe { ::core::mem::transmute(bRepeatOk) };
+            bRepeatOk as u64
+        });
+        __bindgen_bitfield_unit.set(2usize, 1u8, {
+            let bRepeatNok: u8 = unsafe { ::core::mem::transmute(bRepeatNok) };
+            bRepeatNok as u64
+        });
+        __bindgen_bitfield_unit.set(3usize, 1u8, {
+            let bUseCrc: u8 = unsafe { ::core::mem::transmute(bUseCrc) };
+            bUseCrc as u64
+        });
+        __bindgen_bitfield_unit.set(4usize, 1u8, {
+            let bCrcIncSw: u8 = unsafe { ::core::mem::transmute(bCrcIncSw) };
+            bCrcIncSw as u64
+        });
+        __bindgen_bitfield_unit.set(5usize, 1u8, {
+            let bCrcIncHdr: u8 = unsafe { ::core::mem::transmute(bCrcIncHdr) };
+            bCrcIncHdr as u64
+        });
+        __bindgen_bitfield_unit.set(6usize, 1u8, {
+            let endType: u8 = unsafe { ::core::mem::transmute(endType) };
+            endType as u64
+        });
+        __bindgen_bitfield_unit.set(7usize, 1u8, {
+            let filterOp: u8 = unsafe { ::core::mem::transmute(filterOp) };
+            filterOp as u64
+        });
+        __bindgen_bitfield_unit
+    }
+}
+#[repr(C)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
+pub struct rfc_CMD_PROP_RX_ADV_s__bindgen_ty_4 {
+    pub _bitfield_align_1: [u8; 0],
+    pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
+}
+impl rfc_CMD_PROP_RX_ADV_s__bindgen_ty_4 {
+    #[inline]
+    pub fn bAutoFlushIgnored(&self) -> u8 {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(0usize, 1u8) as u8) }
+    }
+    #[inline]
+    pub fn set_bAutoFlushIgnored(&mut self, val: u8) {
+        unsafe {
+            let val: u8 = ::core::mem::transmute(val);
+            self._bitfield_1.set(0usize, 1u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn bAutoFlushCrcErr(&self) -> u8 {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(1usize, 1u8) as u8) }
+    }
+    #[inline]
+    pub fn set_bAutoFlushCrcErr(&mut self, val: u8) {
+        unsafe {
+            let val: u8 = ::core::mem::transmute(val);
+            self._bitfield_1.set(1usize, 1u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn bIncludeHdr(&self) -> u8 {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(3usize, 1u8) as u8) }
+    }
+    #[inline]
+    pub fn set_bIncludeHdr(&mut self, val: u8) {
+        unsafe {
+            let val: u8 = ::core::mem::transmute(val);
+            self._bitfield_1.set(3usize, 1u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn bIncludeCrc(&self) -> u8 {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(4usize, 1u8) as u8) }
+    }
+    #[inline]
+    pub fn set_bIncludeCrc(&mut self, val: u8) {
+        unsafe {
+            let val: u8 = ::core::mem::transmute(val);
+            self._bitfield_1.set(4usize, 1u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn bAppendRssi(&self) -> u8 {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(5usize, 1u8) as u8) }
+    }
+    #[inline]
+    pub fn set_bAppendRssi(&mut self, val: u8) {
+        unsafe {
+            let val: u8 = ::core::mem::transmute(val);
+            self._bitfield_1.set(5usize, 1u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn bAppendTimestamp(&self) -> u8 {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(6usize, 1u8) as u8) }
+    }
+    #[inline]
+    pub fn set_bAppendTimestamp(&mut self, val: u8) {
+        unsafe {
+            let val: u8 = ::core::mem::transmute(val);
+            self._bitfield_1.set(6usize, 1u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn bAppendStatus(&self) -> u8 {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(7usize, 1u8) as u8) }
+    }
+    #[inline]
+    pub fn set_bAppendStatus(&mut self, val: u8) {
+        unsafe {
+            let val: u8 = ::core::mem::transmute(val);
+            self._bitfield_1.set(7usize, 1u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn new_bitfield_1(
+        bAutoFlushIgnored: u8,
+        bAutoFlushCrcErr: u8,
+        bIncludeHdr: u8,
+        bIncludeCrc: u8,
+        bAppendRssi: u8,
+        bAppendTimestamp: u8,
+        bAppendStatus: u8,
+    ) -> __BindgenBitfieldUnit<[u8; 1usize]> {
+        let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 1usize]> = Default::default();
+        __bindgen_bitfield_unit.set(0usize, 1u8, {
+            let bAutoFlushIgnored: u8 = unsafe { ::core::mem::transmute(bAutoFlushIgnored) };
+            bAutoFlushIgnored as u64
+        });
+        __bindgen_bitfield_unit.set(1usize, 1u8, {
+            let bAutoFlushCrcErr: u8 = unsafe { ::core::mem::transmute(bAutoFlushCrcErr) };
+            bAutoFlushCrcErr as u64
+        });
+        __bindgen_bitfield_unit.set(3usize, 1u8, {
+            let bIncludeHdr: u8 = unsafe { ::core::mem::transmute(bIncludeHdr) };
+            bIncludeHdr as u64
+        });
+        __bindgen_bitfield_unit.set(4usize, 1u8, {
+            let bIncludeCrc: u8 = unsafe { ::core::mem::transmute(bIncludeCrc) };
+            bIncludeCrc as u64
+        });
+        __bindgen_bitfield_unit.set(5usize, 1u8, {
+            let bAppendRssi: u8 = unsafe { ::core::mem::transmute(bAppendRssi) };
+            bAppendRssi as u64
+        });
+        __bindgen_bitfield_unit.set(6usize, 1u8, {
+            let bAppendTimestamp: u8 = unsafe { ::core::mem::transmute(bAppendTimestamp) };
+            bAppendTimestamp as u64
+        });
+        __bindgen_bitfield_unit.set(7usize, 1u8, {
+            let bAppendStatus: u8 = unsafe { ::core::mem::transmute(bAppendStatus) };
+            bAppendStatus as u64
+        });
+        __bindgen_bitfield_unit
+    }
+}
+#[repr(C)]
+#[repr(align(2))]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
+pub struct rfc_CMD_PROP_RX_ADV_s__bindgen_ty_5 {
+    pub _bitfield_align_1: [u8; 0],
+    pub _bitfield_1: __BindgenBitfieldUnit<[u8; 2usize]>,
+}
+impl rfc_CMD_PROP_RX_ADV_s__bindgen_ty_5 {
+    #[inline]
+    pub fn numHdrBits(&self) -> u16 {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(0usize, 6u8) as u16) }
+    }
+    #[inline]
+    pub fn set_numHdrBits(&mut self, val: u16) {
+        unsafe {
+            let val: u16 = ::core::mem::transmute(val);
+            self._bitfield_1.set(0usize, 6u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn lenPos(&self) -> u16 {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(6usize, 5u8) as u16) }
+    }
+    #[inline]
+    pub fn set_lenPos(&mut self, val: u16) {
+        unsafe {
+            let val: u16 = ::core::mem::transmute(val);
+            self._bitfield_1.set(6usize, 5u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn numLenBits(&self) -> u16 {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(11usize, 5u8) as u16) }
+    }
+    #[inline]
+    pub fn set_numLenBits(&mut self, val: u16) {
+        unsafe {
+            let val: u16 = ::core::mem::transmute(val);
+            self._bitfield_1.set(11usize, 5u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn new_bitfield_1(
+        numHdrBits: u16,
+        lenPos: u16,
+        numLenBits: u16,
+    ) -> __BindgenBitfieldUnit<[u8; 2usize]> {
+        let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 2usize]> = Default::default();
+        __bindgen_bitfield_unit.set(0usize, 6u8, {
+            let numHdrBits: u16 = unsafe { ::core::mem::transmute(numHdrBits) };
+            numHdrBits as u64
+        });
+        __bindgen_bitfield_unit.set(6usize, 5u8, {
+            let lenPos: u16 = unsafe { ::core::mem::transmute(lenPos) };
+            lenPos as u64
+        });
+        __bindgen_bitfield_unit.set(11usize, 5u8, {
+            let numLenBits: u16 = unsafe { ::core::mem::transmute(numLenBits) };
+            numLenBits as u64
+        });
+        __bindgen_bitfield_unit
+    }
+}
+#[repr(C)]
+#[repr(align(2))]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
+pub struct rfc_CMD_PROP_RX_ADV_s__bindgen_ty_6 {
+    pub _bitfield_align_1: [u8; 0],
+    pub _bitfield_1: __BindgenBitfieldUnit<[u8; 2usize]>,
+}
+impl rfc_CMD_PROP_RX_ADV_s__bindgen_ty_6 {
+    #[inline]
+    pub fn addrType(&self) -> u16 {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(0usize, 1u8) as u16) }
+    }
+    #[inline]
+    pub fn set_addrType(&mut self, val: u16) {
+        unsafe {
+            let val: u16 = ::core::mem::transmute(val);
+            self._bitfield_1.set(0usize, 1u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn addrSize(&self) -> u16 {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(1usize, 5u8) as u16) }
+    }
+    #[inline]
+    pub fn set_addrSize(&mut self, val: u16) {
+        unsafe {
+            let val: u16 = ::core::mem::transmute(val);
+            self._bitfield_1.set(1usize, 5u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn addrPos(&self) -> u16 {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(6usize, 5u8) as u16) }
+    }
+    #[inline]
+    pub fn set_addrPos(&mut self, val: u16) {
+        unsafe {
+            let val: u16 = ::core::mem::transmute(val);
+            self._bitfield_1.set(6usize, 5u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn numAddr(&self) -> u16 {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(11usize, 5u8) as u16) }
+    }
+    #[inline]
+    pub fn set_numAddr(&mut self, val: u16) {
+        unsafe {
+            let val: u16 = ::core::mem::transmute(val);
+            self._bitfield_1.set(11usize, 5u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn new_bitfield_1(
+        addrType: u16,
+        addrSize: u16,
+        addrPos: u16,
+        numAddr: u16,
+    ) -> __BindgenBitfieldUnit<[u8; 2usize]> {
+        let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 2usize]> = Default::default();
+        __bindgen_bitfield_unit.set(0usize, 1u8, {
+            let addrType: u16 = unsafe { ::core::mem::transmute(addrType) };
+            addrType as u64
+        });
+        __bindgen_bitfield_unit.set(1usize, 5u8, {
+            let addrSize: u16 = unsafe { ::core::mem::transmute(addrSize) };
+            addrSize as u64
+        });
+        __bindgen_bitfield_unit.set(6usize, 5u8, {
+            let addrPos: u16 = unsafe { ::core::mem::transmute(addrPos) };
+            addrPos as u64
+        });
+        __bindgen_bitfield_unit.set(11usize, 5u8, {
+            let numAddr: u16 = unsafe { ::core::mem::transmute(numAddr) };
+            numAddr as u64
+        });
+        __bindgen_bitfield_unit
+    }
+}
+#[repr(C)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
+pub struct rfc_CMD_PROP_RX_ADV_s__bindgen_ty_7 {
+    pub _bitfield_align_1: [u8; 0],
+    pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
+}
+impl rfc_CMD_PROP_RX_ADV_s__bindgen_ty_7 {
+    #[inline]
+    pub fn triggerType(&self) -> u8 {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(0usize, 4u8) as u8) }
+    }
+    #[inline]
+    pub fn set_triggerType(&mut self, val: u8) {
+        unsafe {
+            let val: u8 = ::core::mem::transmute(val);
+            self._bitfield_1.set(0usize, 4u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn bEnaCmd(&self) -> u8 {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(4usize, 1u8) as u8) }
+    }
+    #[inline]
+    pub fn set_bEnaCmd(&mut self, val: u8) {
+        unsafe {
+            let val: u8 = ::core::mem::transmute(val);
+            self._bitfield_1.set(4usize, 1u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn triggerNo(&self) -> u8 {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(5usize, 2u8) as u8) }
+    }
+    #[inline]
+    pub fn set_triggerNo(&mut self, val: u8) {
+        unsafe {
+            let val: u8 = ::core::mem::transmute(val);
+            self._bitfield_1.set(5usize, 2u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn pastTrig(&self) -> u8 {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(7usize, 1u8) as u8) }
+    }
+    #[inline]
+    pub fn set_pastTrig(&mut self, val: u8) {
+        unsafe {
+            let val: u8 = ::core::mem::transmute(val);
+            self._bitfield_1.set(7usize, 1u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn new_bitfield_1(
+        triggerType: u8,
+        bEnaCmd: u8,
+        triggerNo: u8,
+        pastTrig: u8,
+    ) -> __BindgenBitfieldUnit<[u8; 1usize]> {
+        let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 1usize]> = Default::default();
+        __bindgen_bitfield_unit.set(0usize, 4u8, {
+            let triggerType: u8 = unsafe { ::core::mem::transmute(triggerType) };
+            triggerType as u64
+        });
+        __bindgen_bitfield_unit.set(4usize, 1u8, {
+            let bEnaCmd: u8 = unsafe { ::core::mem::transmute(bEnaCmd) };
+            bEnaCmd as u64
+        });
+        __bindgen_bitfield_unit.set(5usize, 2u8, {
+            let triggerNo: u8 = unsafe { ::core::mem::transmute(triggerNo) };
+            triggerNo as u64
+        });
+        __bindgen_bitfield_unit.set(7usize, 1u8, {
+            let pastTrig: u8 = unsafe { ::core::mem::transmute(pastTrig) };
+            pastTrig as u64
+        });
+        __bindgen_bitfield_unit
+    }
+}
+impl Default for rfc_CMD_PROP_RX_ADV_s {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+#[must_use]
+pub struct rfc_CMD_PROP_RADIO_SETUP_s {
+    pub commandNo: u16,
+    pub status: u16,
+    pub pNextOp: *mut rfc_radioOp_t,
+    pub startTime: ratmr_t,
+    pub startTrigger: rfc_CMD_PROP_RADIO_SETUP_s__bindgen_ty_1,
+    pub condition: rfc_CMD_PROP_RADIO_SETUP_s__bindgen_ty_2,
+    pub modulation: rfc_CMD_PROP_RADIO_SETUP_s__bindgen_ty_3,
+    pub symbolRate: rfc_CMD_PROP_RADIO_SETUP_s__bindgen_ty_4,
+    pub rxBw: u8,
+    pub preamConf: rfc_CMD_PROP_RADIO_SETUP_s__bindgen_ty_5,
+    pub formatConf: rfc_CMD_PROP_RADIO_SETUP_s__bindgen_ty_6,
+    pub config: rfc_CMD_PROP_RADIO_SETUP_s__bindgen_ty_7,
+    pub txPower: u16,
+    pub pRegOverride: *mut u32,
+}
+#[repr(C)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
+pub struct rfc_CMD_PROP_RADIO_SETUP_s__bindgen_ty_1 {
+    pub _bitfield_align_1: [u8; 0],
+    pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
+}
+impl rfc_CMD_PROP_RADIO_SETUP_s__bindgen_ty_1 {
+    #[inline]
+    pub fn triggerType(&self) -> u8 {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(0usize, 4u8) as u8) }
+    }
+    #[inline]
+    pub fn set_triggerType(&mut self, val: u8) {
+        unsafe {
+            let val: u8 = ::core::mem::transmute(val);
+            self._bitfield_1.set(0usize, 4u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn bEnaCmd(&self) -> u8 {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(4usize, 1u8) as u8) }
+    }
+    #[inline]
+    pub fn set_bEnaCmd(&mut self, val: u8) {
+        unsafe {
+            let val: u8 = ::core::mem::transmute(val);
+            self._bitfield_1.set(4usize, 1u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn triggerNo(&self) -> u8 {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(5usize, 2u8) as u8) }
+    }
+    #[inline]
+    pub fn set_triggerNo(&mut self, val: u8) {
+        unsafe {
+            let val: u8 = ::core::mem::transmute(val);
+            self._bitfield_1.set(5usize, 2u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn pastTrig(&self) -> u8 {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(7usize, 1u8) as u8) }
+    }
+    #[inline]
+    pub fn set_pastTrig(&mut self, val: u8) {
+        unsafe {
+            let val: u8 = ::core::mem::transmute(val);
+            self._bitfield_1.set(7usize, 1u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn new_bitfield_1(
+        triggerType: u8,
+        bEnaCmd: u8,
+        triggerNo: u8,
+        pastTrig: u8,
+    ) -> __BindgenBitfieldUnit<[u8; 1usize]> {
+        let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 1usize]> = Default::default();
+        __bindgen_bitfield_unit.set(0usize, 4u8, {
+            let triggerType: u8 = unsafe { ::core::mem::transmute(triggerType) };
+            triggerType as u64
+        });
+        __bindgen_bitfield_unit.set(4usize, 1u8, {
+            let bEnaCmd: u8 = unsafe { ::core::mem::transmute(bEnaCmd) };
+            bEnaCmd as u64
+        });
+        __bindgen_bitfield_unit.set(5usize, 2u8, {
+            let triggerNo: u8 = unsafe { ::core::mem::transmute(triggerNo) };
+            triggerNo as u64
+        });
+        __bindgen_bitfield_unit.set(7usize, 1u8, {
+            let pastTrig: u8 = unsafe { ::core::mem::transmute(pastTrig) };
+            pastTrig as u64
+        });
+        __bindgen_bitfield_unit
+    }
+}
+#[repr(C)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
+pub struct rfc_CMD_PROP_RADIO_SETUP_s__bindgen_ty_2 {
+    pub _bitfield_align_1: [u8; 0],
+    pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
+}
+impl rfc_CMD_PROP_RADIO_SETUP_s__bindgen_ty_2 {
+    #[inline]
+    pub fn rule(&self) -> u8 {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(0usize, 4u8) as u8) }
+    }
+    #[inline]
+    pub fn set_rule(&mut self, val: u8) {
+        unsafe {
+            let val: u8 = ::core::mem::transmute(val);
+            self._bitfield_1.set(0usize, 4u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn nSkip(&self) -> u8 {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(4usize, 4u8) as u8) }
+    }
+    #[inline]
+    pub fn set_nSkip(&mut self, val: u8) {
+        unsafe {
+            let val: u8 = ::core::mem::transmute(val);
+            self._bitfield_1.set(4usize, 4u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn new_bitfield_1(rule: u8, nSkip: u8) -> __BindgenBitfieldUnit<[u8; 1usize]> {
+        let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 1usize]> = Default::default();
+        __bindgen_bitfield_unit.set(0usize, 4u8, {
+            let rule: u8 = unsafe { ::core::mem::transmute(rule) };
+            rule as u64
+        });
+        __bindgen_bitfield_unit.set(4usize, 4u8, {
+            let nSkip: u8 = unsafe { ::core::mem::transmute(nSkip) };
+            nSkip as u64
+        });
+        __bindgen_bitfield_unit
+    }
+}
+#[repr(C)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
+pub struct rfc_CMD_PROP_RADIO_SETUP_s__bindgen_ty_3 {
+    pub _bitfield_align_1: [u16; 0],
+    pub _bitfield_1: __BindgenBitfieldUnit<[u8; 2usize]>,
+}
+impl rfc_CMD_PROP_RADIO_SETUP_s__bindgen_ty_3 {
+    #[inline]
+    pub fn modType(&self) -> u16 {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(0usize, 3u8) as u16) }
+    }
+    #[inline]
+    pub fn set_modType(&mut self, val: u16) {
+        unsafe {
+            let val: u16 = ::core::mem::transmute(val);
+            self._bitfield_1.set(0usize, 3u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn deviation(&self) -> u16 {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(3usize, 13u8) as u16) }
+    }
+    #[inline]
+    pub fn set_deviation(&mut self, val: u16) {
+        unsafe {
+            let val: u16 = ::core::mem::transmute(val);
+            self._bitfield_1.set(3usize, 13u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn new_bitfield_1(modType: u16, deviation: u16) -> __BindgenBitfieldUnit<[u8; 2usize]> {
+        let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 2usize]> = Default::default();
+        __bindgen_bitfield_unit.set(0usize, 3u8, {
+            let modType: u16 = unsafe { ::core::mem::transmute(modType) };
+            modType as u64
+        });
+        __bindgen_bitfield_unit.set(3usize, 13u8, {
+            let deviation: u16 = unsafe { ::core::mem::transmute(deviation) };
+            deviation as u64
+        });
+        __bindgen_bitfield_unit
+    }
+}
+#[repr(C)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
+pub struct rfc_CMD_PROP_RADIO_SETUP_s__bindgen_ty_4 {
+    pub _bitfield_align_1: [u32; 0],
+    pub _bitfield_1: __BindgenBitfieldUnit<[u8; 4usize]>,
+}
+impl rfc_CMD_PROP_RADIO_SETUP_s__bindgen_ty_4 {
+    #[inline]
+    pub fn preScale(&self) -> u32 {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(0usize, 4u8) as u32) }
+    }
+    #[inline]
+    pub fn set_preScale(&mut self, val: u32) {
+        unsafe {
+            let val: u32 = ::core::mem::transmute(val);
+            self._bitfield_1.set(0usize, 4u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn rateWord(&self) -> u32 {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(8usize, 21u8) as u32) }
+    }
+    #[inline]
+    pub fn set_rateWord(&mut self, val: u32) {
+        unsafe {
+            let val: u32 = ::core::mem::transmute(val);
+            self._bitfield_1.set(8usize, 21u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn new_bitfield_1(preScale: u32, rateWord: u32) -> __BindgenBitfieldUnit<[u8; 4usize]> {
+        let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 4usize]> = Default::default();
+        __bindgen_bitfield_unit.set(0usize, 4u8, {
+            let preScale: u32 = unsafe { ::core::mem::transmute(preScale) };
+            preScale as u64
+        });
+        __bindgen_bitfield_unit.set(8usize, 21u8, {
+            let rateWord: u32 = unsafe { ::core::mem::transmute(rateWord) };
+            rateWord as u64
+        });
+        __bindgen_bitfield_unit
+    }
+}
+#[repr(C)]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
+pub struct rfc_CMD_PROP_RADIO_SETUP_s__bindgen_ty_5 {
+    pub _bitfield_align_1: [u8; 0],
+    pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
+}
+impl rfc_CMD_PROP_RADIO_SETUP_s__bindgen_ty_5 {
+    #[inline]
+    pub fn nPreamBytes(&self) -> u8 {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(0usize, 6u8) as u8) }
+    }
+    #[inline]
+    pub fn set_nPreamBytes(&mut self, val: u8) {
+        unsafe {
+            let val: u8 = ::core::mem::transmute(val);
+            self._bitfield_1.set(0usize, 6u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn preamMode(&self) -> u8 {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(6usize, 2u8) as u8) }
+    }
+    #[inline]
+    pub fn set_preamMode(&mut self, val: u8) {
+        unsafe {
+            let val: u8 = ::core::mem::transmute(val);
+            self._bitfield_1.set(6usize, 2u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn new_bitfield_1(nPreamBytes: u8, preamMode: u8) -> __BindgenBitfieldUnit<[u8; 1usize]> {
+        let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 1usize]> = Default::default();
+        __bindgen_bitfield_unit.set(0usize, 6u8, {
+            let nPreamBytes: u8 = unsafe { ::core::mem::transmute(nPreamBytes) };
+            nPreamBytes as u64
+        });
+        __bindgen_bitfield_unit.set(6usize, 2u8, {
+            let preamMode: u8 = unsafe { ::core::mem::transmute(preamMode) };
+            preamMode as u64
+        });
+        __bindgen_bitfield_unit
+    }
+}
+#[repr(C)]
+#[repr(align(2))]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
+pub struct rfc_CMD_PROP_RADIO_SETUP_s__bindgen_ty_6 {
+    pub _bitfield_align_1: [u8; 0],
+    pub _bitfield_1: __BindgenBitfieldUnit<[u8; 2usize]>,
+}
+impl rfc_CMD_PROP_RADIO_SETUP_s__bindgen_ty_6 {
+    #[inline]
+    pub fn nSwBits(&self) -> u16 {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(0usize, 6u8) as u16) }
+    }
+    #[inline]
+    pub fn set_nSwBits(&mut self, val: u16) {
+        unsafe {
+            let val: u16 = ::core::mem::transmute(val);
+            self._bitfield_1.set(0usize, 6u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn bBitReversal(&self) -> u16 {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(6usize, 1u8) as u16) }
+    }
+    #[inline]
+    pub fn set_bBitReversal(&mut self, val: u16) {
+        unsafe {
+            let val: u16 = ::core::mem::transmute(val);
+            self._bitfield_1.set(6usize, 1u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn bMsbFirst(&self) -> u16 {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(7usize, 1u8) as u16) }
+    }
+    #[inline]
+    pub fn set_bMsbFirst(&mut self, val: u16) {
+        unsafe {
+            let val: u16 = ::core::mem::transmute(val);
+            self._bitfield_1.set(7usize, 1u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn fecMode(&self) -> u16 {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(8usize, 4u8) as u16) }
+    }
+    #[inline]
+    pub fn set_fecMode(&mut self, val: u16) {
+        unsafe {
+            let val: u16 = ::core::mem::transmute(val);
+            self._bitfield_1.set(8usize, 4u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn bOuterCode(&self) -> u16 {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(12usize, 1u8) as u16) }
+    }
+    #[inline]
+    pub fn set_bOuterCode(&mut self, val: u16) {
+        unsafe {
+            let val: u16 = ::core::mem::transmute(val);
+            self._bitfield_1.set(12usize, 1u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn whitenMode(&self) -> u16 {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(13usize, 2u8) as u16) }
+    }
+    #[inline]
+    pub fn set_whitenMode(&mut self, val: u16) {
+        unsafe {
+            let val: u16 = ::core::mem::transmute(val);
+            self._bitfield_1.set(13usize, 2u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn bAgcDisable(&self) -> u16 {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(15usize, 1u8) as u16) }
+    }
+    #[inline]
+    pub fn set_bAgcDisable(&mut self, val: u16) {
+        unsafe {
+            let val: u16 = ::core::mem::transmute(val);
+            self._bitfield_1.set(15usize, 1u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn new_bitfield_1(
+        nSwBits: u16,
+        bBitReversal: u16,
+        bMsbFirst: u16,
+        fecMode: u16,
+        bOuterCode: u16,
+        whitenMode: u16,
+        bAgcDisable: u16,
+    ) -> __BindgenBitfieldUnit<[u8; 2usize]> {
+        let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 2usize]> = Default::default();
+        __bindgen_bitfield_unit.set(0usize, 6u8, {
+            let nSwBits: u16 = unsafe { ::core::mem::transmute(nSwBits) };
+            nSwBits as u64
+        });
+        __bindgen_bitfield_unit.set(6usize, 1u8, {
+            let bBitReversal: u16 = unsafe { ::core::mem::transmute(bBitReversal) };
+            bBitReversal as u64
+        });
+        __bindgen_bitfield_unit.set(7usize, 1u8, {
+            let bMsbFirst: u16 = unsafe { ::core::mem::transmute(bMsbFirst) };
+            bMsbFirst as u64
+        });
+        __bindgen_bitfield_unit.set(8usize, 4u8, {
+            let fecMode: u16 = unsafe { ::core::mem::transmute(fecMode) };
+            fecMode as u64
+        });
+        __bindgen_bitfield_unit.set(12usize, 1u8, {
+            let bOuterCode: u16 = unsafe { ::core::mem::transmute(bOuterCode) };
+            bOuterCode as u64
+        });
+        __bindgen_bitfield_unit.set(13usize, 2u8, {
+            let whitenMode: u16 = unsafe { ::core::mem::transmute(whitenMode) };
+            whitenMode as u64
+        });
+        __bindgen_bitfield_unit.set(15usize, 1u8, {
+            let bAgcDisable: u16 = unsafe { ::core::mem::transmute(bAgcDisable) };
+            bAgcDisable as u64
+        });
+        __bindgen_bitfield_unit
+    }
+}
+#[repr(C)]
+#[repr(align(2))]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
+pub struct rfc_CMD_PROP_RADIO_SETUP_s__bindgen_ty_7 {
+    pub _bitfield_align_1: [u8; 0],
+    pub _bitfield_1: __BindgenBitfieldUnit<[u8; 2usize]>,
+}
+impl rfc_CMD_PROP_RADIO_SETUP_s__bindgen_ty_7 {
+    #[inline]
+    pub fn frontEndMode(&self) -> u16 {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(0usize, 3u8) as u16) }
+    }
+    #[inline]
+    pub fn set_frontEndMode(&mut self, val: u16) {
+        unsafe {
+            let val: u16 = ::core::mem::transmute(val);
+            self._bitfield_1.set(0usize, 3u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn biasMode(&self) -> u16 {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(3usize, 1u8) as u16) }
+    }
+    #[inline]
+    pub fn set_biasMode(&mut self, val: u16) {
+        unsafe {
+            let val: u16 = ::core::mem::transmute(val);
+            self._bitfield_1.set(3usize, 1u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn analogCfgMode(&self) -> u16 {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(4usize, 6u8) as u16) }
+    }
+    #[inline]
+    pub fn set_analogCfgMode(&mut self, val: u16) {
+        unsafe {
+            let val: u16 = ::core::mem::transmute(val);
+            self._bitfield_1.set(4usize, 6u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn bNoFsPowerUp(&self) -> u16 {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(10usize, 1u8) as u16) }
+    }
+    #[inline]
+    pub fn set_bNoFsPowerUp(&mut self, val: u16) {
+        unsafe {
+            let val: u16 = ::core::mem::transmute(val);
+            self._bitfield_1.set(10usize, 1u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn new_bitfield_1(
+        frontEndMode: u16,
+        biasMode: u16,
+        analogCfgMode: u16,
+        bNoFsPowerUp: u16,
+    ) -> __BindgenBitfieldUnit<[u8; 2usize]> {
+        let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 2usize]> = Default::default();
+        __bindgen_bitfield_unit.set(0usize, 3u8, {
+            let frontEndMode: u16 = unsafe { ::core::mem::transmute(frontEndMode) };
+            frontEndMode as u64
+        });
+        __bindgen_bitfield_unit.set(3usize, 1u8, {
+            let biasMode: u16 = unsafe { ::core::mem::transmute(biasMode) };
+            biasMode as u64
+        });
+        __bindgen_bitfield_unit.set(4usize, 6u8, {
+            let analogCfgMode: u16 = unsafe { ::core::mem::transmute(analogCfgMode) };
+            analogCfgMode as u64
+        });
+        __bindgen_bitfield_unit.set(10usize, 1u8, {
+            let bNoFsPowerUp: u16 = unsafe { ::core::mem::transmute(bNoFsPowerUp) };
+            bNoFsPowerUp as u64
+        });
+        __bindgen_bitfield_unit
+    }
+}
+impl Default for rfc_CMD_PROP_RADIO_SETUP_s {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
+#[repr(C)]
+#[repr(align(4))]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
+pub struct rfc_CMD_PROP_RADIO_DIV_SETUP_s {
+    pub dummy0: u8,
+}
+#[repr(C)]
+#[repr(align(4))]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
+pub struct rfc_CMD_PROP_SET_LEN_s {
+    pub commandNo: u16,
+    pub rxLen: u16,
+}
+#[repr(C)]
+#[repr(align(4))]
+#[derive(Debug, Default, Copy, Clone)]
+#[must_use]
+pub struct rfc_CMD_PROP_RESTART_RX_s {
+    pub commandNo: u16,
+}
+#[repr(C)]
+#[derive(Debug, Default, Copy, Clone)]
+pub struct rfc_propRxOutput_s {
+    pub nRxOk: u16,
+    pub nRxNok: u16,
+    pub nRxIgnored: u8,
+    pub nRxStopped: u8,
+    pub nRxBufFull: u8,
+    pub lastRssi: i8,
+    pub timeStamp: ratmr_t,
+}
+#[repr(C)]
+#[repr(align(4))]
+#[derive(Debug, Default, Copy, Clone)]
+pub struct rfc_propRxStatus_s {
+    pub status: rfc_propRxStatus_s__bindgen_ty_1,
+}
+#[repr(C)]
+#[derive(Debug, Default, Copy, Clone)]
+pub struct rfc_propRxStatus_s__bindgen_ty_1 {
+    pub _bitfield_align_1: [u8; 0],
+    pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
+}
+impl rfc_propRxStatus_s__bindgen_ty_1 {
+    #[inline]
+    pub fn addressInd(&self) -> u8 {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(0usize, 5u8) as u8) }
+    }
+    #[inline]
+    pub fn set_addressInd(&mut self, val: u8) {
+        unsafe {
+            let val: u8 = ::core::mem::transmute(val);
+            self._bitfield_1.set(0usize, 5u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn syncWordId(&self) -> u8 {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(5usize, 1u8) as u8) }
+    }
+    #[inline]
+    pub fn set_syncWordId(&mut self, val: u8) {
+        unsafe {
+            let val: u8 = ::core::mem::transmute(val);
+            self._bitfield_1.set(5usize, 1u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn result(&self) -> u8 {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(6usize, 2u8) as u8) }
+    }
+    #[inline]
+    pub fn set_result(&mut self, val: u8) {
+        unsafe {
+            let val: u8 = ::core::mem::transmute(val);
+            self._bitfield_1.set(6usize, 2u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn new_bitfield_1(
+        addressInd: u8,
+        syncWordId: u8,
+        result: u8,
+    ) -> __BindgenBitfieldUnit<[u8; 1usize]> {
+        let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 1usize]> = Default::default();
+        __bindgen_bitfield_unit.set(0usize, 5u8, {
+            let addressInd: u8 = unsafe { ::core::mem::transmute(addressInd) };
+            addressInd as u64
+        });
+        __bindgen_bitfield_unit.set(5usize, 1u8, {
+            let syncWordId: u8 = unsafe { ::core::mem::transmute(syncWordId) };
+            syncWordId as u64
+        });
+        __bindgen_bitfield_unit.set(6usize, 2u8, {
+            let result: u8 = unsafe { ::core::mem::transmute(result) };
+            result as u64
+        });
+        __bindgen_bitfield_unit
+    }
+}
+#[repr(C)]
+#[derive(Debug, Default, Copy, Clone)]
+pub struct rfTrim_t {
+    pub configIfAdc: u32,
+    pub configRfFrontend: u32,
+    pub configSynth: u32,
+    pub configMiscAdc: u32,
+}
+extern "C" {
+    #[link_name = "RFCClockEnable__extern"]
+    pub fn RFCClockEnable();
+}
+extern "C" {
+    #[link_name = "RFCClockDisable__extern"]
+    pub fn RFCClockDisable();
+}
+extern "C" {
+    #[link_name = "RFCClockSet__extern"]
+    pub fn RFCClockSet(ui32Mask: u32);
+}
+extern "C" {
+    #[link_name = "RFCClockClear__extern"]
+    pub fn RFCClockClear(ui32Mask: u32);
+}
+extern "C" {
+    #[link_name = "RFCCpe0IntEnable__extern"]
+    pub fn RFCCpe0IntEnable(ui32Mask: u32);
+}
+extern "C" {
+    #[link_name = "RFCCpe1IntEnable__extern"]
+    pub fn RFCCpe1IntEnable(ui32Mask: u32);
+}
+extern "C" {
+    #[link_name = "RFCHwIntEnable__extern"]
+    pub fn RFCHwIntEnable(ui32Mask: u32);
+}
+extern "C" {
+    #[link_name = "RFCCpeIntDisable__extern"]
+    pub fn RFCCpeIntDisable(ui32Mask: u32);
+}
+extern "C" {
+    #[link_name = "RFCHwIntDisable__extern"]
+    pub fn RFCHwIntDisable(ui32Mask: u32);
+}
+extern "C" {
+    pub fn RFCCpeIntGetAndClear() -> u32;
+}
+extern "C" {
+    #[link_name = "RFCCpeIntClear__extern"]
+    pub fn RFCCpeIntClear(ui32Mask: u32);
+}
+extern "C" {
+    #[link_name = "RFCHwIntClear__extern"]
+    pub fn RFCHwIntClear(ui32Mask: u32);
+}
+extern "C" {
+    #[link_name = "RFCAckIntClear__extern"]
+    pub fn RFCAckIntClear();
+}
+extern "C" {
+    #[link_name = "RFCOverrideSearch__extern"]
+    pub fn RFCOverrideSearch(pOverride: *const u32, pattern: u32, mask: u32) -> u8;
+}
+extern "C" {
+    pub fn RFCDoorbellSendTo(pOp: u32) -> u32;
+}
+extern "C" {
+    pub fn RFCSynthPowerDown();
+}
+extern "C" {
+    pub fn RFCRfTrimRead(pOpSetup: *mut rfc_radioOp_t, rfTrim: *mut rfTrim_t);
+}
+extern "C" {
+    pub fn RFCRfTrimSet(rfTrim: *mut rfTrim_t);
+}
+extern "C" {
+    pub fn RFCRTrim(pOpSetup: *mut rfc_radioOp_t);
+}
+extern "C" {
+    pub fn RFCCPEPatchReset();
+}
+extern "C" {
+    pub fn RFCAdi3VcoLdoVoltageMode(bEnable: bool);
+}
+extern "C" {
+    pub fn RFCOverrideUpdate(pOpSetup: *mut rfc_radioOp_t, pParams: *mut u32) -> u8;
+}
+extern "C" {
+    pub fn RFCHWIntGetAndClear(ui32Mask: u32) -> u32;
 }
 extern "C" {
     pub fn AES_ECB_EncryptData(text: *mut u8, textLen: u16, aesKey: *mut u8);
