@@ -42,11 +42,13 @@ pub unsafe fn panic_fmt(pi: &core::panic::PanicInfo) -> ! {
     let led = &mut kernel::hil::led::LedHigh::new(led_kernel_pin);
 
     #[cfg(feature = "uart_lite")]
-    let writer = &mut uart::PanicWriterLiteAndFull;
+    let writer = &mut uart::PanicWriterLite;
     #[cfg(not(feature = "uart_lite"))]
     let writer = &mut uart::PanicWriterFull;
 
+    #[cfg(not(feature = "uart_lite"))]
     writer.capture_uart();
+
     debug::panic(
         &mut [led],
         writer,
