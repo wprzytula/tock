@@ -14,6 +14,7 @@ default = [
     # "uart_lite",
     # "debug_to_lite",
     # "process_printer",
+    # "low_level_debug",
 ]
 # By default enabled, because the default serial bootloader erases whole Flash, so CCFG needs to be reflashed.
 ccfg = ["ti-cc2650-common/ccfg"]
@@ -23,6 +24,8 @@ uart_lite = ["ti-cc2650-common/uart_lite"]
 debug_to_lite = ["ti-cc2650-common/debug_to_lite"]
 # By default disabled, because it's flash-consuming and only needed for debug purposes.
 process_printer = ["ti-cc2650-common/process_printer"]
+# By default disabled, because it consumes some flash & RAM, and is only helpful in debugging.
+low_level_debug = ["ti-cc2650-common/low_level_debug"]
 
 [dependencies]
 cortexm3 = { path = "../../../arch/cortex-m3" }
