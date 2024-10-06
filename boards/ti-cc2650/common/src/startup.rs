@@ -12,6 +12,8 @@ use cc2650_chip::{
     uart,
 };
 
+#[cfg(feature = "low_level_debug")]
+use capsules_core::low_level_debug::{self, LowLevelDebug};
 use components::tmp431::SetThermometerClient;
 use kernel::{
     capabilities,
@@ -26,6 +28,9 @@ use kernel::{
     static_init,
     syscall::SyscallDriver,
 };
+
+#[cfg(feature = "low_level_debug")]
+use cc2650_chip::uart::UartLite;
 
 #[cfg(feature = "uart_lite")]
 use crate::console_lite;
@@ -135,6 +140,8 @@ pub struct Platform<const NUM_LEDS: usize, Thermometer: SMBusDevice + 'static> {
     console: &'static capsules_core::console::Console<'static>,
     #[cfg(feature = "uart_lite")]
     console_lite: &'static capsules_core::console_lite::ConsoleLite<'static>,
+    #[cfg(feature = "low_level_debug")]
+    low_level_debug: &'static LowLevelDebug<'static, UartLite<'static>>,
     ieee802154: &'static capsules_extra::ieee802154::phy_driver::RadioDriver<
         'static,
         cc2650_chip::ieee802154_radio::Radio<'static>,
@@ -160,6 +167,8 @@ impl<const NUM_LEDS: usize, Thermometer: SMBusDevice + 'static> SyscallDriverLoo
             capsules_core::console::DRIVER_NUM => f(Some(self.console)),
             #[cfg(feature = "uart_lite")]
             console_lite::DRIVER_NUM => f(Some(self.console_lite)),
+            #[cfg(feature = "low_level_debug")]
+            low_level_debug::DRIVER_NUM => f(Some(self.low_level_debug)),
             capsules_extra::ieee802154::DRIVER_NUM => f(Some(self.ieee802154)),
             capsules_extra::temperature::DRIVER_NUM => {
                 f(self.temperature.map(|driver| driver as &dyn SyscallDriver))
@@ -324,6 +333,39 @@ pub unsafe fn start<
         }
     }
 
+    #[cfg(feature = "low_level_debug")]
+    #[cfg(not(feature = "debug_to_lite"))]
+    let low_level_debug = components::lldb::LowLevelDebugComponent::new(
+        board_kernel,
+        low_level_debug::DRIVER_NUM,
+        uart_full_mux,
+    )
+    .finalize(components::lldb::low_level_debug_component_static!());
+
+    #[cfg(feature = "low_level_debug")]
+    #[cfg(feature = "debug_to_lite")]
+    let low_level_debug = {
+        let lldb_uart = &chip.uart_lite;
+
+        let grant_cap = create_capability!(capabilities::MemoryAllocationCapability);
+        let buffer = static_init!(
+            [u8; low_level_debug::BUF_LEN],
+            [0_u8; low_level_debug::BUF_LEN]
+        );
+
+        let lldb = &*static_init!(
+            LowLevelDebug<'_, UartLite>,
+            low_level_debug::LowLevelDebug::new(
+                buffer,
+                lldb_uart,
+                board_kernel.create_grant(low_level_debug::DRIVER_NUM, &grant_cap),
+            )
+        );
+        kernel::hil::uart::Transmit::set_transmit_client(lldb_uart, lldb);
+
+        lldb
+    };
+
     // Temperature sensor
     let temperature_driver = thermometer(&chip.i2c).map(|thermometer| {
         // This hack is quite dirty, but needed.
@@ -456,6 +498,8 @@ pub unsafe fn start<
         console,
         #[cfg(feature = "uart_lite")]
         console_lite,
+        #[cfg(feature = "low_level_debug")]
+        low_level_debug,
         ieee802154,
         temperature: temperature_driver,
     };
