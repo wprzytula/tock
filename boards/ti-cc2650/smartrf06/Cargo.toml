@@ -16,6 +16,7 @@ default = [
     # "process_printer",
     # "low_level_debug",
     # "ieee",
+    # "temperature",
 ]
 # By default enabled, because the default serial bootloader erases whole Flash, so CCFG needs to be reflashed.
 ccfg = ["ti-cc2650-common/ccfg"]
@@ -31,6 +32,8 @@ low_level_debug = ["ti-cc2650-common/low_level_debug"]
 # so for debug purposes (`trace_syscalls`, `debug_loaded_processes`) it's sometimes
 # necessary to disable it.
 ieee = ["ti-cc2650-common/ieee"]
+# By default disabled, because TMP 431 is not present on SmartRF06.
+temperature = ["ti-cc2650-common/temperature"]
 
 [dependencies]
 cortexm3 = { path = "../../../arch/cortex-m3" }

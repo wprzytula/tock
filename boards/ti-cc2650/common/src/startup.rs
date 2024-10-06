@@ -1,10 +1,6 @@
-use core::{
-    mem::MaybeUninit,
-    ptr::{addr_of, addr_of_mut},
-};
+use core::ptr::{addr_of, addr_of_mut};
 
 use capsules_core::{console, led::LedDriver, virtualizers::virtual_alarm::VirtualMuxAlarm};
-use capsules_extra::tmp431::Tmp431SMBus;
 use capsules_system::{process_policies::PanicFaultPolicy, process_printer::ProcessPrinterText};
 use cc2650_chip::{
     chip::{Cc2650, PinConfig},
@@ -26,7 +22,6 @@ use kernel::{
     platform::{KernelResources, SyscallDriverLookup},
     scheduler::round_robin::RoundRobinSched,
     static_init,
-    syscall::SyscallDriver,
 };
 
 #[cfg(feature = "low_level_debug")]
@@ -53,8 +48,10 @@ pub static mut PROCESSES: [Option<&'static dyn kernel::process::Process>; NUM_PR
 pub static mut CHIP: Option<&'static Cc2650> = None;
 pub static mut PROCESS_PRINTER: Option<&'static ProcessPrinterText> = None;
 
-type TemperatureDriver<Thermometer, A> =
-    components::temperature::TemperatureComponentType<Tmp431SMBus<'static, Thermometer, A>>;
+#[cfg(feature = "temperature")]
+type TemperatureDriver<Thermometer, A> = components::temperature::TemperatureComponentType<
+    capsules_extra::tmp431::Tmp431SMBus<'static, Thermometer, A>,
+>;
 
 pub struct NoThermometer;
 impl I2CDevice for NoThermometer {
@@ -147,12 +144,15 @@ pub struct Platform<const NUM_LEDS: usize, Thermometer: SMBusDevice + 'static> {
         'static,
         cc2650_chip::ieee802154_radio::Radio<'static>,
     >,
+    #[cfg(feature = "temperature")]
     temperature: Option<
         &'static TemperatureDriver<
             Thermometer,
             VirtualMuxAlarm<'static, cc2650_chip::rtc::Rtc<'static>>,
         >,
     >,
+    #[cfg(not(feature = "temperature"))]
+    temperature: core::marker::PhantomData<Thermometer>,
 }
 
 impl<const NUM_LEDS: usize, Thermometer: SMBusDevice + 'static> SyscallDriverLookup
@@ -172,9 +172,10 @@ impl<const NUM_LEDS: usize, Thermometer: SMBusDevice + 'static> SyscallDriverLoo
             low_level_debug::DRIVER_NUM => f(Some(self.low_level_debug)),
             #[cfg(feature = "ieee")]
             capsules_extra::ieee802154::DRIVER_NUM => f(Some(self.ieee802154)),
-            capsules_extra::temperature::DRIVER_NUM => {
-                f(self.temperature.map(|driver| driver as &dyn SyscallDriver))
-            }
+            #[cfg(feature = "temperature")]
+            capsules_extra::temperature::DRIVER_NUM => f(self
+                .temperature
+                .map(|driver| driver as &dyn kernel::syscall::SyscallDriver)),
             _ => f(None),
         }
     }
@@ -369,6 +370,7 @@ pub unsafe fn start<
     };
 
     // Temperature sensor
+    #[cfg(feature = "temperature")]
     let temperature_driver = thermometer(&chip.i2c).map(|thermometer| {
         // This hack is quite dirty, but needed.
         // As Thermometer is a generic parameter, it cannot be used in `static_buf!`, because `static`s can't be generic.
@@ -439,7 +441,7 @@ pub unsafe fn start<
             let (alarm, i2c_buf, tmp431) =
                 components::tmp431_component_static!(cc2650_chip::rtc::Rtc, HackMockSMBusDevice);
 
-            let tmp431: &mut MaybeUninit<
+            let tmp431: &mut core::mem::MaybeUninit<
                 capsules_extra::tmp431::Tmp431SMBus<Thermometer, VirtualMuxAlarm<cc2650_chip::rtc::Rtc>>,
             > = core::mem::transmute(tmp431);
             (alarm, i2c_buf, tmp431)
@@ -455,7 +457,7 @@ pub unsafe fn start<
                 capsules_extra::tmp431::Tmp431SMBus<HackMockSMBusDevice, VirtualMuxAlarm<cc2650_chip::rtc::Rtc>>
             );
 
-            let buf: &mut MaybeUninit<capsules_extra::temperature::TemperatureSensor<
+            let buf: &mut core::mem::MaybeUninit<capsules_extra::temperature::TemperatureSensor<
                 'static,
                 capsules_extra::tmp431::Tmp431SMBus<Thermometer, VirtualMuxAlarm<cc2650_chip::rtc::Rtc>>,
             >> = core::mem::transmute(buf);
@@ -506,7 +508,10 @@ pub unsafe fn start<
         low_level_debug,
         #[cfg(feature = "ieee")]
         ieee802154,
+        #[cfg(feature = "temperature")]
         temperature: temperature_driver,
+        #[cfg(not(feature = "temperature"))]
+        temperature: core::marker::PhantomData,
     };
     /* END PLATFORM CONFIGURATION */
 

@@ -16,6 +16,7 @@ default = [
     # "process_printer",
     # "low_level_debug",
     # "ieee",
+    # "temperature",
 ]
 # By default enabled, because CherryMote is assumed to be programmed with serial bootloader,
 # which currently erases the whole flash, requiring CCFG to be reflashed.
@@ -32,6 +33,9 @@ low_level_debug = ["ti-cc2650-common/low_level_debug"]
 # so for debug purposes (`trace_syscalls`, `debug_loaded_processes`) it's sometimes
 # necessary to disable it.
 ieee = ["ti-cc2650-common/ieee"]
+# By default disabled, because it consumes some FLASH and RAM,
+# and is non-mandatory for majority of apps.
+temperature = ["ti-cc2650-common/temperature"]
 
 
 [dependencies]
