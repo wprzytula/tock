@@ -3,7 +3,7 @@ name = "ti-cc2650-smartrf06"
 version.workspace = true
 authors.workspace = true
 edition.workspace = true
-build = "../../build.rs"
+build = "../common/build.rs"
 
 [features]
 default = [
