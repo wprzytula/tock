@@ -438,10 +438,13 @@ pub unsafe fn start<
     /* END CAPSULES CONFIGURATION */
 
     /* PLATFORM CONFIGURATION */
-    // Process Printer consumes 6,5 kB of flash.
-    let process_printer = components::process_printer::ProcessPrinterTextComponent::new()
-        .finalize(components::process_printer_text_component_static!());
-    PROCESS_PRINTER = Some(process_printer);
+    #[cfg(feature = "process_printer")]
+    {
+        // Process Printer consumes 6,5 kB of flash.
+        let process_printer = components::process_printer::ProcessPrinterTextComponent::new()
+            .finalize(components::process_printer_text_component_static!());
+        PROCESS_PRINTER = Some(process_printer);
+    }
 
     let scheduler = components::sched::round_robin::RoundRobinComponent::new(&*addr_of!(PROCESSES))
         .finalize(components::round_robin_component_static!(NUM_PROCS));
