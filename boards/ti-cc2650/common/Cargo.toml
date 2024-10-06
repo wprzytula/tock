@@ -9,14 +9,23 @@ default = [
     # comment kept for formatter to keep features in separate lines
 ]
 
+# CCFG is a special region in nonvolatile memory used for additional chip configuration.
+# Its proper contents are necessary in order for the serial bootloader to pass control
+# to the flashed program; else, the bootloader will loop in UART, trying to fetch
+# a program binary by UART (Full).
 # By default disabled, because SmartRF06 is assumed to be programmed with openocd,
 # so no need for CCFG there.
 ccfg = ["cc2650_chip/ccfg"]
 
+# UART Lite is an emulated UART TX-only interface, using Sensor Controller underneath.
+# It's lossy when overloaded yet never blocking, thus suitable for logging.
 # By default disabled, as interpreting UART-lite outputs require a UART equipment connected to the pin,
 # which SmartRF06 has not connected by default.
 uart_lite = ["cc2650_chip/uart_lite"]
 
+# In-kernel debug prints can be passed either to UART Full or to UART Lite. By default,
+# they are routed to Full; however, using Lite is probably a better option when it's available,
+# and it reduces amount of buffers used, freeing some RAM.
 # By default disabled, as Lite is not available in all setups (on SmartRF06 by default it's not present).
 # Full works correctly, so it's the default.
 debug_to_lite = ["uart_lite"]

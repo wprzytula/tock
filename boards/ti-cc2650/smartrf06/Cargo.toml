@@ -6,9 +6,13 @@ edition.workspace = true
 build = "../common/build.rs"
 
 [features]
+# To see feature descriptions, see ../common/Cargo.toml.
+
 default = [
     # comment kept for formatter to keep features in separate lines
     "ccfg",
+    # "uart_lite",
+    # "debug_to_lite",
 ]
 # By default enabled, because the default serial bootloader erases whole Flash, so CCFG needs to be reflashed.
 ccfg = ["ti-cc2650-common/ccfg"]

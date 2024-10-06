@@ -6,6 +6,8 @@ edition.workspace = true
 build = "../common/build.rs"
 
 [features]
+# To see feature descriptions, see ../common/Cargo.toml.
+
 default = [
     # comment kept for formatter to keep features in separate lines
     "ccfg",
