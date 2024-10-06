@@ -53,5 +53,5 @@ app-%-bin: $(TOCK_ROOT_DIRECTORY)target/$(TARGET)/release/$(PLATFORM)-%.bin
 
 .PRECIOUS: $(LIBTOCK_RS_TARGET)/%.tbf
 
-$(LIBTOCK_RS_TARGET)/%.tbf: $(LIBTOCK_RS)/examples/%.rs
+$(LIBTOCK_RS_TARGET)/%.tbf: $(LIBTOCK_RS)/examples/%.rs $(LIBTOCK_RS)/Makefile
 	make -C $(LIBTOCK_RS) app-$*
