@@ -682,7 +682,6 @@ pub mod lite {
 
     pub const SCIF_UART_BAUD_RATE: u32 = 230400;
     const LOST_BUFFER_SIZE: usize = 16;
-    const SC_UART_FREE_THRESHOLD: usize = (2 * SCIF_UART_TX_FIFO_MAX_COUNT / 4) as usize;
 
     // All shared data structures in AUX RAM need to be packed
 
@@ -1159,6 +1158,9 @@ pub mod lite {
         // kernel::debug!("transmit_lossy len: {}", len);
         static BYTES_LOST: AtomicUsize = AtomicUsize::new(0);
         let mut lost_buffer = [0_u8; LOST_BUFFER_SIZE];
+        if len > 2 * SCIF_UART_TX_FIFO_MAX_COUNT as usize {
+            panic!("A huge input to UART Lite given: {}", len);
+        }
 
         // Based on: https://stackoverflow.com/a/39491059
         struct LostBytesWriter<'a> {
@@ -1209,34 +1211,31 @@ pub mod lite {
 
         if bytes_lost > 0 {
             // We have already lost some bytes and haven't reported that yet.
-            if free_bytes >= SC_UART_FREE_THRESHOLD {
-                // We have enough space to report the past loss.
-                // Let's try creating the loss message.
+            // Let's try to create the loss message.
 
-                let message_size = {
-                    let lost_buffer = &mut lost_buffer;
-                    // Safety: number of bytes written won't ever exceed size of the buffer (16).
-                    let mut writer = LostBytesWriter::new(lost_buffer);
-                    unsafe { write!(&mut writer, "\nLOST:{}\n", bytes_lost).unwrap_unchecked() };
+            let lost_message_size = {
+                let lost_buffer = &mut lost_buffer;
+                // Safety: number of bytes written won't ever exceed size of the buffer (16).
+                let mut writer = LostBytesWriter::new(lost_buffer);
+                unsafe { write!(&mut writer, "\nLOST:{}\n", bytes_lost).unwrap_unchecked() };
 
-                    writer.written_so_far()
-                };
+                writer.written_so_far()
+            };
 
-                if free_bytes < message_size {
-                    // If we can't fit both the LOST message and our new message, just continue
-                    // accounting the loss.
-                    BYTES_LOST.fetch_add(len, Ordering::Relaxed);
-                    return Err(ErrorCode::BUSY);
-                } else {
-                    // Report the past loss, zeroing the loss counter.
-                    unsafe {
-                        scif_uart_tx_put_chars(&lost_buffer, message_size as u32);
-                    }
-                    BYTES_LOST.store(0, Ordering::Relaxed);
+            if free_bytes >= lost_message_size + len {
+                // Report the past loss, zeroing the loss counter,
+                // and proceed to write the new message.
+                unsafe {
+                    scif_uart_tx_put_chars(&lost_buffer, lost_message_size as u32);
                 }
+                BYTES_LOST.store(0, Ordering::Relaxed);
             } else {
+                // If we can't fit both the LOST message and our new message, just continue
+                // accounting the loss.
+
                 // Not only did we lose bytes that we haven't reported yet,
                 // but also we can't even report them yet. Too bad.
+
                 BYTES_LOST.fetch_add(len, Ordering::Relaxed);
                 return Err(ErrorCode::BUSY);
             }
