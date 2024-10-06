@@ -125,7 +125,7 @@ pub struct Tmp431SMBus<'a, S: i2c::SMBusDevice, A: Alarm<'a>> {
 impl<'a, S: i2c::SMBusDevice, A: Alarm<'a>> Tmp431SMBus<'a, S, A> {
     #[allow(dead_code)]
     const ENABLE_DELAY_MS: u32 = 17;
-    const SETTLING_DELAY_MS: u32 = 17;
+    const SETTLING_DELAY_MS: u32 = 50;
 
     pub fn new(
         smbus_temp: &'a S,
