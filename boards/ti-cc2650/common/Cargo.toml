@@ -39,6 +39,12 @@ process_printer = []
 # By default disabled, because it consumes some flash & RAM, and is only helpful in debugging.
 low_level_debug = []
 
+# Support for IEEE 802.15.4 radio & basic networking using the raw 802.15.4 stack.
+# By default disabled, because it consumes significant amount of FLASH and RAM,
+# so for debug purposes (`trace_syscalls`, `debug_loaded_processes`) it's sometimes
+# necessary to disable it.
+ieee = ["cc2650_chip/ieee"]
+
 [dependencies]
 components = { path = "../../components" }
 cortexm3 = { path = "../../../arch/cortex-m3" }
