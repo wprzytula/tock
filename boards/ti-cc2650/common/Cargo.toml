@@ -45,6 +45,11 @@ low_level_debug = []
 # necessary to disable it.
 ieee = ["cc2650_chip/ieee"]
 
+# Support for TMP 431 thermometer & temperature driver.
+# By default disabled, because it consumes some FLASH and RAM,
+# and is non-mandatory for majority of apps.
+temperature = []
+
 [dependencies]
 components = { path = "../../components" }
 cortexm3 = { path = "../../../arch/cortex-m3" }
