@@ -142,6 +142,7 @@ pub struct Platform<const NUM_LEDS: usize, Thermometer: SMBusDevice + 'static> {
     console_lite: &'static capsules_core::console_lite::ConsoleLite<'static>,
     #[cfg(feature = "low_level_debug")]
     low_level_debug: &'static LowLevelDebug<'static, UartLite<'static>>,
+    #[cfg(feature = "ieee")]
     ieee802154: &'static capsules_extra::ieee802154::phy_driver::RadioDriver<
         'static,
         cc2650_chip::ieee802154_radio::Radio<'static>,
@@ -169,6 +170,7 @@ impl<const NUM_LEDS: usize, Thermometer: SMBusDevice + 'static> SyscallDriverLoo
             console_lite::DRIVER_NUM => f(Some(self.console_lite)),
             #[cfg(feature = "low_level_debug")]
             low_level_debug::DRIVER_NUM => f(Some(self.low_level_debug)),
+            #[cfg(feature = "ieee")]
             capsules_extra::ieee802154::DRIVER_NUM => f(Some(self.ieee802154)),
             capsules_extra::temperature::DRIVER_NUM => {
                 f(self.temperature.map(|driver| driver as &dyn SyscallDriver))
@@ -466,8 +468,10 @@ pub unsafe fn start<
     // IEEE 802.15.4 and UDP
     //--------------------------------------------------------------------------
 
+    #[cfg(feature = "ieee")]
     kernel::deferred_call::DeferredCallClient::register(&chip.radio);
 
+    #[cfg(feature = "ieee")]
     let ieee802154 = components::ieee802154::Ieee802154RawComponent::new(
         board_kernel,
         capsules_extra::ieee802154::DRIVER_NUM,
@@ -500,6 +504,7 @@ pub unsafe fn start<
         console_lite,
         #[cfg(feature = "low_level_debug")]
         low_level_debug,
+        #[cfg(feature = "ieee")]
         ieee802154,
         temperature: temperature_driver,
     };

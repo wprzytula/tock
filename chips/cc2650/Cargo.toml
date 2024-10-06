@@ -26,6 +26,12 @@ uart_lite = []
 # so in order to save flash, part of it is not compiled by default.
 full_scif = ["uart_lite"]
 
+# Support for IEEE 802.15.4 radio.
+# By default disabled, because it consumes significant amount of FLASH and RAM,
+# so for debug purposes (`trace_syscalls`, `debug_loaded_processes`) it's sometimes
+# necessary to disable it.
+ieee = []
+
 [dependencies]
 cortexm3 = { path = "../../arch/cortex-m3" }
 kernel = { path = "../../kernel" }
