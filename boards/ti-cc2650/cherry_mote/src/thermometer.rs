@@ -29,7 +29,10 @@ impl<'a> SetThermometerClient<'a> for Tmp431<'a> {
 
 // Taken from whip6, which tries the first address, and if an error occurs,
 // tries switching to the second one. Apparently, both are possible in CherryMotes.
+// Experiments showed that at least CherryMote 116 and 677 have their thermometers
+// at DEV_ADDRESS1.
 const DEV_ADDRESS1: u8 = 0x4C;
+#[allow(dead_code)]
 const DEV_ADDRESS2: u8 = 0x4D;
 
 const TMP431_ADDR: u8 = DEV_ADDRESS1;
