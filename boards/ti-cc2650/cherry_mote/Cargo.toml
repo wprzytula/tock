@@ -13,6 +13,7 @@ default = [
     "ccfg",
     "uart_lite",
     "debug_to_lite",
+    # "process_printer",
 ]
 # By default enabled, because CherryMote is assumed to be programmed with serial bootloader,
 # which currently erases the whole flash, requiring CCFG to be reflashed.
@@ -21,6 +22,8 @@ ccfg = ["ti-cc2650-common/ccfg"]
 uart_lite = ["ti-cc2650-common/uart_lite"]
 # By default enabled, because it's Lite that is intended for debug purposes.
 debug_to_lite = ["ti-cc2650-common/debug_to_lite"]
+# By default disabled, because it's flash-consuming and only needed for debug purposes.
+process_printer = ["ti-cc2650-common/process_printer"]
 
 
 [dependencies]
