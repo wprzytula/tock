@@ -538,7 +538,7 @@ mod cmd {
                 channel,
                 rxConfig: driverlib::rfc_CMD_IEEE_RX_s__bindgen_ty_3 {
                     _bitfield_1: driverlib::rfc_CMD_IEEE_RX_s__bindgen_ty_3::new_bitfield_1(
-                        1, 0, 0, 0, 0, 0, 0, 0,
+                        1, 0, 1, 0, 0, 0, 0, 0,
                     ),
                     ..Default::default()
                 },
