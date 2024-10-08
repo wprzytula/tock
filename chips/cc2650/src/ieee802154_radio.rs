@@ -1455,8 +1455,8 @@ impl<'a> Radio<'a> {
     pub(crate) fn handle_interrupt_cpe1(&self) {
         let interrupts = self.rfc_dbell.rfcpeifg.read();
 
-        let internal_error = interrupts.internal_error().bit_is_set();
-        // let boot_done = interrupts.boot_done().bit_is_set();
+        /* let internal_error = interrupts.internal_error().bit_is_set();
+        let boot_done = interrupts.boot_done().bit_is_set();
         let modules_unlocked = interrupts.modules_unlocked().bit_is_set();
         let synth_no_lock = interrupts.synth_no_lock().bit_is_set();
         let irq27 = interrupts.irq27().bit_is_set();
@@ -1486,14 +1486,13 @@ impl<'a> Radio<'a> {
         let last_fg_command_done = interrupts.last_fg_command_done().bit_is_set();
         let fg_command_done = interrupts.fg_command_done().bit_is_set();
         let last_command_done = interrupts.last_command_done().bit_is_set();
-        let command_done = interrupts.command_done().bit_is_set();
+        let command_done = interrupts.command_done().bit_is_set(); */
 
         let bits = interrupts.bits();
 
-        panic!(
-            "Raised interrupt cpe1 - RFC error! bits={bits},
+        panic!("Raised interrupt cpe1 - RFC error! bits={bits}",);
 
-            internal_error  ={internal_error},
+        /* internal_error  ={internal_error},
             modules_unlocked={modules_unlocked},
             synth_no_lock={synth_no_lock},
             irq27={irq27},
@@ -1525,7 +1524,7 @@ impl<'a> Radio<'a> {
             last_command_done={last_command_done},
             command_done={command_done},
             ",
-        );
+        ); */
     }
 
     /* Radio management logic */
