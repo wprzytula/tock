@@ -1450,6 +1450,15 @@ impl<'a> Radio<'a> {
             }
         } else {
             assert!(rx_entry_done);
+
+            // let stats = self.rx_machinery.stats.get();
+            // kernel::debug!(
+            //     "RX stats: Data={}, Nok={}, stats={:#?}",
+            //     stats.nRxData,
+            //     stats.nRxNok,
+            //     stats
+            // );
+
             // RX completed
             self.rx_machinery.take_finished().map(|frame| {
                 if let Some(rx_buf) = self.rx_buf.take() {
