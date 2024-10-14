@@ -1423,23 +1423,31 @@ impl<'a> Radio<'a> {
         // The interrupt means that we received or transmitted a frame. Let's determine
         // whether it's RX or TX that has triggered the interrupt.
 
-        if let Some(tx_buf) = self.tx_buf.take() {
-            assert!(last_fg_command_done);
-            let raw_status = self.tx_cmd.borrow().status;
-            let status: Result<cmd::RadioOpStatus, u16> = raw_status.try_into();
-            // kernel::debug!("TX status: {} = {:?}", raw_status, status);
-            let status = status.unwrap();
-            assert!(status.finished(), "Nonfinished status: {:?}", status);
-            status.to_result().unwrap();
+        if last_fg_command_done {
+            if let Some(tx_buf) = self.tx_buf.take() {
+                let tx_cmd = self.tx_cmd.borrow();
+                {
+                    let raw_tx_status = tx_cmd.status;
+                    let tx_status: Result<cmd::RadioOpStatus, u16> = raw_tx_status.try_into();
+                    // kernel::debug!("TX status: {} = {:?}", raw_tx_status, tx_status);
+                    let tx_status = tx_status.unwrap();
+                    assert!(
+                        tx_status.finished(),
+                        // "Nonfinished TX status: {:?}",
+                        // tx_status
+                    );
+                    tx_status.to_result().unwrap();
+                }
 
-            // TX completed
-            self.tx_client.map(|client| {
-                client.send_done(
-                    tx_buf,
-                    false /* FIXME: consider if we should set it to true, as automatic ACK is turned on */,
-                    Ok(())
-                )
-            });
+                // TX completed
+                self.tx_client.map(|client| {
+                    client.send_done(
+                        tx_buf,
+                        false /* FIXME: consider if we should set it to true, as automatic ACK is turned on */,
+                        Ok(())
+                    )
+                });
+            }
         } else {
             assert!(rx_entry_done);
             // RX completed
