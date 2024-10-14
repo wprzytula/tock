@@ -546,7 +546,7 @@ mod cmd {
                 pOutput: unsafe { core::mem::transmute(rx_result) },
                 frameFiltOpt: driverlib::rfc_CMD_IEEE_RX_s__bindgen_ty_4 {
                     _bitfield_1: driverlib::rfc_CMD_IEEE_RX_s__bindgen_ty_4::new_bitfield_1(
-                        0, 0, 1, 0, 0, 0, 0, 0, 2, 0, 0, 0,
+                        0, 0, 1, 0, 0, 0, 0, 0, 3, 0, 0, 0,
                     ),
                     ..Default::default()
                 },
