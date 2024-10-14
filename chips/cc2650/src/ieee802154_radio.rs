@@ -684,6 +684,94 @@ mod cmd {
         }
     }
 
+    pub(crate) use driverlib::rfc_CMD_IEEE_CSMA_s as IeeeCsma;
+    impl RadioCommand for IeeeCsma {
+        const COMMAND_NO: u16 = driverlib::CMD_IEEE_CSMA as u16;
+    }
+    impl RadioOp for IeeeCsma {}
+    impl IeeeCsma {
+        pub(super) fn new(random_state: u16) -> Self {
+            Self {
+                commandNo: Self::COMMAND_NO,
+                status: RadioOpStatus::IDLE as u16,
+                pNextOp: core::ptr::null_mut(),
+                startTime: 0,
+                startTrigger: driverlib::rfc_CMD_IEEE_CSMA_s__bindgen_ty_1 {
+                    _bitfield_1: driverlib::rfc_CMD_IEEE_CSMA_s__bindgen_ty_1::new_bitfield_1(
+                        driverlib::TRIG_NOW as u8,
+                        0,
+                        0,
+                        0,
+                    ),
+                    ..Default::default()
+                },
+                condition: driverlib::rfc_CMD_IEEE_CSMA_s__bindgen_ty_2 {
+                    _bitfield_1: driverlib::rfc_CMD_IEEE_CSMA_s__bindgen_ty_2::new_bitfield_1(
+                        driverlib::COND_STOP_ON_FALSE as u8,
+                        0,
+                    ),
+                    ..Default::default()
+                },
+                randomState: random_state,
+                macMaxBE: 5,
+                macMaxCSMABackoffs: 4,
+                csmaConfig: driverlib::rfc_CMD_IEEE_CSMA_s__bindgen_ty_3 {
+                    _bitfield_1: driverlib::rfc_CMD_IEEE_CSMA_s__bindgen_ty_3::new_bitfield_1(
+                        /* Initial value of CW for unslotted CSMA */ 1,
+                        /* Unslotted CSMA for non-beacon enabled PAN */ 0,
+                        /* RX stays on during CSMA backoffs */ 0,
+                    ),
+                    ..Default::default()
+                },
+                NB: 0,
+                BE: 3,
+                remainingPeriods: 0,
+                endTrigger: driverlib::rfc_CMD_IEEE_CSMA_s__bindgen_ty_4 {
+                    _bitfield_1: driverlib::rfc_CMD_IEEE_CSMA_s__bindgen_ty_4::new_bitfield_1(
+                        driverlib::TRIG_NEVER as u8,
+                        0,
+                        0,
+                        0,
+                    ),
+                    ..Default::default()
+                },
+                endTime: 0,
+
+                // Read-only
+                lastRssi: 0,
+                lastTimeStamp: 0,
+            }
+        }
+    }
+
+    pub(crate) struct IeeeCsmaTx {
+        pub(crate) csma: IeeeCsma,
+        pub(crate) tx: IeeeTx,
+    }
+    impl RadioCommand for IeeeCsmaTx {
+        const COMMAND_NO: u16 = driverlib::CMD_IEEE_CSMA as u16;
+
+        fn send(&mut self) -> RadioCmdResult<()> {
+            self.csma.pNextOp = core::ptr::addr_of_mut!(self.tx) as *mut driverlib::rfc_radioOp_s;
+
+            let status: RadioCmdStatus = unsafe {
+                core::mem::transmute(driverlib::RFCDoorbellSendTo(
+                    &mut self.csma as *mut IeeeCsma as u32,
+                ))
+            };
+            match status {
+                RadioCmdStatus::Pending => unreachable!(),
+                RadioCmdStatus::Done => RadioCmdResult::Ok(()),
+                err => Err(err),
+            }
+        }
+    }
+    impl IeeeCsmaTx {
+        pub(super) fn new(csma: IeeeCsma, tx: IeeeTx) -> Self {
+            Self { csma, tx }
+        }
+    }
+
     /// On reception, the radio CPU appends the provided data entry to the queue indicated. The radio CPU
     /// performs the following operations:
     /// ```
@@ -1027,7 +1115,7 @@ pub struct Radio<'a> {
 
     // tx helpers
     tx_buf: TakeCell<'static, [u8]>,
-    tx_cmd: RefCell<cmd::IeeeTx>,
+    csma_tx_cmd: RefCell<cmd::IeeeCsmaTx>,
 
     // rx helpers
     rx_buf: TakeCell<'static, [u8; radio::MAX_BUF_SIZE]>,
@@ -1056,7 +1144,9 @@ impl<'a> Radio<'a> {
             &rx_machinery.stats,
         ));
 
-        let tx_cmd = RefCell::new(cmd::IeeeTx::new(core::ptr::null_mut(), Default::default()));
+        let tx = cmd::IeeeTx::new(core::ptr::null_mut(), Default::default());
+        let csma = cmd::IeeeCsma::new(0);
+        let csma_tx_cmd = RefCell::new(cmd::IeeeCsmaTx::new(csma, tx));
 
         Self {
             rfc_pwr,
@@ -1072,7 +1162,7 @@ impl<'a> Radio<'a> {
             tx_client: OptionalCell::empty(),
 
             tx_buf: TakeCell::empty(),
-            tx_cmd,
+            csma_tx_cmd,
 
             rat_offset: OptionalCell::empty(),
 
@@ -1166,8 +1256,12 @@ impl<'a> Radio<'a> {
         self.clear_pending_interrupts();
         self.clear_and_enable_tx_interrupt();
 
-        let mut cmd = self.tx_cmd.borrow_mut();
-        *cmd = cmd::IeeeTx::new(buf[radio::PSDU_OFFSET..].as_mut_ptr(), frame_len);
+        let mut cmd = self.csma_tx_cmd.borrow_mut();
+        let tx = cmd::IeeeTx::new(buf[radio::PSDU_OFFSET..].as_mut_ptr(), frame_len);
+        let csma = cmd::IeeeCsma::new(
+            0, /* FIXME: pass truly random state. But 0 makes Radio CPU sample itself, so it's still random. */
+        );
+        *cmd = cmd::IeeeCsmaTx::new(csma, tx);
 
         // Save buf before sending the CMD to prevent races.
         self.tx_buf.put(Some(buf));
@@ -1425,9 +1519,21 @@ impl<'a> Radio<'a> {
 
         if last_fg_command_done {
             if let Some(tx_buf) = self.tx_buf.take() {
-                let tx_cmd = self.tx_cmd.borrow();
+                let csma_tx_cmd = self.csma_tx_cmd.borrow();
                 {
-                    let raw_tx_status = tx_cmd.status;
+                    let raw_csma_status = csma_tx_cmd.csma.status;
+                    let csma_status: Result<cmd::RadioOpStatus, u16> = raw_csma_status.try_into();
+                    // kernel::debug!("CSMA status: {} = {:?}", raw_csma_status, csma_status);
+                    let csma_status = csma_status.unwrap();
+                    assert!(
+                        csma_status.finished(),
+                        // "Nonfinished CSMA status: {:?}",
+                        // csma_status
+                    );
+                    csma_status.to_result().unwrap();
+                }
+                {
+                    let raw_tx_status = csma_tx_cmd.tx.status;
                     let tx_status: Result<cmd::RadioOpStatus, u16> = raw_tx_status.try_into();
                     // kernel::debug!("TX status: {} = {:?}", raw_tx_status, tx_status);
                     let tx_status = tx_status.unwrap();
