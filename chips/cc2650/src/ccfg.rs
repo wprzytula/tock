@@ -2478,4 +2478,20 @@ mod ccfg_data {
     }
 }
 
+pub struct Ccfg {
+    ccfg: cc2650::CCFG,
+}
+
+impl Ccfg {
+    pub(crate) fn new(ccfg: cc2650::CCFG) -> Self {
+        Self { ccfg }
+    }
+
+    pub fn ieee_mac(&self) -> Option<u64> {
+        let mac = ((self.ccfg.ieee_mac_1.read().addr().bits() as u64) << 32)
+            | self.ccfg.ieee_mac_0.read().addr().bits() as u64;
+
+        // If mac has all bits set to 1, then it's unset.
+        (mac != (!0)).then_some(mac)
+    }
 }
