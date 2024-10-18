@@ -1,6 +1,7 @@
 use core::ptr::{addr_of, addr_of_mut};
 
 use capsules_core::{console, led::LedDriver, virtualizers::virtual_alarm::VirtualMuxAlarm};
+use capsules_extra::chip_config::ChipConfiguration;
 use capsules_system::{process_policies::PanicFaultPolicy, process_printer::ProcessPrinterText};
 use cc2650_chip::{
     chip::{Cc2650, PinConfig},
@@ -157,6 +158,7 @@ pub struct Platform<const NUM_LEDS: usize, Thermometer: SMBusDevice + 'static> {
     >,
     #[cfg(not(feature = "temperature"))]
     temperature: core::marker::PhantomData<Thermometer>,
+    chip_configuration: capsules_extra::chip_config::ChipConfiguration<'static, Cc2650<'static>>,
 }
 
 impl<const NUM_LEDS: usize, Thermometer: SMBusDevice + 'static> SyscallDriverLookup
@@ -180,6 +182,7 @@ impl<const NUM_LEDS: usize, Thermometer: SMBusDevice + 'static> SyscallDriverLoo
             capsules_extra::temperature::DRIVER_NUM => f(self
                 .temperature
                 .map(|driver| driver as &dyn kernel::syscall::SyscallDriver)),
+            capsules_extra::chip_config::DRIVER_NUM => f(Some(&self.chip_configuration)),
             _ => f(None),
         }
     }
@@ -516,6 +519,7 @@ pub unsafe fn start<
         temperature: temperature_driver,
         #[cfg(not(feature = "temperature"))]
         temperature: core::marker::PhantomData,
+        chip_configuration: ChipConfiguration::new(chip),
     };
     /* END PLATFORM CONFIGURATION */
 
