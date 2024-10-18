@@ -3,7 +3,7 @@ use core::fmt::Write;
 use cortexm3::{nvic, CortexM3, CortexMVariant as _};
 #[cfg(feature = "ieee")]
 use kernel::hil::radio::RadioConfig as _;
-use kernel::platform::chip::InterruptService as _;
+use kernel::{hil::chip_config::ChipConfiguration, platform::chip::InterruptService as _};
 
 #[cfg(feature = "ieee")]
 use crate::ieee802154_radio::Radio;
@@ -231,9 +231,8 @@ impl kernel::platform::chip::InterruptService for Cc2650<'_> {
     }
 }
 
-impl Cc2650<'_> {
-    #[inline]
-    pub fn ieee_mac(&self) -> u64 {
+impl ChipConfiguration for Cc2650<'_> {
+    fn ieee_mac(&self) -> u64 {
         self.ccfg.ieee_mac().unwrap_or_else(|| self.fcfg.ieee_mac())
     }
 }
