@@ -53,74 +53,78 @@ type TemperatureDriver<Thermometer, A> = components::temperature::TemperatureCom
     capsules_extra::tmp431::Tmp431SMBus<'static, Thermometer, A>,
 >;
 
-pub struct NoThermometer;
-impl I2CDevice for NoThermometer {
-    fn enable(&self) {}
+mod no_thermometer {
+    use super::*;
+    pub struct NoThermometer;
+    impl I2CDevice for NoThermometer {
+        fn enable(&self) {}
 
-    fn disable(&self) {}
+        fn disable(&self) {}
 
-    fn write_read(
-        &self,
-        _data: &'static mut [u8],
-        _write_len: usize,
-        _read_len: usize,
-    ) -> Result<(), (kernel::hil::i2c::Error, &'static mut [u8])> {
-        Ok(())
+        fn write_read(
+            &self,
+            _data: &'static mut [u8],
+            _write_len: usize,
+            _read_len: usize,
+        ) -> Result<(), (kernel::hil::i2c::Error, &'static mut [u8])> {
+            Ok(())
+        }
+
+        fn write(
+            &self,
+            _data: &'static mut [u8],
+            _len: usize,
+        ) -> Result<(), (kernel::hil::i2c::Error, &'static mut [u8])> {
+            Ok(())
+        }
+
+        fn read(
+            &self,
+            _buffer: &'static mut [u8],
+            _len: usize,
+        ) -> Result<(), (kernel::hil::i2c::Error, &'static mut [u8])> {
+            Ok(())
+        }
     }
+    impl SMBusDevice for NoThermometer {
+        fn smbus_write_read(
+            &self,
+            _data: &'static mut [u8],
+            _write_len: usize,
+            _read_len: usize,
+        ) -> Result<(), (kernel::hil::i2c::Error, &'static mut [u8])> {
+            Ok(())
+        }
 
-    fn write(
-        &self,
-        _data: &'static mut [u8],
-        _len: usize,
-    ) -> Result<(), (kernel::hil::i2c::Error, &'static mut [u8])> {
-        Ok(())
+        fn smbus_write(
+            &self,
+            _data: &'static mut [u8],
+            _len: usize,
+        ) -> Result<(), (kernel::hil::i2c::Error, &'static mut [u8])> {
+            Ok(())
+        }
+
+        fn smbus_read(
+            &self,
+            _buffer: &'static mut [u8],
+            _len: usize,
+        ) -> Result<(), (kernel::hil::i2c::Error, &'static mut [u8])> {
+            todo!()
+        }
     }
-
-    fn read(
-        &self,
-        _buffer: &'static mut [u8],
-        _len: usize,
-    ) -> Result<(), (kernel::hil::i2c::Error, &'static mut [u8])> {
-        Ok(())
+    impl I2CHwMasterClient for NoThermometer {
+        fn command_complete(
+            &self,
+            _buffer: &'static mut [u8],
+            _status: Result<(), kernel::hil::i2c::Error>,
+        ) {
+        }
+    }
+    impl SetThermometerClient<'_> for NoThermometer {
+        fn set_client(&self, _thermometer_client: &dyn I2CClient) {}
     }
 }
-impl SMBusDevice for NoThermometer {
-    fn smbus_write_read(
-        &self,
-        _data: &'static mut [u8],
-        _write_len: usize,
-        _read_len: usize,
-    ) -> Result<(), (kernel::hil::i2c::Error, &'static mut [u8])> {
-        Ok(())
-    }
-
-    fn smbus_write(
-        &self,
-        _data: &'static mut [u8],
-        _len: usize,
-    ) -> Result<(), (kernel::hil::i2c::Error, &'static mut [u8])> {
-        Ok(())
-    }
-
-    fn smbus_read(
-        &self,
-        _buffer: &'static mut [u8],
-        _len: usize,
-    ) -> Result<(), (kernel::hil::i2c::Error, &'static mut [u8])> {
-        todo!()
-    }
-}
-impl I2CHwMasterClient for NoThermometer {
-    fn command_complete(
-        &self,
-        _buffer: &'static mut [u8],
-        _status: Result<(), kernel::hil::i2c::Error>,
-    ) {
-    }
-}
-impl SetThermometerClient<'_> for NoThermometer {
-    fn set_client(&self, _thermometer_client: &dyn I2CClient) {}
-}
+pub use no_thermometer::NoThermometer;
 
 pub struct Platform<const NUM_LEDS: usize, Thermometer: SMBusDevice + 'static> {
     scheduler: &'static RoundRobinSched<'static>,
