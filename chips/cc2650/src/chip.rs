@@ -9,6 +9,7 @@ use kernel::platform::chip::InterruptService as _;
 use crate::ieee802154_radio::Radio;
 
 use crate::{
+    ccfg::Ccfg,
     fcfg::Fcfg,
     gpt::Gpt,
     i2c::{I2CPinConfig, I2C},
@@ -36,6 +37,7 @@ pub struct Cc2650<'a> {
     pub uart_lite: UartLite<'a>,
     pub prcm: Prcm,
     pub fcfg: Fcfg,
+    pub ccfg: Ccfg,
     #[cfg(feature = "ieee")]
     pub radio: Radio<'a>,
     pub i2c: I2C<'a>,
@@ -94,6 +96,7 @@ impl<'a> Cc2650<'a> {
         uart_full.enable();
 
         let fcfg = Fcfg::new(peripherals.FCFG1);
+        let ccfg = Ccfg::new(peripherals.CCFG);
 
         #[cfg(feature = "ieee")]
         let radio = Radio::new(
@@ -115,6 +118,7 @@ impl<'a> Cc2650<'a> {
             uart_lite,
             prcm,
             fcfg,
+            ccfg,
             #[cfg(feature = "ieee")]
             radio,
             i2c,
@@ -224,5 +228,12 @@ impl kernel::platform::chip::InterruptService for Cc2650<'_> {
         }
 
         true
+    }
+}
+
+impl Cc2650<'_> {
+    #[inline]
+    pub fn ieee_mac(&self) -> u64 {
+        self.ccfg.ieee_mac().unwrap_or_else(|| self.fcfg.ieee_mac())
     }
 }
