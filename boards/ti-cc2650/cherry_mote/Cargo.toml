@@ -15,8 +15,8 @@ default = [
     "debug_to_lite",
     # "process_printer",
     # "low_level_debug",
-    # "ieee",
-    # "temperature",
+    "ieee",
+    "temperature",
 ]
 # By default enabled, because CherryMote is assumed to be programmed with serial bootloader,
 # which currently erases the whole flash, requiring CCFG to be reflashed.
