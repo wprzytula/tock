@@ -1,0 +1,43 @@
+[package]
+name = "ti-cc2650-smartrf06"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+build = "../common/build.rs"
+
+[features]
+# To see feature descriptions, see ../common/Cargo.toml.
+
+default = [
+    # comment kept for formatter to keep features in separate lines
+    "ccfg",
+    # "uart_lite",
+    # "debug_to_lite",
+    # "process_printer",
+    # "low_level_debug",
+    # "ieee",
+    # "temperature",
+]
+# By default enabled, because the default serial bootloader erases whole Flash, so CCFG needs to be reflashed.
+ccfg = ["ti-cc2650-common/ccfg"]
+# By default disabled, because SmartRF06 requires additional equipment to operate UART Lite.
+uart_lite = ["ti-cc2650-common/uart_lite"]
+# By default disabled, because requires UART Lite.
+debug_to_lite = ["ti-cc2650-common/debug_to_lite"]
+# By default disabled, because it's flash-consuming and only needed for debug purposes.
+process_printer = ["ti-cc2650-common/process_printer"]
+# By default disabled, because it consumes some flash & RAM, and is only helpful in debugging.
+low_level_debug = ["ti-cc2650-common/low_level_debug"]
+# By default disabled, because it consumes significant amount of FLASH and RAM,
+# so for debug purposes (`trace_syscalls`, `debug_loaded_processes`) it's sometimes
+# necessary to disable it.
+ieee = ["ti-cc2650-common/ieee"]
+# By default disabled, because TMP 431 is not present on SmartRF06.
+temperature = ["ti-cc2650-common/temperature"]
+
+[dependencies]
+cortexm3 = { path = "../../../arch/cortex-m3" }
+cc2650 = "0.1.1"
+cc2650_chip = { package = "cc2650", path = "../../../chips/cc2650" }
+ti-cc2650-common = { path = "../common" }
+kernel = { path = "../../../kernel" }
