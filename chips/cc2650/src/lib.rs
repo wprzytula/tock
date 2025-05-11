@@ -1,0 +1,24 @@
+#![crate_name = "cc2650"]
+#![crate_type = "rlib"]
+#![no_std]
+#![warn(unreachable_pub)]
+
+mod ccfg;
+pub mod chip;
+mod crt1;
+pub mod driverlib;
+pub mod fcfg;
+pub mod gpio;
+pub mod gpt;
+pub mod i2c;
+#[cfg(feature = "ieee")]
+pub mod ieee802154_radio;
+mod peripheral_interrupts;
+pub mod prcm;
+pub mod rtc;
+#[cfg(feature = "uart_lite")]
+mod scif;
+pub mod uart;
+pub mod udma;
+
+pub use crate::crt1::init;

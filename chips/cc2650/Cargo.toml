@@ -1,0 +1,44 @@
+[package]
+name = "cc2650"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+links = "driverlib"
+
+[features]
+# By default disabled. Cherry Mote crate enables it explicitly, for the serial bootloader to support it.
+# SmartRF06 is assumed to be programmed with openocd, so no need for CCFG there.
+ccfg = []
+
+# The current impl makes no use of overwhelming majority of the uDMA control table,
+# so in order to save memory, only its prefix is used by default.
+# There is no point atm in enabling this feature.
+full_udma_table = []
+
+# UART-lite involves emulating UART TX over pin 28 using Sensor Controller.
+# As interpreting UART-lite outputs require a UART equipment connected to the pin,
+# which SmartRF06 has not connected by default, support for UART-lite is made a feature.
+# Cherry Mote has UART-lite hard-wired in a way it works, so it enables the feature
+# unconditionally.
+uart_lite = []
+
+# The current impl makes no use of considerable part of the Sensor Controller Interface Framework,
+# so in order to save flash, part of it is not compiled by default.
+full_scif = ["uart_lite"]
+
+# Support for IEEE 802.15.4 radio.
+# By default disabled, because it consumes significant amount of FLASH and RAM,
+# so for debug purposes (`trace_syscalls`, `debug_loaded_processes`) it's sometimes
+# necessary to disable it.
+ieee = []
+
+[dependencies]
+cortexm3 = { path = "../../arch/cortex-m3" }
+kernel = { path = "../../kernel" }
+cty = "0.2.2"
+cc2650 = "0.1.1"
+tock-cells = { path = "../../libraries/tock-cells" }
+
+[build-dependencies]
+bindgen = { version = "0.69.4", features = ["experimental"] }
+cc = "1.0.90"
