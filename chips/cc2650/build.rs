@@ -8,15 +8,18 @@ use std::iter::FromIterator;
 use std::path::PathBuf;
 use std::process::Command;
 
-const DRIVERLIB_PATH: &str = "DRIVERLIB_PATH";
 const NEWLIB_INC_PATH: &str = "NEWLIB_INC_PATH";
 
-const LIB_ROM_ORIGINAL: &str = "libROM_driverlib.elf";
+const DRIVERLIB_ROOT: &str = "coresdk_cc13xx_cc26xx/source/ti/devices/cc26x0";
+
+const LIB_ROM_ORIGINAL: &str = "rom/driverlib.elf";
 const LIB_ROM_FILTERED: &str = "libROM_driverlib_filtered.elf";
 
-const LIB_NOROM_ORIGINAL: &str = "libNOROM_driverlib.a";
+const LIB_NOROM_ORIGINAL: &str = "driverlib/bin/gcc/driverlib.lib";
 const LIB_NOROM_NOPREFIX: &str = "libdriverlib.a";
 
+const DRIVERLIB_SOURCES: &str = "driverlib";
+const DRIVERLIB_INCLUDES: &str = "inc";
 const BINDINGS_PATH: &str = "src/driverlib/bindings.rs";
 
 const EXTERN_C_NAME: &str = "extern.c";
@@ -32,10 +35,9 @@ fn main() {
 
 struct DriverlibBuilder {
     out: PathBuf,
-    driverlib_path: PathBuf,
     newlib_inc_path: String,
-    _cc2650_crate_root: PathBuf,
-    _cc2650_crate_driverlib: PathBuf,
+    driverlib_sources: PathBuf,
+    driverlib_includes: PathBuf,
     lib_norom_original_path: PathBuf,
     lib_norom_noprefix_path: PathBuf,
     lib_rom_original_path: PathBuf,
@@ -48,11 +50,6 @@ struct DriverlibBuilder {
 
 impl DriverlibBuilder {
     fn new(out: PathBuf) -> Self {
-        let driverlib_path = PathBuf::from(env::var_os(DRIVERLIB_PATH).expect(concat!(
-            "<",
-            stringify!(DRIVERLIB_PATH),
-            "> env variable must be provided. Check out your board's Makefile for that variable definition."
-        )));
         let newlib_inc_path = env::var(NEWLIB_INC_PATH).expect(
             concat!(
                 "<",
@@ -61,10 +58,14 @@ impl DriverlibBuilder {
             ));
 
         let cc2650_crate_root = PathBuf::from(std::env::var_os("CARGO_MANIFEST_DIR").unwrap());
-        let cc2650_crate_driverlib = cc2650_crate_root.join("src/driverlib");
-        let lib_norom_original_path = cc2650_crate_driverlib.join(LIB_NOROM_ORIGINAL);
+        let cc2650_crate_driverlib_root =
+            cc2650_crate_root.join("src/driverlib").join(DRIVERLIB_ROOT);
+        let cc2650_crate_driverlib_sources = cc2650_crate_driverlib_root.join(DRIVERLIB_SOURCES);
+        let cc2650_crate_driverlib_includes = cc2650_crate_driverlib_root.join(DRIVERLIB_INCLUDES);
+
+        let lib_norom_original_path = cc2650_crate_driverlib_root.join(LIB_NOROM_ORIGINAL);
         let lib_norom_noprefix_path = out.join(LIB_NOROM_NOPREFIX);
-        let lib_rom_original_path = cc2650_crate_driverlib.join(LIB_ROM_ORIGINAL);
+        let lib_rom_original_path = cc2650_crate_driverlib_root.join(LIB_ROM_ORIGINAL);
         let lib_rom_filtered_path = out.join(LIB_ROM_FILTERED);
         let extern_c_path = out.join(EXTERN_C_NAME);
         let extern_o_path = out.join(EXTERN_O_NAME);
@@ -72,10 +73,9 @@ impl DriverlibBuilder {
 
         Self {
             out,
-            driverlib_path,
             newlib_inc_path,
-            _cc2650_crate_root: cc2650_crate_root,
-            _cc2650_crate_driverlib: cc2650_crate_driverlib,
+            driverlib_sources: cc2650_crate_driverlib_sources,
+            driverlib_includes: cc2650_crate_driverlib_includes,
             lib_norom_noprefix_path,
             lib_norom_original_path,
             lib_rom_original_path,
@@ -118,11 +118,11 @@ impl DriverlibBuilder {
     }
 
     fn generate_driverlib_full_h(&self) {
-        let driverlib_full_h_path = self.driverlib_path.join("driverlib_full.h");
+        let driverlib_full_h_path = self.driverlib_sources.join("driverlib_full.h");
         let mut driverlib_full_h = std::fs::File::create(&driverlib_full_h_path)
             .expect("Failed to create driverlib_full.h");
 
-        let mut driverlib_headers = std::fs::read_dir(&self.driverlib_path)
+        let mut driverlib_headers = std::fs::read_dir(&self.driverlib_sources)
             .expect("Failed to iterate through driverlib directory")
             .filter_map(|driverlib_file_res| {
                 driverlib_file_res
@@ -171,7 +171,7 @@ impl DriverlibBuilder {
     fn generate_bindings(&self) {
         println!(
             "cargo:rerun-if-changed={}/driverlib_full.h",
-            &self.driverlib_path.display()
+            self.driverlib_sources.display()
         );
 
         // Create driverlib bindings
@@ -180,7 +180,7 @@ impl DriverlibBuilder {
             // bindings for.
             .header(format!(
                 "{}/driverlib_full.h",
-                self.driverlib_path.to_str().unwrap()
+                self.driverlib_sources.display()
             ))
             // This creates wrapper functions around "static inline" fns to make them available...
             .wrap_static_fns(true)
@@ -194,8 +194,10 @@ impl DriverlibBuilder {
             .clang_arg("-DDOXYGEN")
             // Required in rust-analyzer to succeed in building.
             .clang_arg("-D__GLIBC_USE(...)")
+            // Add driverlib headers. E.g. "inc/hw_types.h" is required.
+            .clang_arg(format!("-I{}", self.driverlib_includes.display()))
             // Add newlib headers. E.g. <string.h> is required.
-            .clang_arg(String::from("-I") + self.newlib_inc_path.as_str())
+            .clang_arg(format!("-I{}", self.newlib_inc_path))
             // Don't extract doc comments.
             .generate_comments(false)
             // Don't create layout tests - trust bindgen.
@@ -224,6 +226,8 @@ impl DriverlibBuilder {
             .warnings(false)
             .define("DOXYGEN", None)
             .include(self.newlib_inc_path.as_str())
+            .include(&self.driverlib_includes)
+            .include(".")
             .flag("-flto=thin")
             .cargo_metadata(false) // We want to first merge everything into one big library, only then link.
             .compile_intermediates()
@@ -298,7 +302,7 @@ impl DriverlibBuilder {
 
     // Strips those functions from ROM symbols ELF, which are disabled in rom.h.
     fn strip_disabled_rom_fns(&self) {
-        get_enabled_rom_fns(&self.enabled_rom_fns_path, &self.driverlib_path);
+        get_enabled_rom_fns(&self.driverlib_sources, &self.enabled_rom_fns_path);
 
         let status = Command::new("arm-none-eabi-objcopy")
             .arg(format!(
@@ -315,14 +319,14 @@ impl DriverlibBuilder {
         );
 
         // Writes ROM symbols enabled in rom.h to a file with the given name.
-        fn get_enabled_rom_fns(enabled_rom_fns: &PathBuf, driverlib_path: &PathBuf) {
+        fn get_enabled_rom_fns(sources: &PathBuf, enabled_rom_fns: &PathBuf) {
             let rom_h = "rom.h";
             let status = Command::new("bash")
                 .arg("-c")
                 .arg("-f")
                 .arg(format!(
                     r#"sed -E -n -e '/^#define ROM_/s/^#define ROM_(.*) \\/\1/p' {} > {}"#,
-                    PathBuf::from(driverlib_path).join(rom_h).to_str().unwrap(),
+                    sources.join(rom_h).to_str().unwrap(),
                     enabled_rom_fns.to_str().unwrap(),
                 ))
                 .status()
@@ -332,14 +336,26 @@ impl DriverlibBuilder {
     }
 
     fn strip_rom_symbols_from_norom_lib(&self) {
+        const EXCLUDED: &[&str] = &[
+            // Not stripped, because these are used in relocations.
+            "FlashProtectionGet",
+            "UARTDisable",
+            "VIMSModeSet",
+        ];
+
         let symbols = std::fs::read_to_string(&self.enabled_rom_fns_path).unwrap();
-        for symbol in symbols.split('\n') {
-            Command::new("arm-none-eabi-objcopy")
+        for symbol in symbols
+            .split('\n')
+            .map(str::trim)
+            .filter(|symbol| !EXCLUDED.contains(symbol))
+        {
+            let status = Command::new("arm-none-eabi-objcopy")
                 .arg("--strip-symbol")
                 .arg(symbol)
                 .arg(&self.lib_norom_noprefix_path)
                 .status()
                 .unwrap();
+            assert_eq!(status.code(), Some(0));
         }
     }
 
