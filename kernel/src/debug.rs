@@ -386,15 +386,23 @@ pub struct DebugWriterWrapper {
 
 /// Main type that we need an immutable reference to so we can share it with
 /// the UART provider and this debug module.
-pub struct DebugWriter {
-    // What provides the actual writing mechanism.
-    uart: &'static dyn hil::uart::Transmit<'static>,
-    // The buffer that is passed to the writing mechanism.
-    output_buffer: TakeCell<'static, [u8]>,
-    // An internal buffer that is used to hold debug!() calls as they come in.
-    internal_buffer: TakeCell<'static, RingBuffer<'static, u8>>,
-    // Number of debug!() calls.
-    count: Cell<usize>,
+pub enum DebugWriter {
+    Buffered {
+        // What provides the actual writing mechanism.
+        uart: &'static dyn hil::uart::Transmit<'static>,
+        // The buffer that is passed to the writing mechanism.
+        output_buffer: TakeCell<'static, [u8]>,
+        // An internal buffer that is used to hold debug!() calls as they come in.
+        internal_buffer: TakeCell<'static, RingBuffer<'static, u8>>,
+        // Number of debug!() calls.
+        count: Cell<usize>,
+    },
+    Synchronous {
+        // What provides the actual writing mechanism.
+        uart: &'static dyn hil::uart::UartLite<'static>,
+        // Number of debug!() calls.
+        count: Cell<usize>,
+    },
 }
 
 /// Static variable that holds the kernel's reference to the debug tool. This is
@@ -428,7 +436,7 @@ impl DebugWriter {
         out_buffer: &'static mut [u8],
         internal_buffer: &'static mut RingBuffer<'static, u8>,
     ) -> DebugWriter {
-        DebugWriter {
+        DebugWriter::Buffered {
             uart,
             output_buffer: TakeCell::new(out_buffer),
             internal_buffer: TakeCell::new(internal_buffer),
@@ -436,56 +444,90 @@ impl DebugWriter {
         }
     }
 
+    pub fn new_sync(uart: &'static dyn hil::uart::UartLite) -> DebugWriter {
+        DebugWriter::Synchronous {
+            uart,
+            count: Cell::new(0), // how many debug! calls
+        }
+    }
+
+    fn count(&self) -> &Cell<usize> {
+        match self {
+            DebugWriter::Buffered { count, .. } => count,
+            DebugWriter::Synchronous { count, .. } => count,
+        }
+    }
+
     fn increment_count(&self) {
-        self.count.increment();
+        self.count().increment();
     }
 
     fn get_count(&self) -> usize {
-        self.count.get()
+        self.count().get()
     }
 
     /// Write as many of the bytes from the internal_buffer to the output
     /// mechanism as possible, returning the number written.
     fn publish_bytes(&self) -> usize {
-        // Can only publish if we have the output_buffer. If we don't that is
-        // fine, we will do it when the transmit done callback happens.
-        self.internal_buffer.map_or(0, |ring_buffer| {
-            if let Some(out_buffer) = self.output_buffer.take() {
-                let mut count = 0;
+        if let Self::Buffered {
+            uart,
+            output_buffer,
+            internal_buffer,
+            ..
+        } = self
+        {
+            // Can only publish if we have the output_buffer. If we don't that is
+            // fine, we will do it when the transmit done callback happens.
+            internal_buffer.map_or(0, |ring_buffer| {
+                if let Some(out_buffer) = output_buffer.take() {
+                    let mut count = 0;
 
-                for dst in out_buffer.iter_mut() {
-                    match ring_buffer.dequeue() {
-                        Some(src) => {
-                            *dst = src;
-                            count += 1;
-                        }
-                        None => {
-                            break;
+                    for dst in out_buffer.iter_mut() {
+                        match ring_buffer.dequeue() {
+                            Some(src) => {
+                                *dst = src;
+                                count += 1;
+                            }
+                            None => {
+                                break;
+                            }
                         }
                     }
-                }
 
-                if count != 0 {
-                    // Transmit the data in the output buffer.
-                    if let Err((_err, buf)) = self.uart.transmit_buffer(out_buffer, count) {
-                        self.output_buffer.put(Some(buf));
-                    } else {
-                        self.output_buffer.put(None);
+                    if count != 0 {
+                        // Transmit the data in the output buffer.
+                        if let Err((_err, buf)) = uart.transmit_buffer(out_buffer, count) {
+                            output_buffer.put(Some(buf));
+                        } else {
+                            output_buffer.put(None);
+                        }
                     }
+                    count
+                } else {
+                    0
                 }
-                count
-            } else {
-                0
-            }
-        })
+            })
+        } else {
+            0
+        }
     }
 
     fn extract(&self) -> Option<&mut RingBuffer<'static, u8>> {
-        self.internal_buffer.take()
+        match self {
+            DebugWriter::Buffered {
+                internal_buffer, ..
+            } => internal_buffer.take(),
+            DebugWriter::Synchronous { .. } => None,
+        }
     }
 
     fn available_len(&self) -> usize {
-        self.internal_buffer.map_or(0, |rb| rb.available_len())
+        match self {
+            DebugWriter::Buffered {
+                internal_buffer, ..
+            } => internal_buffer.map_or(0, |rb| rb.available_len()),
+            DebugWriter::Synchronous { .. } => 0,
+        }
     }
 }
 
@@ -496,12 +538,19 @@ impl hil::uart::TransmitClient for DebugWriter {
         _tx_len: usize,
         _rcode: core::result::Result<(), ErrorCode>,
     ) {
-        // Replace this buffer since we are done with it.
-        self.output_buffer.replace(buffer);
+        if let Self::Buffered {
+            output_buffer,
+            internal_buffer,
+            ..
+        } = self
+        {
+            // Replace this buffer since we are done with it.
+            output_buffer.replace(buffer);
 
-        if self.internal_buffer.map_or(false, |buf| buf.has_elements()) {
-            // Buffer not empty, go around again
-            self.publish_bytes();
+            if internal_buffer.map_or(false, |buf| buf.has_elements()) {
+                // Buffer not empty, go around again
+                self.publish_bytes();
+            }
         }
     }
     fn transmitted_word(&self, _rcode: core::result::Result<(), ErrorCode>) {}
@@ -538,27 +587,40 @@ impl IoWrite for DebugWriterWrapper {
     fn write(&mut self, bytes: &[u8]) -> usize {
         const FULL_MSG: &[u8] = b"\n*** DEBUG BUFFER FULL ***\n";
         self.dw.map_or(0, |dw| {
-            dw.internal_buffer.map_or(0, |ring_buffer| {
-                let available_len_for_msg =
-                    ring_buffer.available_len().saturating_sub(FULL_MSG.len());
+            match dw {
+                DebugWriter::Buffered {
+                    internal_buffer, ..
+                } => {
+                    internal_buffer.map_or(0, |ring_buffer| {
+                        let available_len_for_msg =
+                            ring_buffer.available_len().saturating_sub(FULL_MSG.len());
 
-                if available_len_for_msg >= bytes.len() {
-                    for &b in bytes {
-                        ring_buffer.enqueue(b);
-                    }
-                    bytes.len()
-                } else {
-                    for &b in &bytes[..available_len_for_msg] {
-                        ring_buffer.enqueue(b);
-                    }
-                    // When the buffer is close to full, print a warning and drop the current
-                    // string.
-                    for &b in FULL_MSG {
-                        ring_buffer.enqueue(b);
-                    }
-                    available_len_for_msg
+                        if available_len_for_msg >= bytes.len() {
+                            for &b in bytes {
+                                ring_buffer.enqueue(b);
+                            }
+                            bytes.len()
+                        } else {
+                            for &b in &bytes[..available_len_for_msg] {
+                                ring_buffer.enqueue(b);
+                            }
+                            // When the buffer is close to full, print a warning and drop the current
+                            // string.
+                            for &b in FULL_MSG {
+                                ring_buffer.enqueue(b);
+                            }
+                            available_len_for_msg
+                        }
+                    })
                 }
-            })
+                DebugWriter::Synchronous { uart, .. } => {
+                    uart.transmit_iterator(hil::uart::UartLiteInput::new(
+                        &mut hil::uart::UartLiteWord::iter_from_slice(bytes),
+                        bytes.len(),
+                    ));
+                    bytes.len()
+                }
+            }
         })
     }
 }
