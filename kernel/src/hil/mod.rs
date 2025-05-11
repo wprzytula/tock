@@ -10,6 +10,7 @@ pub mod ble_advertising;
 pub mod bus8080;
 pub mod buzzer;
 pub mod can;
+pub mod chip_config;
 pub mod crc;
 pub mod dac;
 pub mod date_time;
