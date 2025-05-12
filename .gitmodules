@@ -1,3 +1,7 @@
 [submodule "chips/cc2650/src/driverlib/coresdk_cc13xx_cc26xx"]
 	path = chips/cc2650/src/driverlib/coresdk_cc13xx_cc26xx
 	url = https://github.com/contiki-ng/coresdk_cc13xx_cc26xx
+[submodule "libtock-rs"]
+	path = libtock-rs
+	url = https://github.com/wprzytula/libtock-rs.git
+	branch = cc2650-rewritten
