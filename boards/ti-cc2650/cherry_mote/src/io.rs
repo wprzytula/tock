@@ -27,7 +27,6 @@ pub fn _print(args: fmt::Arguments) {
 }
 
 #[cfg(not(test))]
-#[no_mangle]
 #[inline(never)]
 #[panic_handler]
 /// Panic handler
