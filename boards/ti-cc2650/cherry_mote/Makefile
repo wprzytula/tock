@@ -1,6 +1,6 @@
 # Makefile for building the tock kernel for the CC2650-CherryMote
 
-export NEWLIB_INC_PATH ?= /usr/arm-none-eabi/include
+export NEWLIB_INC_PATH ?= /usr/lib/arm-none-eabi/include
 
 # Decide on kernel/apps flash and RAM division
 export KERNEL_FLASH_LEN ?= 0x13000

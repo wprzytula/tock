@@ -84,13 +84,13 @@ pub const __bool_true_false_are_defined: u32 = 1;
 pub const true_: u32 = 1;
 pub const false_: u32 = 0;
 pub const _NEWLIB_VERSION_H__: u32 = 1;
-pub const _NEWLIB_VERSION: &[u8; 6] = b"4.5.0\0";
+pub const _NEWLIB_VERSION: &[u8; 6] = b"4.4.0\0";
 pub const __NEWLIB__: u32 = 4;
-pub const __NEWLIB_MINOR__: u32 = 5;
+pub const __NEWLIB_MINOR__: u32 = 4;
 pub const __NEWLIB_PATCHLEVEL__: u32 = 0;
 pub const _DEFAULT_SOURCE: u32 = 1;
 pub const _POSIX_SOURCE: u32 = 1;
-pub const _POSIX_C_SOURCE: u32 = 202405;
+pub const _POSIX_C_SOURCE: u32 = 200809;
 pub const _ATFILE_SOURCE: u32 = 1;
 pub const __ATFILE_VISIBLE: u32 = 1;
 pub const __BSD_VISIBLE: u32 = 1;
@@ -98,7 +98,7 @@ pub const __GNU_VISIBLE: u32 = 0;
 pub const __ISO_C_VISIBLE: u32 = 2011;
 pub const __LARGEFILE_VISIBLE: u32 = 0;
 pub const __MISC_VISIBLE: u32 = 1;
-pub const __POSIX_VISIBLE: u32 = 202405;
+pub const __POSIX_VISIBLE: u32 = 200809;
 pub const __SVID_VISIBLE: u32 = 1;
 pub const __XSI_VISIBLE: u32 = 0;
 pub const __SSP_FORTIFY_LEVEL: u32 = 0;
@@ -2411,9 +2411,7 @@ pub const _HAVE_LONG_DOUBLE: u32 = 1;
 pub const _LDBL_EQ_DBL: u32 = 1;
 pub const _MB_LEN_MAX: u32 = 1;
 pub const _REENT_CHECK_VERIFY: u32 = 1;
-pub const _RETARGETABLE_LOCKING: u32 = 1;
 pub const _UNBUF_STREAM_OPT: u32 = 1;
-pub const _WANT_IO_C99_FORMATS: u32 = 1;
 pub const _WANT_IO_LONG_LONG: u32 = 1;
 pub const _WANT_REGISTER_FINI: u32 = 1;
 pub const _WANT_USE_GDTOA: u32 = 1;
@@ -18991,43 +18989,9 @@ pub type __suseconds_t = cty::c_long;
 pub type __useconds_t = cty::c_ulong;
 pub type __va_list = u32;
 pub type __ULong = cty::c_ulong;
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct __lock {
-    _unused: [u8; 0],
-}
-pub type _LOCK_T = *mut __lock;
-extern "C" {
-    pub fn __retarget_lock_init(lock: *mut _LOCK_T);
-}
-extern "C" {
-    pub fn __retarget_lock_init_recursive(lock: *mut _LOCK_T);
-}
-extern "C" {
-    pub fn __retarget_lock_close(lock: _LOCK_T);
-}
-extern "C" {
-    pub fn __retarget_lock_close_recursive(lock: _LOCK_T);
-}
-extern "C" {
-    pub fn __retarget_lock_acquire(lock: _LOCK_T);
-}
-extern "C" {
-    pub fn __retarget_lock_acquire_recursive(lock: _LOCK_T);
-}
-extern "C" {
-    pub fn __retarget_lock_try_acquire(lock: _LOCK_T) -> cty::c_int;
-}
-extern "C" {
-    pub fn __retarget_lock_try_acquire_recursive(lock: _LOCK_T) -> cty::c_int;
-}
-extern "C" {
-    pub fn __retarget_lock_release(lock: _LOCK_T);
-}
-extern "C" {
-    pub fn __retarget_lock_release_recursive(lock: _LOCK_T);
-}
-pub type _flock_t = _LOCK_T;
+pub type _LOCK_T = cty::c_int;
+pub type _LOCK_RECURSIVE_T = cty::c_int;
+pub type _flock_t = _LOCK_RECURSIVE_T;
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct __locale_t {
@@ -19250,7 +19214,6 @@ pub struct _reent__bindgen_ty_1__bindgen_ty_1 {
     pub _wcrtomb_state: _mbstate_t,
     pub _wcsrtombs_state: _mbstate_t,
     pub _h_errno: cty::c_int,
-    pub _getlocalename_l_buf: [cty::c_char; 32usize],
 }
 impl Default for _reent__bindgen_ty_1__bindgen_ty_1 {
     fn default() -> Self {
@@ -19553,18 +19516,10 @@ extern "C" {
     ) -> *mut cty::c_char;
 }
 extern "C" {
-    pub fn strlcat(
-        arg1: *mut cty::c_char,
-        arg2: *const cty::c_char,
-        arg3: cty::c_uint,
-    ) -> cty::c_uint;
+    pub fn strlcat(arg1: *mut cty::c_char, arg2: *const cty::c_char, arg3: usize) -> usize;
 }
 extern "C" {
-    pub fn strlcpy(
-        arg1: *mut cty::c_char,
-        arg2: *const cty::c_char,
-        arg3: cty::c_uint,
-    ) -> cty::c_uint;
+    pub fn strlcpy(arg1: *mut cty::c_char, arg2: *const cty::c_char, arg3: usize) -> usize;
 }
 extern "C" {
     pub fn strnlen(arg1: *const cty::c_char, arg2: usize) -> usize;
